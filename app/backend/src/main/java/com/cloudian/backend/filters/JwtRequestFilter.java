@@ -22,9 +22,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component 
 public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired  
-    private JwtUtil jwtUtil; 
+    private final JwtUtil jwtUtil; 
     @Autowired  
-    private CustomUserDetailsService customUserDetailsService; 
+    private final CustomUserDetailsService customUserDetailsService; 
     public JwtRequestFilter(
         JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService
     ) {
@@ -40,7 +40,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization"); 
                 String username = null;
         String jwt = null;
-        System.out.println("JWT FILTER: " + request.getRequestURI());
         if (authorizationHeader != null &&
                 authorizationHeader.startsWith("Bearer ")) {
 
@@ -53,8 +52,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             CustomUserDetails userDetails =
                     (CustomUserDetails)customUserDetailsService.loadUserByUsername(username);
-
-            if (jwtUtil.validateToken(jwt, userDetails.getUsername() , TokenType.ACCESS)) {
+            if (jwtUtil.validateToken(jwt, userDetails.getUserId() , TokenType.ACCESS)) {
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(

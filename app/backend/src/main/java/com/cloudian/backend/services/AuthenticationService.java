@@ -15,7 +15,6 @@ public class AuthenticationService {
     @Autowired
     private AuthenticationManager authenticationManager;
     public String[] authenticate(String username, String password) {
-        System.out.println("Dang authent..."); 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         
         final CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
