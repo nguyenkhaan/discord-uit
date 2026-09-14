@@ -2,6 +2,7 @@ package com.cloudian.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -13,25 +14,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.cloudian.backend.exceptions.ErrorResponse;
+import com.cloudian.backend.exceptions.ErrorResponseWriter;
 import com.cloudian.backend.filters.JwtRequestFilter;
 import com.cloudian.backend.services.CustomUserDetailsService;
-import com.cloudian.backend.utils.JwtUtil;
 
 @Configuration
 public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
+    private final ErrorResponseWriter errorResponseWriter;
 
     public SecurityConfig(
-            JwtUtil jwtUtil,
             CustomUserDetailsService customUserDetailsService,
-            JwtRequestFilter jwtRequestFilter
+            JwtRequestFilter jwtRequestFilter,
+            ErrorResponseWriter errorResponseWriter
     ) {
-        this.jwtUtil = jwtUtil;
         this.customUserDetailsService = customUserDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
+        this.errorResponseWriter = errorResponseWriter;
     }
 
     @Bean
@@ -74,6 +76,19 @@ public class SecurityConfig {
 
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, exception) -> errorResponseWriter.write(
+                    response,
+                    HttpStatus.UNAUTHORIZED,
+                    ErrorResponse.defaultMessage(HttpStatus.UNAUTHORIZED)
+                ))
+                .accessDeniedHandler((request, response, exception) -> errorResponseWriter.write(
+                    response,
+                    HttpStatus.FORBIDDEN,
+                    ErrorResponse.defaultMessage(HttpStatus.FORBIDDEN)
+                ))
             )
 
             .authenticationProvider(authenticationProvider())

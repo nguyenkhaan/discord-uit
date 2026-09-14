@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.modules.health.dto.HealthResponse;
 
 @RestController
@@ -17,4 +18,8 @@ public class HealthController {
     public HealthResponse readness() {
         return (HealthResponse.builder().message("Cloudian love cloud").build()); 
     } 
+    @GetMapping("/error") 
+    public void HealthError() {
+        throw new ApiException(401,"User cannot be null"); 
+    }
 }
