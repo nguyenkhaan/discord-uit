@@ -1,0 +1,551 @@
+enum AccountType {
+  PERSONAL
+  UIT
+}
+
+enum AccountStatus {
+  UNVERIFIED
+  ACTIVE
+  BANNED
+}
+
+enum SystemRole {
+  USER
+  ADMIN
+}
+
+enum AccountTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
+enum MediaStatus {
+  QUARANTINED
+  SCANNING
+  READY
+  REJECTED
+  DELETED
+}
+
+enum ServerMemberRole {
+  OWNER
+  MEMBER
+}
+
+enum MembershipEndReason {
+  LEFT
+  KICKED
+  SERVER_DELETED
+}
+
+enum ServerInviteType {
+  DIRECT
+  LINK
+}
+
+enum ServerInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+  EXPIRED
+}
+
+enum MessageLinkType {
+  DOCUMENT
+  FORUM_POST
+}
+
+enum CallStatus {
+  ACTIVE
+  ENDED
+}
+
+enum CallEventType {
+  FORCE_MUTE
+  SCREEN_SHARE_STARTED
+  SCREEN_SHARE_STOPPED
+  FORCE_SCREEN_SHARE_STOP
+}
+
+enum DocumentVisibilityStatus {
+  HIDDEN
+  PUBLIC
+  REMOVED
+}
+
+enum DocumentSubmissionStatus {
+  PENDING_PROCESSING
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ModerationRecommendation {
+  APPROVE
+  REJECT
+  NEEDS_REVIEW
+}
+
+enum ForumPostStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+enum CommentStatus {
+  VISIBLE
+  REMOVED
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+enum ReportTargetType {
+  USER_ACCOUNT
+  SERVER
+  CHAT_MESSAGE
+  DOCUMENT
+  FORUM_POST
+  COMMENT
+  CALL_BEHAVIOR
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum NotificationKind {
+  SERVER_INVITATION
+  ADMIN_MESSAGE
+  DOCUMENT_REJECTED
+  DOCUMENT_REPORTED
+  FORUM_POST_APPROVED
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+// Authentication
+table user_account {
+  id uuid PK
+  email string unique
+  password_hash string // Null only for UIT accounts; personal accounts require a secure hash.
+  account_type AccountType
+  account_status AccountStatus
+  email_verified_at datetime
+  uit_subject string unique // Null for personal accounts.
+  full_name string
+  system_role SystemRole
+  created_at datetime
+  updated_at datetime
+}
+
+table account_token {
+  id uuid PK
+  user_id uuid
+  token_hash string unique
+  purpose AccountTokenPurpose
+  expires_at datetime
+  consumed_at datetime
+  created_at datetime
+}
+
+table refresh_session {
+  id uuid PK
+  user_id uuid
+  token_hash string unique
+  expires_at datetime
+  revoked_at datetime
+  created_at datetime
+}
+
+// Files are private object-storage objects; access uses short-lived signed URLs.
+table media {
+  id uuid PK
+  uploaded_by_user_id uuid
+  file_name string
+  mime_type string
+  size_bytes int
+  object_key string unique
+  status MediaStatus
+  scan_completed_at datetime
+  created_at datetime
+}
+
+// Private servers have one shared chat stream and no subchannels.
+table server {
+  id uuid PK
+  name string
+  group_image_url string
+  created_by_user_id uuid
+  created_at datetime
+  updated_at datetime
+  deleted_by_user_id uuid
+  deleted_at datetime
+  deletion_reason string
+}
+
+// A new row is created whenever a user rejoins after leaving or being removed.
+table server_membership {
+  id uuid PK
+  user_id uuid
+  server_id uuid
+  role ServerMemberRole
+  joined_at datetime
+  left_at datetime
+  ended_reason MembershipEndReason
+  ended_by_user_id uuid
+
+  indexes {
+    (server_id, user_id, joined_at) [unique]
+  }
+}
+
+table server_invite {
+  id uuid PK
+  server_id uuid
+  created_by_user_id uuid
+  recipient_user_id uuid // Required for DIRECT invites and null for LINK invites.
+  token_hash string unique // Required for LINK invites; DIRECT invites may omit it.
+  invite_type ServerInviteType
+  status ServerInviteStatus
+  expires_at datetime
+  max_uses int
+  use_count int [not null, default: 0]
+  created_at datetime
+  accepted_at datetime
+  declined_at datetime
+  revoked_at datetime
+}
+
+// Realtime chat
+table chat_message {
+  id uuid PK
+  server_id uuid
+  sender_user_id uuid
+  content_text string
+  client_request_id string
+  linked_content_type MessageLinkType
+  linked_content_id uuid
+  created_at datetime
+  edited_at datetime
+  deleted_at datetime
+  deleted_by_user_id uuid
+  deletion_reason string
+  purge_at datetime
+
+  indexes {
+    (server_id, sender_user_id, client_request_id) [unique]
+  }
+}
+
+table react_icon {
+  id uuid PK
+  icon_image string
+  name string
+  summary string
+  created_at datetime
+}
+
+table message_reaction {
+  message_id uuid
+  reacted_by_user_id uuid
+  icon_id uuid
+  created_at datetime
+
+  indexes {
+    (message_id, reacted_by_user_id, icon_id) [pk]
+  }
+}
+
+// Calling
+table call_session {
+  id uuid PK
+  server_id uuid
+  coordinator_user_id uuid
+  status CallStatus
+  livekit_room_name string unique
+  active_screen_sharer_user_id uuid
+  started_at datetime
+  ended_at datetime
+}
+
+table call_participation {
+  id uuid PK
+  call_session_id uuid
+  user_id uuid
+  joined_at datetime
+  left_at datetime
+
+  indexes {
+    (call_session_id, user_id, joined_at) [unique]
+  }
+}
+
+// Join and leave history belongs to call_participation; this table records controls and sharing events.
+table call_event {
+  id uuid PK
+  call_session_id uuid
+  actor_user_id uuid
+  target_user_id uuid
+  event_type CallEventType
+  created_at datetime
+}
+
+// Documents
+// A tag is a free-form user keyword, a category is a reusable classification label,
+// and a collection is an administrator-curated grouping of documents.
+table document {
+  id uuid PK
+  uploaded_by_user_id uuid
+  media_id uuid
+  title string
+  description string
+  tags string[]
+  slug string unique
+  visibility_status DocumentVisibilityStatus
+  created_at datetime
+  updated_at datetime
+  removed_by_user_id uuid
+  removed_at datetime
+  removal_reason string
+}
+
+// Review attempts are append-only so a rejected document can be submitted again.
+table document_submission {
+  id uuid PK
+  document_id uuid
+  submitted_by_user_id uuid
+  status DocumentSubmissionStatus
+  submitted_at datetime
+  reviewed_by_user_id uuid
+  reviewed_at datetime
+  rejection_reason string
+  purge_at datetime
+}
+
+// Classifications belong to a submission because OCR and suggestions may change on resubmission.
+table agent_classification {
+  id uuid PK
+  document_submission_id uuid
+  model_id string
+  classification_run_id string unique
+  ocr_text string
+  created_at datetime
+}
+
+table category {
+  id uuid PK
+  name string unique
+  created_at datetime
+  updated_at datetime
+}
+
+table collection {
+  id uuid PK
+  name string unique
+  description string
+  slug string unique
+  created_at datetime
+  updated_at datetime
+}
+
+table document_category {
+  document_id uuid
+  category_id uuid
+  created_at datetime
+
+  indexes {
+    (document_id, category_id) [pk]
+  }
+}
+
+table document_collection {
+  document_id uuid
+  collection_id uuid
+  created_at datetime
+
+  indexes {
+    (document_id, collection_id) [pk]
+  }
+}
+
+table collection_category {
+  collection_id uuid
+  category_id uuid
+  created_at datetime
+
+  indexes {
+    (collection_id, category_id) [pk]
+  }
+}
+
+table agent_classification_collection {
+  agent_classification_id uuid
+  collection_id uuid
+  confidence float
+  created_at datetime
+
+  indexes {
+    (agent_classification_id, collection_id) [pk]
+  }
+}
+
+table agent_classification_category {
+  agent_classification_id uuid
+  category_id uuid
+  confidence float
+  created_at datetime
+
+  indexes {
+    (agent_classification_id, category_id) [pk]
+  }
+}
+
+// Forum topics are free-form search terms, not administrator-managed categories.
+table forum_post {
+  id uuid PK
+  author_user_id uuid
+  title string
+  content json
+  topics string[]
+  is_anonymous boolean [not null, default: false]
+  status ForumPostStatus
+  ai_recommendation ModerationRecommendation
+  ai_confidence float
+  moderated_by_user_id uuid
+  moderated_at datetime
+  moderation_reason string
+  created_at datetime
+  updated_at datetime
+  deleted_at datetime
+}
+
+table comment {
+  id uuid PK
+  parent_id uuid
+  forum_post_id uuid
+  author_user_id uuid
+  content json
+  is_anonymous boolean [not null, default: false]
+  status CommentStatus
+  created_at datetime
+  updated_at datetime
+  deleted_at datetime
+}
+
+// The same user keeps one public alias inside a thread, but aliases do not link threads.
+table anonymous_alias {
+  id uuid PK
+  forum_post_id uuid
+  user_id uuid
+  display_alias string
+  created_at datetime
+
+  indexes {
+    (forum_post_id, user_id) [unique]
+    (forum_post_id, display_alias) [unique]
+  }
+}
+
+table post_reaction {
+  forum_post_id uuid
+  user_id uuid
+  reaction ReactionType
+  created_at datetime
+  updated_at datetime
+
+  indexes {
+    (forum_post_id, user_id) [pk]
+  }
+}
+
+table comment_reaction {
+  comment_id uuid
+  user_id uuid
+  reaction ReactionType
+  created_at datetime
+  updated_at datetime
+
+  indexes {
+    (comment_id, user_id) [pk]
+  }
+}
+
+// Reports and moderation
+table report {
+  id uuid PK
+  reported_by_user_id uuid
+  target_type ReportTargetType
+  target_id uuid
+  reason string
+  description string
+  status ReportStatus
+  assigned_admin_id uuid
+  resolved_by_admin_id uuid
+  resolution string
+  created_at datetime
+  resolved_at datetime
+}
+
+// Snapshots are immutable after insertion and remain independent of the source record.
+table report_evidence {
+  id uuid PK
+  report_id uuid
+  source_type ReportTargetType
+  snapshot json
+  captured_at datetime
+  purge_at datetime
+}
+
+// Sensitive administrator reads and moderation actions are retained for at most one year.
+table audit_log {
+  id uuid PK
+  actor_admin_id uuid
+  action string
+  target_type string
+  target_id uuid
+  report_id uuid
+  purpose string
+  occurred_at datetime
+  metadata json
+  retain_until datetime
+}
+
+// Notifications remain until the recipient deletes them or the account is deleted.
+table notification {
+  id uuid PK
+  recipient_user_id uuid
+  actor_user_id uuid
+  kind NotificationKind
+  content string
+  related_entity_type string
+  related_entity_id uuid
+  read_at datetime
+  deleted_at datetime
+  created_at datetime
+}
+
+// State changes and realtime delivery are committed atomically through the outbox.
+table outbox_event {
+  id uuid PK
+  entity_type string
+  entity_id uuid
+  event_type string
+  payload json
+  status OutboxStatus
+  created_at datetime
+  published_at datetime
+  attempt_count int [not null, default: 0]
+}
