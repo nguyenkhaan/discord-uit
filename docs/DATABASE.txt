@@ -549,3 +549,85 @@ table outbox_event {
   published_at datetime
   attempt_count int [not null, default: 0]
 }
+
+// Required integrity rules for the concrete PostgreSQL migration:
+// - Personal accounts require password_hash and no uit_subject; UIT accounts require uit_subject and no password_hash.
+// - Only one server_membership per (server_id, user_id) may have left_at = null.
+// - DIRECT invites require recipient_user_id; LINK invites require token_hash, positive max_uses, and use_count <= max_uses.
+// - linked_content_type and linked_content_id must either both be null or both be present.
+// - Only one call_session per server may have status = ACTIVE, and at most 30 participation rows may be active per call.
+// - Only one call_participation per (call_session_id, user_id) may have left_at = null.
+// - Confidence values must be between 0 and 1 inclusive.
+// - report_evidence and audit_log rows are append-only; evidence snapshots are never updated with source content.
+// - AI/OCR output is untrusted recommendation data and cannot directly change publication or moderation status.
+// - Chat purge_at is at most 90 days after deletion, report evidence is retained at most 180 days,
+//   and audit logs are retained at most one year. Notifications have no automatic expiry.
+// - Persisted state and its outbox_event are written in the same transaction.
+
+Ref: account_token.user_id > user_account.id
+Ref: refresh_session.user_id > user_account.id
+Ref: media.uploaded_by_user_id > user_account.id
+
+Ref: server.created_by_user_id > user_account.id
+Ref: server.deleted_by_user_id > user_account.id
+Ref: server_membership.user_id > user_account.id
+Ref: server_membership.server_id > server.id
+Ref: server_membership.ended_by_user_id > user_account.id
+Ref: server_invite.server_id > server.id
+Ref: server_invite.created_by_user_id > user_account.id
+Ref: server_invite.recipient_user_id > user_account.id
+
+Ref: chat_message.server_id > server.id
+Ref: chat_message.sender_user_id > user_account.id
+Ref: chat_message.deleted_by_user_id > user_account.id
+Ref: message_reaction.message_id > chat_message.id
+Ref: message_reaction.reacted_by_user_id > user_account.id
+Ref: message_reaction.icon_id > react_icon.id
+
+Ref: call_session.server_id > server.id
+Ref: call_session.coordinator_user_id > user_account.id
+Ref: call_session.active_screen_sharer_user_id > user_account.id
+Ref: call_participation.call_session_id > call_session.id
+Ref: call_participation.user_id > user_account.id
+Ref: call_event.call_session_id > call_session.id
+Ref: call_event.actor_user_id > user_account.id
+Ref: call_event.target_user_id > user_account.id
+
+Ref: document.uploaded_by_user_id > user_account.id
+Ref: document.media_id > media.id
+Ref: document.removed_by_user_id > user_account.id
+Ref: document_submission.document_id > document.id
+Ref: document_submission.submitted_by_user_id > user_account.id
+Ref: document_submission.reviewed_by_user_id > user_account.id
+Ref: agent_classification.document_submission_id > document_submission.id
+Ref: document_category.document_id > document.id
+Ref: document_category.category_id > category.id
+Ref: document_collection.document_id > document.id
+Ref: document_collection.collection_id > collection.id
+Ref: collection_category.collection_id > collection.id
+Ref: collection_category.category_id > category.id
+Ref: agent_classification_collection.agent_classification_id > agent_classification.id
+Ref: agent_classification_collection.collection_id > collection.id
+Ref: agent_classification_category.agent_classification_id > agent_classification.id
+Ref: agent_classification_category.category_id > category.id
+
+Ref: forum_post.author_user_id > user_account.id
+Ref: forum_post.moderated_by_user_id > user_account.id
+Ref: comment.parent_id > comment.id
+Ref: comment.forum_post_id > forum_post.id
+Ref: comment.author_user_id > user_account.id
+Ref: anonymous_alias.forum_post_id > forum_post.id
+Ref: anonymous_alias.user_id > user_account.id
+Ref: post_reaction.forum_post_id > forum_post.id
+Ref: post_reaction.user_id > user_account.id
+Ref: comment_reaction.comment_id > comment.id
+Ref: comment_reaction.user_id > user_account.id
+
+Ref: report.reported_by_user_id > user_account.id
+Ref: report.assigned_admin_id > user_account.id
+Ref: report.resolved_by_admin_id > user_account.id
+Ref: report_evidence.report_id > report.id
+Ref: audit_log.actor_admin_id > user_account.id
+Ref: audit_log.report_id > report.id
+Ref: notification.recipient_user_id > user_account.id
+Ref: notification.actor_user_id > user_account.id
