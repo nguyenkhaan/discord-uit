@@ -1,4 +1,4 @@
-# Cloudian
+# UIT Server Discord
 
 ## Technology Badges
 
@@ -11,16 +11,10 @@
 
 ## Overview
 
-Cloudian is a student collaboration platform for sharing knowledge, communicating in private groups, and participating in a moderated community. It is designed for UIT students and external users with personal email accounts.
-
-The product scope combines two spaces:
-
-- **Private servers:** Members can join invite-only groups for real-time chat, video calls, and screen sharing. Each server has one shared chat stream; direct messages between users are intentionally out of scope.
-- **Public community:** Students can share documents, create forum posts, comment, and search approved content across the platform. Documents and posts are reviewed before becoming public, while an AI agent may suggest classification or moderation results for an administrator to approve.
-
-Cloudian also includes account management, reports, notifications, and an administrator dashboard. Anonymous forum contributions keep a consistent alias within one discussion while protecting the author’s public identity. Private chat and call content are not available for unrestricted administrator access; moderation actions and sensitive reads are intended to be auditable.
-
-The application is organised as a modular Spring Boot backend with a React frontend. The backend exposes REST APIs secured with JWT and documents them through OpenAPI. PostgreSQL stores transactional data, RabbitMQ supports asynchronous work, and the local Docker stack also provides Mailpit for email testing. The broader architecture is designed to support object storage, real-time event delivery, video rooms, OCR, and AI-assisted moderation as the product grows.
+UIT Server Discord is a collaboration platform for UIT students and external users.
+Users can join private servers for group chat, video calls, and screen sharing.
+The platform also provides moderated document sharing, forums, reports, notifications, and an admin dashboard.
+It uses a Spring Boot API, React frontend, PostgreSQL, RabbitMQ, and JWT authentication.
 
 ## How to Set Up the Backend
 
