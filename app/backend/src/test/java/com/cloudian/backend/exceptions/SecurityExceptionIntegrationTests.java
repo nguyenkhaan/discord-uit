@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
@@ -16,6 +18,9 @@ class SecurityExceptionIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@MockitoBean
+	private JdbcTemplate jdbcTemplate;
 
 	@Test
 	void returnsTheSharedSchemaWhenAnAuthenticatedEndpointHasNoJwt() throws Exception {
@@ -33,6 +38,13 @@ class SecurityExceptionIntegrationTests {
 				.andExpect(jsonPath("$.message").value("The requested resource was not found."))
 				.andExpect(jsonPath("$.status").value(404))
 				.andExpect(jsonPath("$.timestamp").isNotEmpty());
+	}
+
+	@Test
+	void permitsUnauthenticatedHealthSubpaths() throws Exception {
+		mockMvc.perform(get("/api/health/message").contextPath("/api"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.message").value("Cloudian love cloud"));
 	}
 
 }
