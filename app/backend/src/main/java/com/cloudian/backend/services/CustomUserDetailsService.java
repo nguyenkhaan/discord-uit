@@ -5,21 +5,21 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.cloudian.backend.modules.auth.entity.UserAccount;
+import com.cloudian.backend.modules.auth.repository.UserAccountRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Service 
+@RequiredArgsConstructor 
 public class CustomUserDetailsService implements UserDetailsService {
+    private final UserAccountRepository userRepository;
 
     @Override
-    public CustomUserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
-
-        String myUsername = "cloudian";
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String password = encoder.encode("cloudian"); 
-        String userId = "A very long userid with 12 characters";
-        return new CustomUserDetails(
-            userId,
-            myUsername,
-            password
-        );
+    public CustomUserDetails loadUserByUsername(String email) {
+        UserAccount u = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("not found"));
+        return new CustomUserDetails(u.getId(), u.getEmail(), u.getPasswordHash(),
+                u.getSystemRole(), u.getAccountStatus());
     }
 }

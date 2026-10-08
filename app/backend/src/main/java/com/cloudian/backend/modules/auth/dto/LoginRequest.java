@@ -1,9 +1,14 @@
 package com.cloudian.backend.modules.auth.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-@Data 
+@Data
 public class LoginRequest {
-    private String username; 
-    private String password; 
+    @NotBlank
+    @Email
+    private String email;
+    @NotBlank
+    private String password;
 }

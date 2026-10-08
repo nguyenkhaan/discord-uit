@@ -29,8 +29,7 @@ public class SecurityConfig {
     public SecurityConfig(
             CustomUserDetailsService customUserDetailsService,
             JwtRequestFilter jwtRequestFilter,
-            ErrorResponseWriter errorResponseWriter
-    ) {
+            ErrorResponseWriter errorResponseWriter) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
         this.errorResponseWriter = errorResponseWriter;
@@ -43,8 +42,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(customUserDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
 
         provider.setPasswordEncoder(passwordEncoder());
 
@@ -53,49 +51,42 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+            HttpSecurity http) throws Exception {
 
         http
-            .cors(cors -> {})
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login").permitAll()
-                .requestMatchers("/health/**").permitAll()
-                .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
-                .anyRequest().authenticated()
-            )
+                .cors(cors -> {
+                })
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/login", "/auth/refresh").permitAll()
+                        .requestMatchers("/health/**").permitAll()
+                        .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
+                        .anyRequest().authenticated())
 
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-            .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, exception) -> errorResponseWriter.write(
-                    response,
-                    HttpStatus.UNAUTHORIZED,
-                    ErrorResponse.defaultMessage(HttpStatus.UNAUTHORIZED)
-                ))
-                .accessDeniedHandler((request, response, exception) -> errorResponseWriter.write(
-                    response,
-                    HttpStatus.FORBIDDEN,
-                    ErrorResponse.defaultMessage(HttpStatus.FORBIDDEN)
-                ))
-            )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) -> errorResponseWriter.write(
+                                response,
+                                HttpStatus.UNAUTHORIZED,
+                                ErrorResponse.defaultMessage(HttpStatus.UNAUTHORIZED)))
+                        .accessDeniedHandler((request, response, exception) -> errorResponseWriter.write(
+                                response,
+                                HttpStatus.FORBIDDEN,
+                                ErrorResponse.defaultMessage(HttpStatus.FORBIDDEN))))
 
-            .authenticationProvider(authenticationProvider())
+                .authenticationProvider(authenticationProvider())
 
-            .addFilterBefore(
-                jwtRequestFilter,
-                UsernamePasswordAuthenticationFilter.class
-            );
+                .addFilterBefore(
+                        jwtRequestFilter,
+                        UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
