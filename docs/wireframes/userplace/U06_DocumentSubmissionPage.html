@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Nộp tài liệu · UIT Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+    let preferredTheme;
+    try { preferredTheme = localStorage.getItem('uit-connect-theme'); } catch {}
+    document.documentElement.dataset.theme = preferredTheme === 'light' || preferredTheme === 'dark' ? preferredTheme : systemTheme.matches ? 'dark' : 'light';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+  <style type="text/tailwindcss">
+    @theme inline {
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --color-canvas: var(--canvas); --color-surface: var(--surface); --color-raised: var(--raised);
+      --color-ink: var(--ink); --color-support: var(--support); --color-line: var(--line);
+      --color-primary: #5865F2; --color-primary-hover: #4752C4; --color-danger: #F23F42;
+      --color-warning: #F0B232; --color-success: #23A559; --color-danger-fill: #B42326;
+      --color-success-fill: #18743A; --color-on-semantic: #FFFFFF; --radius-control: 8px; --radius-card: 12px;
+    }
+  </style>
+  <style>
+    :root { color-scheme:light; --canvas:#F2F3F5; --surface:#FFFFFF; --raised:#FFFFFF; --ink:#060607; --support:#3F4147; --line:#DCDDDE; --input:#80848E; --soft:#E8EAFE; --hover:#F2F3F5; --focus-inner:#FFF; --scrim:rgba(6,6,7,.56); }
+    :root[data-theme="dark"] { color-scheme:dark; --canvas:#1E1F22; --surface:#2B2D31; --raised:#313338; --ink:#F2F3F5; --support:#B5BAC1; --line:#3F4147; --input:#80848E; --soft:#30345C; --hover:#313338; --scrim:rgba(0,0,0,.72); }
+    html { scroll-padding-top:80px; } body { margin:0; background:var(--canvas); } [hidden] { display:none!important; }
+    button, a, input, textarea { transition:background-color 150ms ease-out,border-color 150ms ease-out,color 150ms ease-out; }
+    button, a { -webkit-tap-highlight-color:transparent; } button { cursor:pointer; } button:disabled { cursor:not-allowed; opacity:.5; }
+    :where(button,a,input,textarea):focus-visible { outline:2px solid #5865F2; outline-offset:2px; box-shadow:0 0 0 2px var(--focus-inner); }
+    input, textarea { border-color:var(--input); caret-color:#5865F2; } input::placeholder, textarea::placeholder { color:var(--support); opacity:1; }
+    .neutral:hover,.neutral:active { background:var(--hover); } .link { color:#4752C4; text-underline-offset:4px; } [data-theme="dark"] .link,[data-theme="dark"] .text-primary { color:#E8EAFE; } [data-theme="dark"] .border-primary { border-color:#E8EAFE; }
+    .field-error { color:var(--ink); font-size:14px; line-height:20px; margin-top:8px; } .field-error::before { content:"!"; display:inline-grid; place-items:center; width:16px; height:16px; margin-right:8px; border:1px solid #F23F42; border-radius:50%; font-weight:700; color:#F23F42; }
+    dialog { color:var(--ink); background:var(--raised); } dialog::backdrop { background:var(--scrim); }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
+  </style>
+</head>
+<body class="min-h-dvh bg-canvas font-sans text-ink antialiased">
+  <a href="#main" class="fixed left-3 top-3 z-50 -translate-y-20 rounded-control bg-primary px-4 py-3 font-semibold text-white focus:translate-y-0">Đến nội dung chính</a>
+
+  <!-- U06 global user workspace shell -->
+  <header class="sticky top-0 z-30 border-b border-line bg-surface">
+    <div class="mx-auto flex h-16 max-w-screen-xl items-center gap-3 px-4 md:px-6 xl:px-8">
+      <a href="/servers" class="shrink-0 text-lg font-bold tracking-tight">UIT <span class="font-medium">Connect</span></a>
+      <nav aria-label="Điều hướng chính" class="ml-5 hidden h-full items-center gap-1 md:flex">
+        <a href="/servers" class="neutral inline-flex h-full items-center border-b-2 border-transparent px-3 text-sm font-semibold">Server</a>
+        <a href="/documents" aria-current="page" class="inline-flex h-full items-center border-b-2 border-primary px-3 text-sm font-bold text-primary">Tài liệu</a>
+        <a href="/forum" class="neutral inline-flex h-full items-center border-b-2 border-transparent px-3 text-sm font-semibold">Diễn đàn</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-1">
+        <button type="button" data-open-notifications class="neutral hidden min-h-11 rounded-control px-3 text-sm font-semibold sm:inline-flex sm:items-center">Thông báo</button>
+        <button id="theme-toggle" type="button" class="neutral min-h-11 rounded-control px-3 text-sm font-semibold"><span id="theme-label">Chế độ tối</span></button>
+        <button id="account-button" type="button" aria-expanded="false" aria-controls="account-menu" class="neutral hidden min-h-11 rounded-control px-3 text-sm font-semibold sm:block">Tài khoản</button>
+        <button id="menu-button" type="button" aria-expanded="false" aria-controls="mobile-menu" class="neutral min-h-11 min-w-11 rounded-control px-3 font-semibold md:hidden">Menu</button>
+      </div>
+    </div>
+    <nav id="mobile-menu" aria-label="Điều hướng di động" class="border-t border-line px-4 py-2 md:hidden" hidden>
+      <a href="/servers" class="neutral flex min-h-11 items-center rounded-control px-3 font-semibold">Server</a>
+      <a href="/documents" aria-current="page" class="flex min-h-11 items-center rounded-control bg-[var(--soft)] px-3 font-bold text-primary">Tài liệu</a>
+      <a href="/forum" class="neutral flex min-h-11 items-center rounded-control px-3 font-semibold">Diễn đàn</a>
+      <button type="button" data-open-notifications class="neutral flex min-h-11 w-full items-center rounded-control px-3 text-left font-semibold">Thông báo</button>
+      <a href="/settings/account" class="neutral flex min-h-11 items-center rounded-control px-3 font-semibold">Tài khoản</a>
+    </nav>
+    <div id="account-menu" class="absolute right-4 top-14 w-56 rounded-card border border-line bg-raised p-2 shadow-lg" hidden>
+      <a href="/settings/account" class="neutral flex min-h-11 items-center rounded-control px-3 text-sm font-semibold">Cài đặt tài khoản</a>
+      <a href="/my-content" class="neutral flex min-h-11 items-center rounded-control px-3 text-sm font-semibold">Nội dung của tôi</a>
+      <button type="button" class="neutral flex min-h-11 w-full items-center rounded-control px-3 text-left text-sm font-semibold">Đăng xuất</button>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8 xl:px-8">
+    <!-- U06 breadcrumb and page state -->
+    <nav aria-label="Đường dẫn" class="mb-4 flex flex-wrap items-center gap-2 text-sm text-support"><a href="/my-content" class="link font-semibold">Nội dung của tôi</a><span aria-hidden="true">/</span><span aria-current="page">Nộp tài liệu</span></nav>
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <div><p class="mb-1 text-sm font-semibold text-primary">Thư viện tài liệu</p><h1 id="page-title" class="text-[28px] font-bold leading-9 tracking-tight">Nộp tài liệu</h1><p class="mt-2 max-w-2xl text-support">Thêm tệp và thông tin, sau đó kiểm tra lại trước khi gửi duyệt.</p></div>
+      <a href="/my-content" class="neutral inline-flex min-h-11 items-center rounded-control border border-line px-4 text-sm font-semibold">Xem nội dung của tôi</a>
+    </div>
+
+    <section id="rejection-note" aria-labelledby="rejection-title" class="mb-6 rounded-card border border-danger bg-surface p-4" hidden>
+      <div class="flex items-start gap-3"><svg aria-hidden="true" class="mt-0.5 shrink-0 text-danger" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg><div><h2 id="rejection-title" class="font-bold">Lần nộp trước bị từ chối</h2><p class="mt-1 text-sm leading-5 text-support">Tệp bị thiếu trang tài liệu tham khảo. Vui lòng bổ sung đầy đủ trước khi gửi lại.</p></div></div>
+    </section>
+    <section id="media-rejected-note" aria-labelledby="media-rejected-title" class="mb-6 rounded-card border border-danger bg-surface p-4" hidden>
+      <div class="flex items-start gap-3"><svg aria-hidden="true" class="mt-0.5 shrink-0 text-danger" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg><div><h2 id="media-rejected-title" class="font-bold">Tệp không vượt qua kiểm tra</h2><p class="mt-1 text-sm leading-5 text-support">Tệp trước đó đã bị từ chối. Hãy chọn một tệp khác để tiếp tục; thông tin tài liệu vẫn được giữ.</p></div></div>
+    </section>
+
+    <!-- U06 two-step progress marker -->
+    <ol id="submission-steps" class="mb-6 grid grid-cols-2 gap-2" aria-label="Tiến trình nộp tài liệu">
+      <li id="step-one-indicator" aria-current="step" class="rounded-control border border-primary bg-[var(--soft)] p-3 text-sm font-bold"><span class="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-primary text-white">1</span>Tệp và thông tin</li>
+      <li id="step-two-indicator" class="rounded-control border border-line bg-surface p-3 text-sm font-semibold text-support"><span class="mr-2 inline-grid h-6 w-6 place-items-center rounded-full border border-line">2</span>Kiểm tra</li>
+    </ol>
+
+    <!-- U06 step 1: media + document fields -->
+    <form id="submission-form" novalidate>
+      <section id="details-step" aria-labelledby="details-title" class="rounded-card border border-line bg-surface p-4 sm:p-6">
+        <h2 id="details-title" tabindex="-1" class="text-[22px] font-bold leading-[30px]">Tệp và thông tin</h2>
+        <div id="drop-zone" class="mt-4 rounded-card border-2 border-dashed border-line bg-canvas p-6 text-center">
+          <input id="file" name="file" type="file" required class="sr-only" aria-label="Chọn tệp tài liệu" aria-describedby="file-hint file-error">
+          <p class="font-semibold">Kéo tệp vào đây hoặc</p>
+          <button id="choose-file" type="button" class="mt-3 inline-flex min-h-11 items-center rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover">Chọn tệp</button>
+          <p id="file-hint" class="mt-3 text-sm leading-5 text-support">Tệp sẽ được kiểm tra an toàn ở bước gửi. Định dạng và kích thước do hệ thống xác thực.</p>
+          <p id="file-error" class="field-error" role="alert" hidden></p>
+        </div>
+        <div id="file-summary" class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-line bg-canvas p-4" hidden>
+          <div class="min-w-0 flex-1"><p id="file-name" class="truncate font-semibold"></p><p id="file-meta" class="mt-1 text-sm text-support"></p></div>
+          <button id="choose-again" type="button" class="link inline-flex min-h-11 items-center font-semibold">Chọn lại</button>
+        </div>
+        <div class="mt-5 grid gap-5">
+          <div><label for="title" class="mb-2 block text-sm font-bold">Tiêu đề</label><input id="title" name="title" type="text" required aria-describedby="title-error" class="min-h-11 w-full rounded-control border bg-surface px-3 py-2 text-base" placeholder="Tên tài liệu"><p id="title-error" class="field-error" role="alert" hidden></p></div>
+          <div><label for="description" class="mb-2 block text-sm font-bold">Mô tả</label><textarea id="description" name="description" rows="4" class="w-full resize-y rounded-control border bg-surface px-3 py-2 text-base" placeholder="Mô tả ngắn về nội dung tài liệu"></textarea></div>
+          <div><label for="tag-input" class="mb-2 block text-sm font-bold">Tag</label><div id="tag-list" class="mb-2 flex flex-wrap gap-2" aria-label="Tag đã thêm"></div><input id="tag-input" type="text" class="min-h-11 w-full rounded-control border bg-surface px-3 py-2 text-base" aria-describedby="tag-hint" placeholder="Nhập tag rồi nhấn Enter"><p id="tag-hint" class="mt-2 text-sm text-support">Tag là từ khóa tự do. Nhấn Enter để thêm.</p></div>
+        </div>
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between"><a href="/my-content" class="neutral inline-flex min-h-11 items-center justify-center rounded-control border border-line px-4 text-sm font-semibold">Quay lại</a><button type="submit" class="min-h-11 rounded-control bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover">Kiểm tra</button></div>
+      </section>
+
+      <!-- U06 step 2: exact read-only review -->
+      <section id="review-step" aria-labelledby="review-title" class="rounded-card border border-line bg-surface p-4 sm:p-6" hidden>
+        <h2 id="review-title" tabindex="-1" class="text-[22px] font-bold leading-[30px]">Kiểm tra trước khi gửi</h2>
+        <dl class="mt-4 divide-y divide-line rounded-card border border-line">
+          <div class="grid gap-1 p-4 sm:grid-cols-[160px_1fr]"><dt class="text-sm font-semibold text-support">Tiêu đề</dt><dd id="review-title-value" class="font-semibold"></dd></div>
+          <div class="grid gap-1 p-4 sm:grid-cols-[160px_1fr]"><dt class="text-sm font-semibold text-support">Tệp</dt><dd><span id="review-file"></span><span id="review-size" class="ml-2 text-sm text-support"></span></dd></div>
+          <div class="grid gap-1 p-4 sm:grid-cols-[160px_1fr]"><dt class="text-sm font-semibold text-support">Mô tả</dt><dd id="review-description"></dd></div>
+          <div class="grid gap-1 p-4 sm:grid-cols-[160px_1fr]"><dt class="text-sm font-semibold text-support">Tag</dt><dd id="review-tags"></dd></div>
+        </dl>
+        <p class="mt-4 rounded-control border border-line bg-canvas p-3 text-sm leading-5">Tài liệu sẽ được xử lý và chờ duyệt. Chỉ thao tác “Gửi duyệt” mới bắt đầu tải tệp.</p>
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button id="edit-button" type="button" class="neutral min-h-11 rounded-control border border-line px-4 text-sm font-semibold">Sửa thông tin</button><button id="send-button" type="button" class="min-h-11 rounded-control bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover">Gửi duyệt</button></div>
+        <div id="upload-region" class="mt-5" aria-live="polite" hidden><div class="flex justify-between gap-4 text-sm"><span id="upload-label" class="font-semibold">Đang tải tệp</span><span id="upload-percent" class="tabular-nums">0%</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-[var(--line)]" role="progressbar" aria-label="Tiến trình tải tệp" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="upload-bar" class="h-full bg-primary" style="width:0"></div></div><button id="retry-button" type="button" class="link mt-3 min-h-11 font-semibold" hidden>Thử lại</button></div>
+      </section>
+    </form>
+
+    <!-- U06 post-submit processing state -->
+    <section id="success-state" aria-labelledby="success-title" class="rounded-card border border-line bg-surface p-6 text-center" hidden>
+      <span id="processing-badge" class="inline-flex rounded-full border border-warning px-3 py-1 text-xs font-bold">Đang xử lý</span>
+      <h2 id="success-title" tabindex="-1" class="mt-4 text-[22px] font-bold">Đã nhận tài liệu</h2>
+      <p id="processing-description" class="mx-auto mt-2 max-w-xl text-support">Tệp đang được kiểm tra. Sau đó, trạng thái sẽ chuyển sang “Chờ duyệt”.</p>
+      <a href="/my-content" class="mt-5 inline-flex min-h-11 items-center rounded-control bg-primary px-5 text-sm font-semibold text-white">Xem nội dung của tôi</a>
+    </section>
+  </main>
+
+  <!-- Shared notification drawer: opened from desktop or mobile shell controls. -->
+  <dialog id="notification-drawer" aria-labelledby="notification-title" class="m-0 ml-auto h-full max-h-none w-full max-w-md border-0 border-l border-line p-0 shadow-2xl">
+    <div class="flex h-full flex-col"><header class="flex items-start justify-between gap-4 border-b border-line p-5"><div><p class="text-sm font-semibold text-primary">Cập nhật gần đây</p><h2 id="notification-title" class="mt-1 text-[22px] font-bold">Thông báo</h2></div><button id="close-notifications" type="button" class="neutral min-h-11 rounded-control px-3 font-semibold">Đóng</button></header><div class="flex-1 overflow-y-auto p-5"><article class="rounded-control border border-line bg-surface p-4"><p class="font-semibold">Tài liệu “Tóm tắt Trí tuệ nhân tạo” đã được duyệt.</p><time datetime="2026-10-08T08:30:00+07:00" class="mt-2 block text-sm tabular-nums text-support">08/10/2026 08:30</time></article><article class="mt-3 rounded-control border border-line bg-surface p-4"><p class="font-semibold">Bài viết của bạn đang chờ duyệt.</p><time datetime="2026-10-07T16:40:00+07:00" class="mt-2 block text-sm tabular-nums text-support">07/10/2026 16:40</time></article></div></div>
+  </dialog>
+
+  <script>
+    const byId = id => document.getElementById(id);
+    function toggleExpanded(button, panel) { const open = button.getAttribute('aria-expanded') !== 'true'; button.setAttribute('aria-expanded', String(open)); panel.hidden = !open; }
+    byId('menu-button').addEventListener('click', () => toggleExpanded(byId('menu-button'), byId('mobile-menu')));
+    byId('account-button').addEventListener('click', () => toggleExpanded(byId('account-button'), byId('account-menu')));
+    let notificationTrigger;
+    document.querySelectorAll('[data-open-notifications]').forEach(button => button.addEventListener('click', () => { notificationTrigger=button; byId('mobile-menu').hidden=true; byId('menu-button').setAttribute('aria-expanded','false'); byId('notification-drawer').showModal(); byId('close-notifications').focus(); }));
+    byId('close-notifications').addEventListener('click', () => byId('notification-drawer').close());
+    byId('notification-drawer').addEventListener('close', () => notificationTrigger?.focus());
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { byId('mobile-menu').hidden = true; byId('menu-button').setAttribute('aria-expanded','false'); byId('account-menu').hidden = true; byId('account-button').setAttribute('aria-expanded','false'); } });
+    function syncThemeControl() { byId('theme-label').textContent = document.documentElement.dataset.theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'; }
+    byId('theme-toggle').addEventListener('click', () => { preferredTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = preferredTheme; try { localStorage.setItem('uit-connect-theme', preferredTheme); } catch {} syncThemeControl(); });
+    systemTheme.addEventListener('change', () => { if (preferredTheme === 'light' || preferredTheme === 'dark') return; document.documentElement.dataset.theme = systemTheme.matches ? 'dark' : 'light'; syncThemeControl(); }); syncThemeControl();
+
+    const state = { file:null, tags:[] };
+    const fileInput = byId('file');
+    byId('choose-file').addEventListener('click', () => fileInput.click());
+    byId('choose-again').addEventListener('click', () => fileInput.click());
+    function formatBytes(bytes) { if (bytes < 1024) return `${bytes} B`; const units=['KB','MB','GB']; let value=bytes/1024, unit=units[0]; for (let index=1; value>=1024 && index<units.length; index+=1) { value/=1024; unit=units[index]; } return `${value.toFixed(value>=10?0:1)} ${unit}`; }
+    function showFile(file) { state.file=file; byId('file-name').textContent=file.name; byId('file-meta').textContent=`${file.type || 'Loại tệp chưa xác định'} · ${formatBytes(file.size)}`; byId('file-summary').hidden=false; byId('file-error').hidden=true; }
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) showFile(fileInput.files[0]); });
+    const dropZone=byId('drop-zone');
+    dropZone.addEventListener('dragover', event => { event.preventDefault(); dropZone.style.borderColor='#5865F2'; });
+    dropZone.addEventListener('dragleave', () => dropZone.style.removeProperty('border-color'));
+    dropZone.addEventListener('drop', event => { event.preventDefault(); dropZone.style.removeProperty('border-color'); if (event.dataTransfer.files[0]) showFile(event.dataTransfer.files[0]); });
+    function renderTags() { byId('tag-list').replaceChildren(...state.tags.map(tag => { const chip=document.createElement('span'); chip.className='inline-flex min-h-9 items-center gap-1 rounded-full border border-line bg-canvas pl-3 pr-1 text-sm font-semibold'; const label=document.createElement('span'); label.textContent=tag; const remove=document.createElement('button'); remove.type='button'; remove.className='min-h-8 min-w-8 rounded-full'; remove.setAttribute('aria-label',`Xóa tag ${tag}`); remove.textContent='×'; remove.addEventListener('click',()=>{ state.tags=state.tags.filter(value=>value!==tag); renderTags(); }); chip.append(label,remove); return chip; })); }
+    byId('tag-input').addEventListener('keydown', event => { if (event.key !== 'Enter') return; event.preventDefault(); const tag=event.currentTarget.value.trim(); if (tag && !state.tags.includes(tag)) state.tags.push(tag); event.currentTarget.value=''; renderTags(); });
+    function validate() { let firstInvalid=null; const title=byId('title'); const errors=[{input:fileInput,error:byId('file-error'),message:'Hãy chọn tệp để tiếp tục.',valid:Boolean(state.file)},{input:title,error:byId('title-error'),message:'Hãy nhập tiêu đề tài liệu.',valid:Boolean(title.value.trim())}]; for (const item of errors) { item.error.textContent=item.valid?'':item.message; item.error.hidden=item.valid; item.input.setAttribute('aria-invalid',String(!item.valid)); if (!item.valid && !firstInvalid) firstInvalid=item.input; } if (firstInvalid) { (firstInvalid===fileInput?byId('choose-file'):firstInvalid).focus(); return false; } return true; }
+    function showStep(reviewing) { byId('details-step').hidden=reviewing; byId('review-step').hidden=!reviewing; byId('step-one-indicator').toggleAttribute('aria-current',!reviewing); byId('step-two-indicator').toggleAttribute('aria-current',reviewing); byId('step-one-indicator').classList.toggle('bg-[var(--soft)]',!reviewing); byId('step-two-indicator').classList.toggle('bg-[var(--soft)]',reviewing); (reviewing?byId('review-title'):byId('details-title')).focus?.(); window.scrollTo({top:0,behavior:'smooth'}); }
+    byId('submission-form').addEventListener('submit', event => { event.preventDefault(); if (!validate()) return; byId('review-title-value').textContent=byId('title').value.trim(); byId('review-file').textContent=state.file.name; byId('review-size').textContent=formatBytes(state.file.size); byId('review-description').textContent=byId('description').value.trim() || 'Không có mô tả'; byId('review-tags').textContent=state.tags.length?state.tags.join(', '):'Không có tag'; showStep(true); });
+    byId('edit-button').addEventListener('click',()=>showStep(false));
+    let uploadTimer;
+    let uploadAttempts=0;
+    function upload() { const failsFirstAttempt=new URLSearchParams(location.search).get('state')==='upload-error'&&uploadAttempts===0; uploadAttempts+=1; byId('upload-region').hidden=false; byId('retry-button').hidden=true; byId('send-button').disabled=true; byId('upload-label').textContent='Đang tải tệp'; let progress=0; clearInterval(uploadTimer); uploadTimer=setInterval(()=>{ progress=Math.min(progress+20,100); byId('upload-percent').textContent=`${progress}%`; byId('upload-bar').style.width=`${progress}%`; byId('upload-region').querySelector('[role="progressbar"]').setAttribute('aria-valuenow',String(progress)); if (progress<100) return; clearInterval(uploadTimer); if (failsFirstAttempt) { byId('upload-label').textContent='Không thể tải tệp. Nội dung đã nhập vẫn được giữ.'; byId('retry-button').hidden=false; byId('send-button').disabled=false; return; } byId('submission-form').hidden=true; byId('submission-steps').hidden=true; byId('success-state').hidden=false; byId('success-title').focus(); },160); }
+    byId('send-button').addEventListener('click',upload); byId('retry-button').addEventListener('click',upload);
+    const params=new URLSearchParams(location.search); if (params.get('mode')==='resubmit') { byId('page-title').textContent='Gửi lại tài liệu'; document.title='Gửi lại tài liệu · UIT Connect'; byId('rejection-note').hidden=false; }
+    if (params.get('media')==='REJECTED') byId('media-rejected-note').hidden=false;
+    if (params.get('media')==='SCANNING') { byId('submission-form').hidden=true; byId('submission-steps').hidden=true; byId('success-state').hidden=false; byId('processing-badge').textContent='Đang quét'; byId('success-title').textContent='Tệp đang được kiểm tra'; byId('processing-description').textContent='Tệp đang được quét an toàn. Khi hoàn tất, tài liệu sẽ chuyển sang “Chờ duyệt”.'; }
+  </script>
+</body>
+</html>
