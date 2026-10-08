@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/register": {
+      "targetKind": "new-ui",
+      "projectId": "e68eee7e-08d8-4775-b2bb-2ef0091baa6f",
+      "activeDraftId": "1a84e08c-6726-42c0-b857-3360735d1aa9",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "docs/DATABASE.txt",
+        "docs/wireframes/screen_list.md",
+        "docs/wireframes/dark/auth/RegisterPage.html"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "95d33a8575f9cca9fea83e9ae0709897e96823362973ccf2eb1d2feb871ce5d5",
+        "docs/DATABASE.txt": "48f6febea5ef4e5b0dfe6b46600853a818f504838f8ead91b178be7d24539551",
+        "docs/wireframes/screen_list.md": "e74d270c246c99e23df75d04d5cecd597b362a4202f381ed3f9abbd5acbd692a",
+        "docs/wireframes/dark/auth/RegisterPage.html": "db842aa055bd9f4a4900f6e658f67f1fc26ef4e2ba7fd398aacb6fcbbd300e15"
+      },
+      "components": [],
+      "drafts": {
+        "1a84e08c-6726-42c0-b857-3360735d1aa9": {
+          "title": "Register Page — Dark",
+          "visualDirection": "dark split-layout authentication with flat email-verification illustration",
+          "currentVersion": 2
+        }
+      },
+      "updatedAt": "2026-10-08T02:20:40Z"
+    }
+  }
+}

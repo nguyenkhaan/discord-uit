@@ -4,181 +4,203 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0F1218" />
     <title>Create account · UIT Server Discord</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style type="text/tailwindcss">
       @theme {
-        --color-canvas: #0b1020;
-        --color-surface: #11182a;
-        --color-raised: #18223a;
-        --color-raised-hover: #202e4a;
-        --color-inset: #0c1426;
-        --color-border: #2a3854;
-        --color-foreground: #f7f8ff;
-        --color-secondary: #bec8db;
-        --color-muted: #8c99b1;
-        --color-brand: #5d56b8;
-        --color-brand-hover: #4f489f;
-        --color-focus: #c1bdff;
-        --color-accent: #b8b4ff;
-        --color-error: #ffadb8;
+        --color-canvas: #0f1218;
+        --color-surface: #151a24;
+        --color-raised: #202737;
+        --color-border: #2b3445;
+        --color-foreground: #f4f6fa;
+        --color-secondary: #b5bfce;
+        --color-muted: #7f8a9c;
+        --color-primary: #5b55b8;
+        --color-primary-hover: #6a63c8;
+        --color-focus: #9b96e8;
+        --color-coral: #d47b72;
+        --color-success: #62b99c;
       }
 
-      :root { color-scheme: dark; }
-      html { scrollbar-color: var(--color-border) var(--color-canvas); }
-      body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      ::selection { background: var(--color-brand); color: var(--color-foreground); }
-      input { caret-color: var(--color-focus); }
-      .registration-steps::before { content: ""; position: absolute; top: 1rem; bottom: 1rem; left: 1rem; width: 1px; background: var(--color-border); }
-      [hidden] { display: none !important; }
+      :root {
+        color-scheme: dark;
+        background: #0f1218;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: #0f1218;
+        scrollbar-color: #2b3445 #0f1218;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      ::selection {
+        background: #5b55b8;
+        color: #ffffff;
+      }
+
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #f4f6fa;
+        box-shadow: 0 0 0 1000px #202737 inset;
+        transition: background-color 9999s ease-in-out 0s;
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        * { transition: none !important; }
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
       }
     </style>
   </head>
-  <body class="flex min-h-screen flex-col overflow-x-hidden bg-canvas text-foreground antialiased">
-    <header class="border-b border-border bg-canvas">
-      <nav class="mx-auto flex min-h-16 w-full max-w-[1440px] items-center justify-between gap-3 px-4 py-2 sm:min-h-20 sm:px-8 sm:py-3 lg:px-12 xl:px-16" aria-label="Main navigation">
-        <a id="brand-link" href="/login" class="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:gap-3" aria-label="UIT Server Discord home">
-          <span class="flex size-8 shrink-0 items-center justify-center rounded-lg border border-focus bg-brand text-white sm:size-10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-          </span>
-          <span class="min-w-0 text-sm leading-tight font-semibold tracking-[-0.02em] sm:text-lg">UIT Server Discord</span>
-        </a>
-
-        <div id="guest-actions" class="ml-auto flex shrink-0 items-center">
-          <a href="/login" class="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground transition-colors duration-150 hover:border-focus hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Sign in</a>
-        </div>
-
-        <a id="account-link" href="/settings/account" hidden class="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-raised text-sm font-semibold text-foreground transition-colors duration-150 hover:border-focus hover:bg-raised-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" aria-label="Account settings for Jane Doe" title="Jane Doe — Account settings">JD</a>
-      </nav>
-    </header>
-
-    <main class="mx-auto grid w-full max-w-[1440px] flex-1 items-center gap-12 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,540px)] lg:gap-16 lg:px-12 lg:py-16 xl:gap-24 xl:px-16">
-      <section class="hidden max-w-[620px] lg:block lg:pb-6" aria-labelledby="activation-heading">
-        <h2 id="activation-heading" class="max-w-[580px] text-[2.75rem] leading-[1.08] font-semibold tracking-[-0.035em] text-balance lg:text-[3.75rem]">Verify your email to activate your account.</h2>
-        <p class="mt-6 max-w-[540px] text-lg leading-8 text-secondary">Personal accounts remain unavailable until email verification is complete.</p>
-
-        <ol class="registration-steps relative mt-12 max-w-[560px] space-y-7 pl-12" aria-label="Registration steps">
-          <li class="relative flex items-start gap-4">
-            <span class="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
-              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+  <body>
+    <div class="min-h-screen overflow-x-hidden bg-canvas text-foreground antialiased">
+      <main class="grid min-h-screen w-full lg:grid-cols-2" aria-labelledby="register-title">
+        <section class="relative flex min-h-[280px] flex-col overflow-hidden border-b border-border bg-surface px-5 py-5 sm:min-h-[340px] sm:px-8 sm:py-7 lg:min-h-screen lg:border-r lg:border-b-0 lg:px-12 lg:py-10 xl:px-16" aria-labelledby="illustration-title">
+          <a id="register-brand-link" href="#login" class="relative z-10 inline-flex min-h-11 w-fit items-center gap-3 rounded-lg text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
+            <span class="flex size-10 items-center justify-center rounded-lg border border-primary bg-primary" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                <path d="M8 9h8" />
+                <path d="M8 13h5" />
+              </svg>
             </span>
-            <div><h3 class="font-semibold">Create your account</h3><p class="mt-1 text-sm leading-6 text-secondary">Provide your full name, personal email, and password.</p></div>
-          </li>
-          <li class="relative flex items-start gap-4">
-            <span class="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
-              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><path d="m9 13 2 2 4-4"/></svg>
-            </span>
-            <div><h3 class="font-semibold">Verify your email</h3><p class="mt-1 text-sm leading-6 text-secondary">Use the one-time link or code sent to your email address.</p></div>
-          </li>
-          <li class="relative flex items-start gap-4">
-            <span class="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
-              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 2.5 2.5L16 9"/></svg>
-            </span>
-            <div><h3 class="font-semibold">Start using the app</h3><p class="mt-1 text-sm leading-6 text-secondary">Your account becomes active after verification.</p></div>
-          </li>
-        </ol>
-      </section>
+            <span class="text-sm font-semibold tracking-[-0.01em] sm:text-base">UIT Server Discord</span>
+          </a>
 
-      <section class="mx-auto w-full max-w-[540px] rounded-2xl border border-border bg-surface p-6 sm:p-8 lg:mr-0 lg:p-10" aria-labelledby="register-heading">
-        <h1 id="register-heading" class="text-3xl leading-tight font-semibold tracking-[-0.03em]">Create account</h1>
-        <p class="mt-3 text-sm leading-6 text-secondary">Personal accounts require email verification.</p>
+          <div class="mx-auto flex w-full max-w-[680px] flex-1 items-center justify-center py-4 sm:py-6 lg:py-10">
+            <div class="grid w-full items-center gap-5 sm:grid-cols-[minmax(220px,0.9fr)_minmax(260px,1.1fr)] lg:block">
+              <div class="mx-auto w-full max-w-[360px] lg:max-w-[520px]">
+                <svg class="h-auto w-full" viewBox="0 0 640 500" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="register-illustration-title register-illustration-description">
+                  <title id="register-illustration-title">Email verification</title>
+                  <desc id="register-illustration-description">An outline illustration of a user account connected to a verification email and an activated community account.</desc>
 
-        <form id="personal-registration" class="mt-8" novalidate>
-          <div class="space-y-5">
-            <div>
-              <label for="full-name" class="mb-2 block text-sm font-medium">Full name</label>
-              <input id="full-name" name="fullName" type="text" autocomplete="name" required placeholder="Your full name" class="min-h-12 w-full rounded-lg border border-border bg-inset px-4 text-base text-foreground placeholder:text-muted transition-colors duration-150 focus:border-focus focus:outline-2 focus:outline-offset-1 focus:outline-focus" />
-            </div>
-            <div>
-              <label for="email" class="mb-2 block text-sm font-medium">Personal email</label>
-              <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-help" placeholder="name@example.com" class="min-h-12 w-full rounded-lg border border-border bg-inset px-4 text-base text-foreground placeholder:text-muted transition-colors duration-150 focus:border-focus focus:outline-2 focus:outline-offset-1 focus:outline-focus" />
-              <p id="email-help" class="mt-2 text-xs leading-5 text-muted">UIT email addresses use UIT SSO.</p>
-            </div>
-            <div>
-              <label for="password" class="mb-2 block text-sm font-medium">Password</label>
-              <div class="relative">
-                <input id="password" name="password" type="password" autocomplete="new-password" required placeholder="Create a password" class="min-h-12 w-full rounded-lg border border-border bg-inset py-3 pr-12 pl-4 text-base text-foreground placeholder:text-muted transition-colors duration-150 focus:border-focus focus:outline-2 focus:outline-offset-1 focus:outline-focus" />
-                <button id="toggle-password" type="button" class="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-lg text-secondary transition-colors duration-150 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" aria-label="Show password" aria-pressed="false">
-                  <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
+                  <path d="M149 118C207 62 310 46 402 77C491 107 555 180 551 273C548 363 481 430 391 448C303 466 199 439 142 370C84 301 83 181 149 118Z" fill="#202737" />
+                  <path d="M134 350H508" stroke="#2B3445" stroke-width="2" stroke-linecap="round" />
+                  <path d="M224 159C261 129 310 114 359 120C406 126 447 151 477 189" stroke="#5B55B8" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 10" />
+                  <path d="M467 178L480 190L464 199" stroke="#5B55B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+                  <rect x="112" y="113" width="150" height="188" rx="18" fill="#151A24" stroke="#3B4659" stroke-width="3" />
+                  <circle cx="187" cy="171" r="28" fill="#2B3445" />
+                  <circle cx="187" cy="161" r="10" stroke="#B5BFCE" stroke-width="3" />
+                  <path d="M166 187C171 178 179 174 187 174C195 174 203 178 208 187" stroke="#B5BFCE" stroke-width="3" stroke-linecap="round" />
+                  <rect x="143" y="223" width="88" height="10" rx="5" fill="#5B55B8" />
+                  <rect x="153" y="245" width="68" height="8" rx="4" fill="#3B4659" />
+                  <rect x="161" y="267" width="52" height="8" rx="4" fill="#3B4659" />
+
+                  <rect x="272" y="181" width="190" height="135" rx="18" fill="#F0F2F6" />
+                  <path d="M288 202L355 253C362 258 372 258 379 253L446 202" stroke="#4338A3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M288 296L342 249M446 296L392 249" stroke="#C9D0DC" stroke-width="4" stroke-linecap="round" />
+                  <rect x="345" y="286" width="44" height="44" rx="12" fill="#5B55B8" stroke="#9B96E8" stroke-width="3" />
+                  <path d="M356 308L364 316L379 299" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+
+                  <rect x="453" y="96" width="82" height="82" rx="20" fill="#151A24" stroke="#3B4659" stroke-width="3" />
+                  <circle cx="494" cy="129" r="13" fill="#D47B72" />
+                  <path d="M474 158C478 145 485 139 494 139C503 139 510 145 514 158" stroke="#B5BFCE" stroke-width="3" stroke-linecap="round" />
+
+                  <circle cx="492" cy="354" r="43" fill="#151A24" stroke="#62B99C" stroke-width="3" />
+                  <path d="M473 354L486 367L512 341" stroke="#62B99C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M448 309C466 324 480 331 492 331" stroke="#62B99C" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 9" />
+
+                  <circle cx="123" cy="377" r="10" fill="#D47B72" />
+                  <circle cx="151" cy="403" r="7" fill="#5B55B8" />
+                  <circle cx="536" cy="224" r="8" fill="#D47B72" />
+                  <path d="M93 322L115 315M520 404L548 395" stroke="#3B4659" stroke-width="3" stroke-linecap="round" />
+                </svg>
+              </div>
+
+              <div class="max-w-[520px] sm:pr-2 lg:mt-2 lg:pr-0">
+                <p class="text-xs font-semibold tracking-[0.16em] text-coral uppercase">Personal account</p>
+                <h2 id="illustration-title" class="mt-3 text-2xl leading-tight font-semibold tracking-[-0.025em] sm:text-3xl lg:text-[2.5rem]">Create and verify your account</h2>
+                <p class="mt-3 max-w-[480px] text-sm leading-6 text-secondary sm:text-base sm:leading-7">After registration, check your inbox and use the verification link to activate your account.</p>
               </div>
             </div>
           </div>
+        </section>
 
-          <p id="register-feedback" class="mt-5 hidden rounded-lg border border-border bg-raised px-4 py-3 text-sm leading-6 text-secondary" role="status" aria-live="polite"></p>
-          <button type="submit" class="mt-6 flex min-h-12 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Create account</button>
-        </form>
+        <section class="flex min-h-[620px] items-center bg-canvas px-5 py-10 sm:px-10 sm:py-14 lg:min-h-screen lg:px-12 xl:px-16">
+          <div class="mx-auto w-full max-w-[460px]">
+            <div>
+              <p class="text-sm font-medium text-secondary">Registration</p>
+              <h1 id="register-title" class="mt-2 text-3xl leading-tight font-semibold tracking-[-0.035em] sm:text-4xl">Create your account</h1>
+              <p class="mt-3 text-sm leading-6 text-secondary">Enter your personal account details.</p>
+            </div>
 
-        <div class="mt-8 border-t border-border pt-6">
-          <p class="text-center text-sm text-secondary">Already have an account? <a href="/login" class="font-semibold text-accent underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:text-foreground hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Sign in</a></p>
-          <p class="mt-5 flex items-start gap-2 text-xs leading-5 text-muted"><svg class="mt-0.5 size-4 shrink-0 text-accent" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg><span>UIT accounts are created through UIT SSO.</span></p>
-        </div>
-      </section>
-    </main>
+            <form class="mt-8 space-y-5" action="#verify-email" method="post">
+              <div>
+                <label for="full-name" class="mb-2 block text-sm font-medium text-foreground">Full name</label>
+                <div class="relative">
+                  <svg class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <input id="full-name" name="full_name" type="text" autocomplete="name" required placeholder="Your full name" class="min-h-12 w-full rounded-lg border border-border bg-raised py-3 pr-4 pl-12 text-base text-foreground outline-none transition-colors placeholder:text-muted hover:border-focus focus:border-focus focus:ring-2 focus:ring-focus/30" />
+                </div>
+              </div>
 
-    <footer class="border-t border-border bg-canvas">
-      <div class="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-        <div class="flex flex-col gap-2 py-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-          <nav class="flex flex-wrap items-center gap-x-6" aria-label="Community support">
-            <a href="/guidelines" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Forum rules</a>
-            <a href="/help" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Help / FAQ</a>
-            <a href="/contact" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Contact administrator</a>
-          </nav>
-          <nav class="flex flex-wrap items-center gap-x-6" aria-label="Legal">
-            <a href="/terms" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Terms of Service</a>
-            <a href="/privacy" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Privacy Policy</a>
-          </nav>
-        </div>
-        <p class="border-t border-border py-5 text-xs leading-6 text-secondary">Copyright © 2026 UIT Server Discord. Powered by React.</p>
-      </div>
-    </footer>
+              <div>
+                <label for="personal-email" class="mb-2 block text-sm font-medium text-foreground">Personal email</label>
+                <div class="relative">
+                  <svg class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                  <input id="personal-email" name="email" type="email" inputmode="email" autocomplete="email" required aria-describedby="email-guidance" placeholder="name@example.com" class="min-h-12 w-full rounded-lg border border-border bg-raised py-3 pr-4 pl-12 text-base text-foreground outline-none transition-colors placeholder:text-muted hover:border-focus focus:border-focus focus:ring-2 focus:ring-focus/30" />
+                </div>
+                <p id="email-guidance" class="mt-2 text-xs leading-5 text-muted">UIT accounts use UIT SSO on the sign-in screen.</p>
+              </div>
 
-    <script>
-      const signedIn = new URLSearchParams(window.location.search).get('state') === 'signed-in';
-      document.querySelector('#guest-actions').hidden = signedIn;
-      document.querySelector('#account-link').hidden = !signedIn;
-      document.querySelector('#brand-link').href = signedIn ? '/servers' : '/login';
+              <div>
+                <label for="new-password" class="mb-2 block text-sm font-medium text-foreground">Password</label>
+                <div class="relative">
+                  <svg class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input id="new-password" name="password" type="password" autocomplete="new-password" required placeholder="Create a password" class="min-h-12 w-full rounded-lg border border-border bg-raised py-3 pr-4 pl-12 text-base text-foreground outline-none transition-colors placeholder:text-muted hover:border-focus focus:border-focus focus:ring-2 focus:ring-focus/30" />
+                </div>
+              </div>
 
-      const password = document.querySelector('#password');
-      const togglePassword = document.querySelector('#toggle-password');
-      const feedback = document.querySelector('#register-feedback');
+              <div class="rounded-lg border border-border bg-surface px-4 py-3">
+                <div class="flex items-start gap-3">
+                  <svg class="mt-0.5 size-5 shrink-0 text-focus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
+                  </svg>
+                  <p class="text-sm leading-6 text-secondary">A verification link will be sent to your email after account creation.</p>
+                </div>
+              </div>
 
-      togglePassword.addEventListener('click', () => {
-        const isVisible = password.type === 'text';
-        password.type = isVisible ? 'password' : 'text';
-        togglePassword.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
-        togglePassword.setAttribute('aria-pressed', String(!isVisible));
-      });
+              <button type="submit" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+                Create account
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </button>
+            </form>
 
-      function showFeedback(message) {
-        feedback.textContent = message;
-        feedback.classList.remove('hidden', 'text-error');
-        feedback.classList.add('text-secondary');
-        feedback.setAttribute('role', 'status');
-      }
-
-      function showError(message) {
-        showFeedback(message);
-        feedback.classList.remove('text-secondary');
-        feedback.classList.add('text-error');
-        feedback.setAttribute('role', 'alert');
-      }
-
-      document.querySelector('#personal-registration').addEventListener('submit', (event) => {
-        event.preventDefault();
-        if (!event.currentTarget.reportValidity()) return;
-        if (document.querySelector('#email').value.trim().toLowerCase().endsWith('@uit.edu.vn')) {
-          showError('Use UIT SSO to continue with an @uit.edu.vn email address.');
-          return;
-        }
-        showFeedback('Account created. Check your email to verify your account.');
-      });
-
-      if (new URLSearchParams(window.location.search).get('state') === 'registered') {
-        showFeedback('Account created. Check your email to verify your account.');
-      }
-    </script>
+            <div class="mt-7 border-t border-border pt-6 text-center">
+              <p class="text-sm text-secondary">Already have an account? <a id="register-sign-in-link" href="#login" class="rounded-sm font-semibold text-focus underline decoration-transparent underline-offset-4 transition-colors hover:text-foreground hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Sign in</a></p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   </body>
 </html>

@@ -1,195 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
-    <title>Sign in · UIT Server Discord</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style type="text/tailwindcss">
-      @theme {
-        --color-canvas: #0b1020;
-        --color-surface: #11182a;
-        --color-raised: #18223a;
-        --color-raised-hover: #202e4a;
-        --color-inset: #0c1426;
-        --color-border: #2a3854;
-        --color-foreground: #f7f8ff;
-        --color-secondary: #bec8db;
-        --color-muted: #8c99b1;
-        --color-brand: #5d56b8;
-        --color-brand-hover: #4f489f;
-        --color-focus: #c1bdff;
-        --color-accent: #b8b4ff;
-        --color-error: #ffadb8;
-      }
-
-      :root { color-scheme: dark; }
-      html { scrollbar-color: var(--color-border) var(--color-canvas); }
-      body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      ::selection { background: var(--color-brand); color: var(--color-foreground); }
-      input { caret-color: var(--color-focus); }
-      [hidden] { display: none !important; }
-      @media (prefers-reduced-motion: reduce) {
-        * { transition: none !important; }
-      }
-    </style>
-  </head>
-  <body class="flex min-h-screen flex-col bg-canvas text-foreground antialiased">
-    <header class="border-b border-border bg-canvas">
-      <nav class="mx-auto flex min-h-16 w-full max-w-[1440px] items-center justify-between gap-3 px-4 py-2 sm:min-h-20 sm:px-8 sm:py-3 lg:px-12 xl:px-16" aria-label="Main navigation">
-        <a id="brand-link" href="/login" class="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:gap-3" aria-label="UIT Server Discord home">
-          <span class="flex size-8 shrink-0 items-center justify-center rounded-lg border border-focus bg-brand text-white sm:size-10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-          </span>
-          <span class="min-w-0 text-sm leading-tight font-semibold tracking-[-0.02em] sm:text-lg">UIT Server Discord</span>
-        </a>
-
-        <div id="guest-actions" class="ml-auto flex shrink-0 items-center">
-          <a href="/register" class="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground transition-colors duration-150 hover:border-focus hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Create account</a>
-        </div>
-
-        <a id="account-link" href="/settings/account" hidden class="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-raised text-sm font-semibold text-foreground transition-colors duration-150 hover:border-focus hover:bg-raised-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" aria-label="Account settings for Jane Doe" title="Jane Doe — Account settings">JD</a>
-      </nav>
-    </header>
-
-    <main class="mx-auto grid w-full max-w-[1440px] flex-1 items-center gap-12 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,540px)] lg:gap-16 lg:px-12 lg:py-16 xl:gap-24 xl:px-16">
-        <section class="hidden max-w-[640px] lg:block lg:pb-6" aria-labelledby="welcome-heading">
-          <h2 id="welcome-heading" class="max-w-[600px] text-[2.75rem] leading-[1.08] font-semibold tracking-[-0.035em] text-balance lg:text-[3.75rem]">Your people, projects, and conversations—one place.</h2>
-          <p class="mt-6 max-w-[540px] text-lg leading-8 text-secondary">Pick up where your class, server, or study group left off. The community is ready when you are.</p>
-
-          <div class="relative mt-12 max-w-[560px] pl-12" aria-label="Spaces in the platform">
-            <span class="absolute top-4 bottom-4 left-4 w-px bg-border" aria-hidden="true"></span>
-            <div class="relative flex items-start gap-4 pt-0 pb-4">
-              <span class="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8M8 13h5"/></svg>
-              </span>
-              <div><h3 class="font-semibold">Forum</h3><p class="mt-1 text-sm leading-6 text-secondary">Follow conversations and share what your community needs to know.</p></div>
-            </div>
-            <div class="relative flex items-start gap-4 py-4">
-              <span class="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-3a4 4 0 0 0-4 1 4 4 0 0 0-4-1H5a2 2 0 0 1-2-2Z"/></svg>
-              </span>
-              <div><h3 class="font-semibold">Document library</h3><p class="mt-1 text-sm leading-6 text-secondary">Keep approved notes, guides, and shared resources close by.</p></div>
-            </div>
-            <div class="relative flex items-start gap-4 py-4 last:pb-0">
-              <span class="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </span>
-              <div><h3 class="font-semibold">Private servers</h3><p class="mt-1 text-sm leading-6 text-secondary">Meet and work with the people in your group.</p></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="mx-auto w-full max-w-[540px] rounded-2xl border border-border bg-surface p-6 sm:p-8 lg:mr-0 lg:p-10" aria-labelledby="login-heading">
-          <h1 id="login-heading" class="text-3xl leading-tight font-semibold tracking-[-0.03em]">Welcome back</h1>
-          <p class="mt-3 text-sm leading-6 text-secondary">Sign in to continue to your community space.</p>
-
-          <button id="uit-login" type="button" class="mt-8 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-brand px-4 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7"/><path d="M4 10h16M5 10v10h14V10M9 20v-6h6v6"/></svg>
-            Continue with UIT SSO
-          </button>
-          <p class="mt-2 text-center text-xs leading-5 text-secondary">For @uit.edu.vn accounts</p>
-
-          <div class="my-8 flex items-center gap-4" aria-hidden="true"><span class="h-px flex-1 bg-border"></span><span class="text-xs font-medium text-muted">or use personal email</span><span class="h-px flex-1 bg-border"></span></div>
-
-          <form id="personal-login" novalidate>
-            <div class="space-y-5">
-              <div>
-                <label for="email" class="mb-2 block text-sm font-medium">Personal email</label>
-                <input id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com" class="min-h-12 w-full rounded-lg border border-border bg-inset px-4 text-base text-foreground placeholder:text-muted transition-colors duration-150 focus:border-focus focus:outline-2 focus:outline-offset-1 focus:outline-focus" />
-              </div>
-              <div>
-                <div class="mb-2 flex items-center justify-between gap-3"><label for="password" class="text-sm font-medium">Password</label><a href="/forgot-password" class="rounded-sm text-sm font-semibold text-accent underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:text-foreground hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Forgot password?</a></div>
-                <div class="relative">
-                  <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter password" class="min-h-12 w-full rounded-lg border border-border bg-inset py-3 pr-12 pl-4 text-base text-foreground placeholder:text-muted transition-colors duration-150 focus:border-focus focus:outline-2 focus:outline-offset-1 focus:outline-focus" />
-                  <button id="toggle-password" type="button" class="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-lg text-secondary transition-colors duration-150 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" aria-label="Show password" aria-pressed="false">
-                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <p id="login-feedback" class="mt-5 hidden rounded-lg border border-border bg-raised px-4 py-3 text-sm leading-6 text-secondary" role="status" aria-live="polite"></p>
-            <button type="submit" class="mt-6 flex min-h-12 w-full items-center justify-center rounded-lg border border-border bg-raised px-4 text-sm font-semibold text-foreground transition-colors duration-150 hover:border-focus hover:bg-raised-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Sign in with email</button>
-          </form>
-
-          <p class="mt-8 border-t border-border pt-6 text-center text-sm text-secondary">No personal account yet? <a href="/register" class="font-semibold text-accent underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:text-foreground hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Create account</a></p>
-          <p class="mt-5 flex items-start gap-2 text-xs leading-5 text-muted"><svg class="mt-0.5 size-4 shrink-0 text-accent" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Use your personal email for a community account. UIT students should sign in with SSO.</span></p>
-        </section>
-    </main>
-
-    <footer class="border-t border-border bg-canvas">
-      <div class="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-        <div class="flex flex-col gap-2 py-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-          <nav class="flex flex-wrap items-center gap-x-6" aria-label="Community support">
-            <a href="/guidelines" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Forum rules</a>
-            <a href="/help" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Help / FAQ</a>
-            <a href="/contact" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Contact administrator</a>
-          </nav>
-          <nav class="flex flex-wrap items-center gap-x-6" aria-label="Legal">
-            <a href="/terms" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Terms of Service</a>
-            <a href="/privacy" class="inline-flex min-h-11 items-center rounded-sm text-sm text-secondary hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Privacy Policy</a>
-          </nav>
-        </div>
-        <p class="border-t border-border py-5 text-xs leading-6 text-secondary">Copyright © 2026 UIT Server Discord. Powered by React.</p>
-      </div>
-    </footer>
-
-    <script>
-      const signedIn = new URLSearchParams(window.location.search).get('state') === 'signed-in';
-      document.querySelector('#guest-actions').hidden = signedIn;
-      document.querySelector('#account-link').hidden = !signedIn;
-      document.querySelector('#brand-link').href = signedIn ? '/servers' : '/login';
-
-      const password = document.querySelector('#password');
-      const togglePassword = document.querySelector('#toggle-password');
-      const feedback = document.querySelector('#login-feedback');
-
-      togglePassword.addEventListener('click', () => {
-        const isVisible = password.type === 'text';
-        password.type = isVisible ? 'password' : 'text';
-        togglePassword.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
-        togglePassword.setAttribute('aria-pressed', String(!isVisible));
-      });
-
-      function showFeedback(message) {
-        feedback.textContent = message;
-        feedback.classList.remove('hidden');
-        feedback.classList.remove('text-error');
-        feedback.classList.add('text-secondary');
-        feedback.setAttribute('role', 'status');
-      }
-
-      function showError(message) {
-        showFeedback(message);
-        feedback.classList.remove('text-secondary');
-        feedback.classList.add('text-error');
-        feedback.setAttribute('role', 'alert');
-      }
-
-      document.querySelector('#personal-login').addEventListener('submit', (event) => {
-        event.preventDefault();
-        if (!event.currentTarget.reportValidity()) return;
-        if (document.querySelector('#email').value.trim().toLowerCase().endsWith('@uit.edu.vn')) {
-          showError('Use UIT SSO to sign in with an @uit.edu.vn email address.');
-          return;
-        }
-        showFeedback('Sign-in is unavailable in this preview.');
-      });
-
-      document.querySelector('#uit-login').addEventListener('click', () => {
-        showFeedback('UIT SSO is unavailable in this preview.');
-      });
-
-      const previewState = new URLSearchParams(window.location.search).get('state');
-      if (previewState === 'unverified') {
-        showError('Your email is not verified. Check your inbox to complete verification before signing in.');
-      } else if (previewState === 'banned') {
-        showError('This account is blocked and cannot sign in.');
-      } else if (previewState === 'invalid') {
-        showError('Email or password is incorrect. Try again.');
-      }
-    </script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | UIT Server</title>
+<script src="https://cdn.tailwindcss.com">
+</script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js">
+</script>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');:root { --canvas: #0F1218; --surface: #151A24; --surface-raised: #202737; --text-primary: #F4F6FA; --text-secondary: #B5BFCE; --text-muted: #7F8A9C; --border: #2B3445; --primary: #5B55B8; --primary-hover: #6B64C8; --on-primary: #FFFFFF; --accent-coral: #D47B72; --focus-ring: #9B96E8; --error: #E17B87; --info: #82A9D6; } body { font-family: 'Inter', sans-serif; background-color: var(--canvas); color: var(--text-primary); margin: 0; padding: 0; line-height: 1.5; } .focus-visible:focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; } input::placeholder { color: var(--text-muted); } </style>
+</head>
+<body>
+<div class="grid min-h-screen w-full grid-cols-1 bg-[#151A24] lg:grid-cols-2" data-sd-id="1">
+<section class="hidden min-h-screen items-center justify-center border-r border-[#2B3445] bg-[#0F1218] p-8 lg:flex lg:p-12 xl:p-16" data-sd-id="3">
+<div class="relative w-full lg:w-4/5 xl:w-3/4" data-sd-id="4">
+<svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto" data-sd-id="5">
+<circle cx="200" cy="200" r="150" stroke="#2B3445" stroke-width="2" stroke-dasharray="8 8">
+</circle>
+<rect x="160" y="120" width="80" height="160" rx="8" fill="#151A24" stroke="#5B55B8" stroke-width="2">
+</rect>
+<path d="M160 160H240M160 200H240M160 240H240" stroke="#2B3445" stroke-width="2">
+</path>
+<rect x="100" y="220" width="40" height="60" rx="4" fill="#202737" stroke="#7F8A9C" stroke-width="2">
+</rect>
+<rect x="260" y="220" width="40" height="60" rx="4" fill="#202737" stroke="#7F8A9C" stroke-width="2">
+</rect>
+<circle cx="140" cy="140" r="20" fill="#202737" stroke="#B5BFCE" stroke-width="2">
+</circle>
+<circle cx="260" cy="140" r="20" fill="#202737" stroke="#B5BFCE" stroke-width="2">
+</circle>
+<path d="M140 160L160 180" stroke="#5B55B8" stroke-width="2" stroke-linecap="round">
+</path>
+<path d="M260 160L240 180" stroke="#5B55B8" stroke-width="2" stroke-linecap="round">
+</path>
+<path d="M120 220L160 200" stroke="#B5BFCE" stroke-width="1.5" opacity="0.5">
+</path>
+<path d="M280 220L240 200" stroke="#B5BFCE" stroke-width="1.5" opacity="0.5">
+</path>
+</svg>
+<div class="mt-12 text-center" data-sd-id="6">
+<h2 class="text-[#F4F6FA] text-2xl font-semibold mb-4" data-sd-id="7">Collaborative Environment</h2>
+<p class="mx-auto w-4/5 text-[#B5BFCE]" data-sd-id="8">Connect with your peers in private servers, share knowledge in the public forum, and access the document library.</p>
+</div>
+</div>
+</section>
+<main class="flex min-h-screen items-center justify-center bg-[#151A24] px-6 py-12 sm:px-10 lg:px-16 xl:px-24" data-sd-id="9">
+<div class="w-full lg:w-4/5 xl:w-3/5" data-sd-id="10">
+<header class="mb-8" data-sd-id="11">
+<h1 class="text-[#F4F6FA] text-[32px] md:text-[40px] font-bold tracking-tight leading-tight mb-2" data-sd-id="12">Welcome back</h1>
+<p class="text-[#B5BFCE]" data-sd-id="13">Log in to your UIT Server account</p>
+</header>
+<div class="space-y-6" data-sd-id="14">
+<a href="#" id="sso-login-link" class="flex items-center justify-center w-full h-[48px] px-4 bg-[#5B55B8] hover:bg-[#6B64C8] text-[#FFFFFF] font-medium rounded-[8px] transition-colors focus:outline-none focus:ring-2 focus:ring-[#9B96E8] focus:ring-offset-2 focus:ring-offset-[#151A24]" data-sd-id="15">
+<iconify-icon icon="lucide:graduation-cap" class="mr-2 text-xl">
+</iconify-icon>Continue with UIT SSO</a>
+<div class="relative flex items-center py-2" data-sd-id="16">
+<div class="flex-grow border-t border-[#2B3445]" data-sd-id="17">
+</div>
+<span class="flex-shrink mx-4 text-[#7F8A9C] text-sm font-medium" data-sd-id="18">OR</span>
+<div class="flex-grow border-t border-[#2B3445]" data-sd-id="19">
+</div>
+</div>
+<form action="#" method="POST" class="space-y-4" data-sd-id="20">
+<div class="space-y-2" data-sd-id="21">
+<label for="email" class="block text-sm font-medium text-[#B5BFCE]" data-sd-id="22">Email address</label>
+<input type="email" id="email" name="email" autocomplete="email" placeholder="name@example.com" required="" class="w-full h-[48px] px-4 bg-[#202737] border border-[#2B3445] rounded-[8px] text-[#F4F6FA] placeholder-[#7F8A9C] focus:outline-none focus:ring-2 focus:ring-[#9B96E8] transition-all" data-sd-id="23">
+</div>
+<div class="space-y-2" data-sd-id="24">
+<label for="password" class="block text-sm font-medium text-[#B5BFCE]" data-sd-id="25">Password</label>
+<div class="relative" data-sd-id="26">
+<input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••" required="" class="w-full h-[48px] pl-4 pr-12 bg-[#202737] border border-[#2B3445] rounded-[8px] text-[#F4F6FA] placeholder-[#7F8A9C] focus:outline-none focus:ring-2 focus:ring-[#9B96E8] transition-all" data-sd-id="27">
+<button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#7F8A9C] hover:text-[#B5BFCE] transition-colors" aria-label="Toggle password visibility" data-sd-id="28">
+<iconify-icon icon="lucide:eye" class="text-xl">
+</iconify-icon>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2" data-sd-id="29">
+<a href="#" id="forgot-password-link" class="text-sm font-medium text-[#5B55B8] hover:text-[#6B64C8] transition-colors" data-sd-id="30">Forgot password?</a>
+</div>
+<button type="submit" class="w-full h-[48px] bg-[#202737] border border-[#2B3445] text-[#F4F6FA] font-semibold rounded-[8px] hover:bg-[#2B3445] transition-all focus:outline-none focus:ring-2 focus:ring-[#9B96E8]" data-sd-id="31">Sign in with email</button>
+</form>
+<div class="text-center pt-6 border-t border-[#2B3445]" data-sd-id="32">
+<p class="text-sm text-[#7F8A9C]" data-sd-id="33">Don't have a personal account? <a href="#" id="create-account-link" class="text-[#5B55B8] font-medium hover:underline" data-sd-id="34">Create an account</a>
+</p>
+</div>
+</div>
+<div id="validation-announcer" aria-live="polite" class="sr-only" data-sd-id="35">
+</div>
+</div>
+</main>
+</div>
+</body>
 </html>
