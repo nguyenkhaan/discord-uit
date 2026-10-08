@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Sign in · UIT Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+    let preferredTheme;
+    try { preferredTheme = localStorage.getItem('uit-connect-theme'); } catch {}
+    document.documentElement.dataset.theme = preferredTheme === 'light' || preferredTheme === 'dark'
+      ? preferredTheme : systemTheme.matches ? 'dark' : 'light';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+  <style type="text/tailwindcss">
+    @theme inline {
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --color-canvas: var(--canvas);
+      --color-surface: var(--surface);
+      --color-ink: var(--ink);
+      --color-support: var(--support);
+      --color-line: var(--line);
+      --color-primary: #5865F2;
+      --color-primary-hover: #4752C4;
+      --color-secondary: #3BA55D;
+      --color-danger: #F23F42;
+      --radius-control: 8px;
+      --radius-card: 12px;
+    }
+  </style>
+  <style>
+    /* theme.md: auth shell, exact palette, Inter, 4px spacing, and 150ms interactions. */
+    :root {
+      color-scheme: light;
+      --canvas: #F2F3F5; --surface: #FFFFFF; --ink: #060607;
+      --support: #3F4147; --line: #DCDDDE; --input-line: #80848E;
+      --wash: #E8EAFE; --link: #4752C4; --hover: #F2F3F5;
+      --primary: #5865F2; --danger: #F23F42; --focus-inner: #FFFFFF;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --canvas: #1E1F22; --surface: #2B2D31; --ink: #F2F3F5;
+      --support: #B5BAC1; --line: #3F4147; --input-line: #80848E;
+      --wash: #313338; --link: #E8EAFE; --hover: #313338;
+    }
+    body { margin: 0; background: linear-gradient(145deg, var(--wash), var(--canvas) 65%); }
+    ::selection { background: var(--primary); color: #FFFFFF; }
+    :root { scrollbar-color: var(--input-line) var(--canvas); }
+    input { caret-color: var(--primary); border-color: var(--input-line); }
+    input::placeholder { color: var(--support); opacity: 1; }
+    button, a, input { transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    :where(button, a, input):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
+    input[aria-invalid="true"] { border-color: var(--danger); }
+    .text-link { color: var(--link); text-underline-offset: 4px; }
+    .text-link:hover { text-decoration: underline; }
+    .neutral:hover, .neutral:active { background: var(--hover); }
+    button:disabled { cursor: wait; opacity: .7; }
+    .field-error { margin-top: 8px; font-size: 14px; line-height: 20px; }
+    .field-error::before { content: '!'; display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 8px; border: 1px solid var(--danger); border-radius: 50%; font-weight: 700; }
+    [hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body class="min-h-dvh font-sans text-ink antialiased flex flex-col">
+  <!-- A01 guest shell: product name only; no unprovided institutional logo. -->
+  <header class="h-16 shrink-0 flex items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
+    <span class="text-lg font-bold tracking-tight">UIT <span class="font-medium">Connect</span></span>
+    <button id="theme-toggle" class="neutral inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-semibold" type="button">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3.5a8.5 8.5 0 1 0 9.7 9.7Z"/></svg>
+      <span id="theme-label">Dark mode</span>
+    </button>
+  </header>
+  <main class="flex flex-1 items-center justify-center px-4 py-8 md:px-6 md:py-12">
+    <section aria-labelledby="login-title" class="w-full max-w-[480px] rounded-card border border-line bg-surface p-4 sm:p-6">
+      <div class="mb-6">
+        <h1 id="login-title" class="text-[40px] text-center leading-10 font-bold tracking-tight">Sign in</h1>
+<!--      
+  <div class="w-full mx-auto my-4 border-t-2 border-dashed border-gray-300 px-4"></div>
+    -->
+        <!-- <p class="mt-2 text-base leading-6 text-support">Return to your userspace.</p> -->
+      </div>
+
+      <!-- A01 → A06. Callback is the outline's SSO prototype destination, not an OAuth initiation endpoint. -->
+      <a id="uit-sso" href="/auth/uit/callback" class="neutral flex min-h-12 items-center justify-center gap-3 rounded-control border border-line px-4 text-sm font-semibold">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 11.2V17c3 2.7 7 2.7 10 0v-5.8M21 9v7"/></svg>
+        Continue with UIT
+      </a>
+      <p class="mt-2 text-center text-sm leading-5 text-support">For @uit.edu.vn email address</p>
+      <div class="my-6 flex items-center gap-4" aria-hidden="true"><span class="h-px flex-1 bg-line"></span><span class="text-sm uppercase text-support">or</span><span class="h-px flex-1 bg-line"></span></div>
+
+      <!-- A01 data: user_account.email + transient password. No credential storage or network submission.
+           account_type/status and session fields are server-owned, never editable fields.
+           Production routing: ACTIVE → /servers (or validated invite); UNVERIFIED → /verify-email. -->
+      <form id="login-form" novalidate>
+        <div>
+          <label for="email" class="mb-2 block text-sm font-semibold leading-5">Personal email</label>
+          <input id="email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required aria-describedby="email-error uit-hint" class="min-h-12 w-full rounded-control border bg-surface px-3 py-3 text-base leading-6" placeholder="you@example.com">
+          <p id="email-error" class="field-error" hidden></p>
+          <p id="uit-hint" class="mt-2 text-sm leading-5 text-support" role="status" hidden>UIT email uses single sign-on. Select “Continue with UIT”; you do not need to enter a password here.</p>
+        </div>
+        <div id="password-field" class="mt-4">
+          <label for="password" class="mb-2 block text-sm font-semibold leading-5">Password</label>
+          <div class="relative">
+            <input id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="password-error" class="min-h-12 w-full rounded-control border bg-surface py-3 pl-3 pr-16 text-base leading-6">
+            <button id="password-toggle" type="button" aria-label="Show password" aria-controls="password" aria-pressed="false" class="neutral absolute right-0 top-0 bottom-0 min-w-11 rounded-control px-2 text-sm font-semibold">Show</button>
+          </div>
+          <p id="password-error" class="field-error" hidden></p>
+        </div>
+        <div id="password-recovery" class="mt-2 flex justify-end"><a href="/forgot-password" class="text-link inline-flex min-h-11 items-center text-sm font-semibold">Forgot password?</a></div>
+        <button id="submit-button" type="submit" class="mt-4 flex min-h-12 w-full items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover active:bg-primary">Sign in</button>
+        <p id="form-status" role="status" aria-live="polite" aria-atomic="true" class="mt-4 rounded-control border border-line p-3 text-sm leading-5" hidden></p>
+      </form>
+      <p class="mt-6 flex flex-wrap items-center justify-center gap-x-2 text-sm leading-5 text-support">Don’t have an account? <a href="/register" class="text-link inline-flex min-h-11 items-center font-semibold">Sign up</a></p>
+    </section>
+  </main>
+  <script>
+    const themeToggle = document.querySelector('#theme-toggle');
+    function syncThemeControl() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.querySelector('#theme-label').textContent = dark ? 'Light mode' : 'Dark mode';
+    }
+    themeToggle.addEventListener('click', () => {
+      preferredTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = preferredTheme;
+      try { localStorage.setItem('uit-connect-theme', preferredTheme); } catch {}
+      syncThemeControl();
+    });
+    systemTheme.addEventListener('change', () => {
+      if (preferredTheme === 'light' || preferredTheme === 'dark') return;
+      document.documentElement.dataset.theme = systemTheme.matches ? 'dark' : 'light';
+      syncThemeControl();
+    });
+    syncThemeControl();
+
+    const form = document.querySelector('#login-form');
+    const email = document.querySelector('#email');
+    const password = document.querySelector('#password');
+    const passwordToggle = document.querySelector('#password-toggle');
+    const submitButton = document.querySelector('#submit-button');
+    const formStatus = document.querySelector('#form-status');
+    function isUitEmail() { return /^[^@\s]+@uit\.edu\.vn$/i.test(email.value.trim()); }
+    function showFieldError(input) {
+      const message = input.validity.valueMissing
+        ? (input === email ? 'Enter your personal email.' : 'Enter your password.')
+        : input.validity.typeMismatch ? 'Enter a valid email, for example you@example.com.' : '';
+      const error = document.querySelector('#' + input.id + '-error');
+      error.textContent = message;
+      error.hidden = !message;
+      input.setAttribute('aria-invalid', String(Boolean(message)));
+      return !message;
+    }
+    function syncEmailPath() {
+      const uit = isUitEmail();
+      document.querySelector('#password-field').hidden = uit;
+      document.querySelector('#password-recovery').hidden = uit;
+      document.querySelector('#uit-hint').hidden = !uit;
+      password.disabled = uit;
+      password.required = !uit;
+      submitButton.textContent = uit ? 'Continue with UIT' : 'Sign in';
+      if (uit) {
+        password.value = '';
+        password.removeAttribute('aria-invalid');
+        document.querySelector('#password-error').hidden = true;
+        password.type = 'password';
+        passwordToggle.textContent = 'Show';
+        passwordToggle.setAttribute('aria-label', 'Show password');
+        passwordToggle.setAttribute('aria-pressed', 'false');
+      }
+    }
+    passwordToggle.addEventListener('click', () => {
+      const visible = password.type === 'password';
+      password.type = visible ? 'text' : 'password';
+      passwordToggle.textContent = visible ? 'Hide' : 'Show';
+      passwordToggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+      passwordToggle.setAttribute('aria-pressed', String(visible));
+    });
+    for (const input of [email, password]) {
+      input.addEventListener('blur', () => { if (!input.disabled) showFieldError(input); });
+      input.addEventListener('input', () => {
+        formStatus.hidden = true;
+        formStatus.style.removeProperty('border-color');
+        if (input === email) syncEmailPath();
+        if (input.getAttribute('aria-invalid') === 'true') showFieldError(input);
+      });
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (submitButton.disabled) return;
+      email.value = email.value.trim();
+      syncEmailPath();
+      const emailValid = showFieldError(email);
+      const passwordValid = isUitEmail() || showFieldError(password);
+      if (!emailValid || !passwordValid) { (emailValid ? password : email).focus(); return; }
+      if (isUitEmail()) { window.location.assign(document.querySelector('#uit-sso').href); return; }
+      submitButton.disabled = true;
+      form.setAttribute('aria-busy', 'true');
+      submitButton.textContent = 'Signing in…';
+      formStatus.hidden = false;
+      formStatus.style.removeProperty('border-color');
+      formStatus.textContent = 'Processing…';
+      // Prototype-only delay: never authenticate against invented accounts or submit credentials.
+      await new Promise(resolve => setTimeout(resolve, 600));
+      form.removeAttribute('aria-busy');
+      submitButton.disabled = false;
+      syncEmailPath();
+      formStatus.textContent = 'The prototype is not connected to sign-in. Your information was not sent.';
+    });
+    // Review A01 server states with ?state=invalid or ?state=banned; never infer status from an email.
+    const previewState = new URLSearchParams(location.search).get('state');
+    const previewMessages = {
+      invalid: 'The email or password is incorrect. Please try again.',
+      banned: 'This account has been locked.'
+    };
+    if (Object.hasOwn(previewMessages, previewState)) {
+      formStatus.textContent = previewMessages[previewState];
+      formStatus.hidden = false;
+      formStatus.style.borderColor = 'var(--danger)';
+    }
+    syncEmailPath();
+  </script>
+</body>
+</html>
