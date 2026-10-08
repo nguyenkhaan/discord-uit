@@ -28,6 +28,58 @@
         }
       },
       "updatedAt": "2026-10-08T02:20:40Z"
+    },
+    "component:navbar": {
+      "targetKind": "new-ui",
+      "projectId": "e68eee7e-08d8-4775-b2bb-2ef0091baa6f",
+      "activeDraftId": "843d83de-7bf2-4518-8489-65c90aadd5ae",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "docs/wireframes/screen_list.md",
+        "docs/wireframes/dark/components/Navbar.html"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "95d33a8575f9cca9fea83e9ae0709897e96823362973ccf2eb1d2feb871ce5d5",
+        "docs/wireframes/screen_list.md": "e74d270c246c99e23df75d04d5cecd597b362a4202f381ed3f9abbd5acbd692a",
+        "docs/wireframes/dark/components/Navbar.html": "89dd3e6db045bf35a4514f55680504ae3df5010ac82578761dd5496069461271"
+      },
+      "components": [],
+      "drafts": {
+        "843d83de-7bf2-4518-8489-65c90aadd5ae": {
+          "title": "Shared Navbar — Dark",
+          "visualDirection": "dark right-aligned brand with guest and authenticated left-side states",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-10-08T03:10:02Z"
+    },
+    "component:footer": {
+      "targetKind": "new-ui",
+      "projectId": "e68eee7e-08d8-4775-b2bb-2ef0091baa6f",
+      "activeDraftId": "297e68ba-666e-4ecf-8df8-dc06324c5576",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "docs/wireframes/screen_list.md",
+        "docs/wireframes/dark/components/Footer.html"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "95d33a8575f9cca9fea83e9ae0709897e96823362973ccf2eb1d2feb871ce5d5",
+        "docs/wireframes/screen_list.md": "e74d270c246c99e23df75d04d5cecd597b362a4202f381ed3f9abbd5acbd692a",
+        "docs/wireframes/dark/components/Footer.html": "8dd7cd1bd3deb0cf7e6271374f8c76f2445e0382de00a224eedd87a6f8939ea3"
+      },
+      "components": [],
+      "drafts": {
+        "297e68ba-666e-4ecf-8df8-dc06324c5576": {
+          "title": "Shared Footer — Dark",
+          "visualDirection": "dark structured footer with brand, grouped navigation, status, and locale controls",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-10-08T03:10:02Z"
     }
   }
 }
