@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Create an account · UIT Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+    let preferredTheme;
+    try { preferredTheme = localStorage.getItem('uit-connect-theme'); } catch {}
+    document.documentElement.dataset.theme = preferredTheme === 'light' || preferredTheme === 'dark'
+      ? preferredTheme : systemTheme.matches ? 'dark' : 'light';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+  <style type="text/tailwindcss">
+    @theme inline {
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --color-canvas: var(--canvas);
+      --color-surface: var(--surface);
+      --color-ink: var(--ink);
+      --color-support: var(--support);
+      --color-line: var(--line);
+      --color-primary: #5865F2;
+      --color-primary-hover: #4752C4;
+      --radius-control: 8px;
+      --radius-card: 12px;
+    }
+  </style>
+  <style>
+    /* theme.md: the guest shell uses the shared Inter type, palette, radii, and focus treatment. */
+    :root {
+      color-scheme: light;
+      --canvas: #F2F3F5; --surface: #FFFFFF; --ink: #060607;
+      --support: #3F4147; --line: #DCDDDE; --input-line: #80848E;
+      --wash: #E8EAFE; --link: #4752C4; --hover: #F2F3F5;
+      --primary: #5865F2; --danger: #F23F42; --focus-inner: #FFFFFF;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --canvas: #1E1F22; --surface: #2B2D31; --ink: #F2F3F5;
+      --support: #B5BAC1; --line: #3F4147; --input-line: #80848E;
+      --wash: #313338; --link: #E8EAFE; --hover: #313338;
+    }
+    body { margin: 0; background: linear-gradient(145deg, var(--wash), var(--canvas) 65%); }
+    ::selection { background: var(--primary); color: #FFFFFF; }
+    :root { scrollbar-color: var(--input-line) var(--canvas); }
+    input { caret-color: var(--primary); border-color: var(--input-line); }
+    input::placeholder { color: var(--support); opacity: 1; }
+    button, a, input { transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out; }
+    button { cursor: pointer; }
+    :where(button, a, input):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
+    input[aria-invalid="true"] { border-color: var(--danger); }
+    .text-link { color: var(--link); text-underline-offset: 4px; }
+    .text-link:hover { text-decoration: underline; }
+    .neutral:hover, .neutral:active { background: var(--hover); }
+    button:disabled { cursor: wait; opacity: .7; }
+    .field-error { margin-top: 8px; font-size: 14px; line-height: 20px; }
+    .field-error::before { content: '!'; display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 8px; border: 1px solid var(--danger); border-radius: 50%; font-weight: 700; }
+    [hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body class="min-h-dvh font-sans text-ink antialiased flex flex-col">
+  <!-- A02 guest shell: product name only; no unprovided institutional logo. -->
+  <header class="h-16 shrink-0 flex items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
+    <span class="text-lg font-bold tracking-tight">UIT <span class="font-medium">Connect</span></span>
+    <button id="theme-toggle" class="neutral inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-semibold" type="button">
+      <svg id="moon-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3.5a8.5 8.5 0 1 0 9.7 9.7Z"/></svg>
+      <svg id="sun-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" hidden><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+      <span id="theme-label">Dark mode</span>
+    </button>
+  </header>
+  <main class="flex flex-1 items-center justify-center px-4 py-8 md:px-6 md:py-12">
+    <section aria-labelledby="register-title" class="w-full max-w-[480px] rounded-card border border-line bg-surface p-4 sm:p-6">
+      <h1 id="register-title" class="text-[32px] leading-10 font-bold tracking-tight">Create an account</h1>
+      <p class="mt-2 mb-6 text-base leading-6 text-support">Use your personal email. You'll verify it before joining UIT Connect.</p>
+
+      <!-- A02: full_name, personal email, and a transient password are the only registration inputs.
+           The backend owns account_type=PERSONAL, account_status=UNVERIFIED, password_hash, and email verification. -->
+      <form id="register-form" novalidate>
+        <div>
+          <label for="full-name" class="mb-2 block text-sm font-semibold leading-5">Full name</label>
+          <input id="full-name" name="full_name" type="text" autocomplete="name" required aria-describedby="full-name-error" class="min-h-12 w-full rounded-control border bg-surface px-3 py-3 text-base leading-6" placeholder="Your full name">
+          <p id="full-name-error" class="field-error" hidden></p>
+        </div>
+        <div class="mt-4">
+          <label for="email" class="mb-2 block text-sm font-semibold leading-5">Personal email</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required aria-describedby="email-hint email-error" class="min-h-12 w-full rounded-control border bg-surface px-3 py-3 text-base leading-6" placeholder="you@example.com">
+          <p id="email-hint" class="mt-2 text-sm leading-5 text-support">Have a @uit.edu.vn email? <a href="/login" class="text-link font-semibold">Sign in with UIT</a> instead.</p>
+          <p id="email-error" class="field-error" hidden></p>
+        </div>
+        <div class="mt-4">
+          <label for="password" class="mb-2 block text-sm font-semibold leading-5">Password</label>
+          <div class="relative">
+            <input id="password" name="password" type="password" autocomplete="new-password" required aria-describedby="password-error" class="min-h-12 w-full rounded-control border bg-surface py-3 pl-3 pr-16 text-base leading-6">
+            <button id="password-toggle" type="button" aria-label="Show password" aria-controls="password" aria-pressed="false" class="neutral absolute right-0 top-0 bottom-0 min-w-11 rounded-control px-2 text-sm font-semibold">Show</button>
+          </div>
+          <p id="password-error" class="field-error" hidden></p>
+        </div>
+        <button id="submit-button" type="submit" class="mt-6 flex min-h-12 w-full items-center justify-center rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover active:bg-primary-hover">Create account</button>
+      </form>
+      <p id="form-status" role="status" aria-live="polite" aria-atomic="true" class="mt-4 rounded-control border border-line p-3 text-sm leading-5" hidden></p>
+      <p class="mt-6 flex flex-wrap items-center justify-center gap-x-2 text-sm leading-5 text-support">Already have an account? <a href="/login" class="text-link inline-flex min-h-11 items-center font-semibold">Sign in</a></p>
+    </section>
+  </main>
+  <script>
+    const themeToggle = document.querySelector('#theme-toggle');
+    function syncThemeControl() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.querySelector('#theme-label').textContent = dark ? 'Light mode' : 'Dark mode';
+      document.querySelector('#moon-icon').hidden = dark;
+      document.querySelector('#sun-icon').hidden = !dark;
+    }
+    themeToggle.addEventListener('click', () => {
+      preferredTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = preferredTheme;
+      try { localStorage.setItem('uit-connect-theme', preferredTheme); } catch {}
+      syncThemeControl();
+    });
+    systemTheme.addEventListener('change', () => {
+      if (preferredTheme === 'light' || preferredTheme === 'dark') return;
+      document.documentElement.dataset.theme = systemTheme.matches ? 'dark' : 'light';
+      syncThemeControl();
+    });
+    syncThemeControl();
+
+    const form = document.querySelector('#register-form');
+    const fullName = document.querySelector('#full-name');
+    const email = document.querySelector('#email');
+    const password = document.querySelector('#password');
+    const passwordToggle = document.querySelector('#password-toggle');
+    const submitButton = document.querySelector('#submit-button');
+    const formStatus = document.querySelector('#form-status');
+    const inputs = [fullName, email, password];
+    function showFieldError(input) {
+      const message = !input.value.trim()
+        ? (input === fullName ? 'Enter your full name.' : input === email ? 'Enter your personal email.' : 'Enter a password.')
+        : input === email && input.validity.typeMismatch ? 'Enter a valid email, for example you@example.com.'
+        : input === email && /^[^@\s]+@uit\.edu\.vn$/i.test(input.value.trim()) ? 'UIT email addresses use single sign-on. Select “Sign in with UIT” above.'
+        : '';
+      const error = document.querySelector('#' + input.id + '-error');
+      error.textContent = message;
+      error.hidden = !message;
+      input.setAttribute('aria-invalid', String(Boolean(message)));
+      return !message;
+    }
+    passwordToggle.addEventListener('click', () => {
+      const visible = password.type === 'password';
+      password.type = visible ? 'text' : 'password';
+      passwordToggle.textContent = visible ? 'Hide' : 'Show';
+      passwordToggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+      passwordToggle.setAttribute('aria-pressed', String(visible));
+    });
+    for (const input of inputs) {
+      input.addEventListener('blur', () => showFieldError(input));
+      input.addEventListener('input', () => {
+        formStatus.hidden = true;
+        if (input.getAttribute('aria-invalid') === 'true') showFieldError(input);
+      });
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (submitButton.disabled) return;
+      fullName.value = fullName.value.trim();
+      email.value = email.value.trim();
+      const firstInvalid = inputs.filter(input => !showFieldError(input))[0];
+      if (firstInvalid) { firstInvalid.focus(); return; }
+      submitButton.disabled = true;
+      form.setAttribute('aria-busy', 'true');
+      submitButton.textContent = 'Creating account…';
+      formStatus.hidden = false;
+      formStatus.textContent = 'Processing…';
+      // The prototype never sends credentials or invents a successful registration.
+      await new Promise(resolve => setTimeout(resolve, 600));
+      form.removeAttribute('aria-busy');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Create account';
+      formStatus.textContent = 'This prototype is not connected to registration. Your information was not sent.';
+    });
+  </script>
+</body>
+</html>
