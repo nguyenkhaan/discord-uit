@@ -18,7 +18,32 @@ services:
       - "9001:9001"
     volumes:
       - minio-data:/data
+  kafka: 
+    image: apache/kafka:4.3.1
+    ports:
+      - 9092:9092
+  kafka-init:
+    image: apache/kafka:4.3.1
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        until /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list; do
+          sleep 2
+        done
+        /opt/kafka/bin/kafka-topics.sh \
+          --create \
+          --if-not-exists \
+          --topic notification.events.v1 \
+          --partitions 3 \
+          --replication-factor 1 \
+          --bootstrap-server kafka:9092
 
+        /opt/kafka/bin/kafka-topics.sh \
+          --describe \
+          --topic notification.events.v1 \
+          --bootstrap-server kafka:9092
   rabbitmq:
     image: rabbitmq:3-management
     environment:

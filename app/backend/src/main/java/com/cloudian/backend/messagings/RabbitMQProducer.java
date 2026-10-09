@@ -1,3 +1,4 @@
+//Deprecated 
 package com.cloudian.backend.messagings;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
