@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Nhóm đồ án NT208 | UIT Connect</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <a class="skip-link" href="#conversation">Bỏ qua đến cuộc trò chuyện</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Điều hướng UIT Connect">
+      <a class="brand" href="#" aria-label="UIT Connect - Trang chủ">
+        <img src="../images/uit-connect-mark.webp" alt="" width="42" height="42">
+        <span>UIT Connect</span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Điều hướng chính">
+        <a href="#"><i class="bi bi-house-door" aria-hidden="true"></i><span>Trang chủ</span></a>
+        <a class="is-current" href="#" aria-current="page"><i class="bi bi-kanban" aria-hidden="true"></i><span>Server</span></a>
+        <a href="#"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>Tài liệu</span></a>
+        <a href="#"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Diễn đàn</span></a>
+        <a href="#"><i class="bi bi-bell" aria-hidden="true"></i><span>Thông báo</span></a>
+      </nav>
+
+      <section class="server-nav" aria-labelledby="server-list-title">
+        <header>
+          <h2 id="server-list-title">Server của bạn</h2>
+          <button type="button" aria-label="Thêm server"><i class="bi bi-plus-lg" aria-hidden="true"></i></button>
+        </header>
+        <nav aria-label="Server của bạn">
+          <a class="is-active" href="#"><span class="server-mark server-mark--uit">UIT</span><span>Nhóm đồ án NT208</span></a>
+          <a href="#"><span class="server-mark server-mark--code"><i class="bi bi-code-slash" aria-hidden="true"></i></span><span>CLB Lập trình</span></a>
+          <a href="#"><span class="server-mark server-mark--database"><i class="bi bi-database-fill" aria-hidden="true"></i></span><span>Ôn thi CSDL</span></a>
+          <a href="#"><span class="server-mark server-mark--game"><i class="bi bi-controller" aria-hidden="true"></i></span><span>UIT Game Dev</span></a>
+          <a href="#"><span class="server-mark server-mark--intern"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i></span><span>Kinh nghiệm thực tập</span></a>
+        </nav>
+      </section>
+
+      <button class="profile" type="button" aria-label="Mở cài đặt tài khoản Hoàng An">
+        <img src="../images/user-hoang-an.webp" alt="" width="48" height="48">
+        <span><strong>Hoàng An</strong><small>Sinh viên UIT</small></span>
+        <i class="bi bi-gear" aria-hidden="true"></i>
+      </button>
+    </aside>
+
+    <main class="chat" id="conversation" tabindex="-1">
+      <header class="chat-header">
+        <div class="channel-identity">
+          <span class="channel-mark" aria-hidden="true">UIT</span>
+          <div>
+            <h1>Nhóm đồ án NT208 <i class="bi bi-chevron-down" aria-hidden="true"></i></h1>
+            <small><span class="presence-dot" aria-hidden="true"></span>28 thành viên <span aria-hidden="true">·</span> Đang hoạt động</small>
+          </div>
+        </div>
+        <div class="chat-actions" aria-label="Hành động cuộc trò chuyện">
+          <button type="button" aria-label="Tìm trong cuộc trò chuyện"><i class="bi bi-search" aria-hidden="true"></i></button>
+          <button class="member-toggle" type="button" aria-label="Xem 28 thành viên"><i class="bi bi-people" aria-hidden="true"></i></button>
+          <span class="action-divider" aria-hidden="true"></span>
+          <button class="screen-action" type="button" aria-label="Chia sẻ màn hình"><i class="bi bi-display" aria-hidden="true"></i></button>
+          <button class="call-action" type="button"><i class="bi bi-camera-video" aria-hidden="true"></i><span>Bắt đầu cuộc gọi</span></button>
+          <button type="button" aria-label="Tùy chọn khác"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+        </div>
+      </header>
+
+      <button class="pinned-post" type="button">
+        <i class="bi bi-pin-angle" aria-hidden="true"></i>
+        <span><strong>Bài viết quan trọng</strong><small>Deadline nộp báo cáo: 23/10. Mọi người nhớ đọc kỹ yêu cầu trong file đính kèm nhé!</small></span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+
+      <section class="message-feed" aria-label="Tin nhắn trong Nhóm đồ án NT208">
+        <div class="date-divider"><span>Hôm nay, 8 tháng 10, 2026</span></div>
+
+        <article class="message">
+          <img class="avatar" src="../images/user-hoang-an.webp" alt="" width="48" height="48">
+          <div class="message-content">
+            <header><strong>Hoàng An</strong><time datetime="2026-10-08T09:12">09:12</time></header>
+            <p>Chào mọi người 👋<br>Tuần này mình họp để thống nhất phần giao diện nhé!</p>
+          </div>
+        </article>
+
+        <article class="message">
+          <img class="avatar" src="../images/user-tran-phuong.webp" alt="" width="48" height="48">
+          <div class="message-content">
+            <header><strong>Trần Phương</strong><time datetime="2026-10-08T09:15">09:15</time></header>
+            <p>Mình đã chuẩn bị một vài mockup, mọi người xem thử.</p>
+            <div class="attachment">
+              <span class="file-icon file-icon--figma" aria-hidden="true"><i class="bi bi-palette-fill"></i></span>
+              <span><strong>UI_Mockup_NT208.fig</strong><small>12.4 MB</small></span>
+              <button type="button" aria-label="Tải UI Mockup NT208"><i class="bi bi-download" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="message">
+          <img class="avatar" src="../images/user-nguyen-minh.webp" alt="" width="48" height="48">
+          <div class="message-content">
+            <header><strong>Nguyễn Minh</strong><time datetime="2026-10-08T09:20">09:20</time></header>
+            <p>Mình thấy phần này khá ổn, chỉ cần chỉnh lại màu sắc cho phù hợp với UIT.<br>Đây là file mình đề xuất:</p>
+            <div class="attachment attachment--preview">
+              <img src="../images/chat-dashboard-preview.webp" alt="Bản xem trước giao diện dashboard" width="143" height="60">
+              <span><strong>dashboard-preview.png</strong><small>1.8 MB</small></span>
+              <button type="button" aria-label="Tải dashboard preview"><i class="bi bi-download" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="message">
+          <img class="avatar" src="../images/user-le-duc.webp" alt="" width="48" height="48">
+          <div class="message-content">
+            <header><strong>Lê Đức</strong><time datetime="2026-10-08T09:25">09:25</time></header>
+            <p>Oke, vậy chiều nay mình sinh hoạt nhóm để chốt nha.</p>
+            <div class="reactions" aria-label="Cảm xúc cho tin nhắn">
+              <button type="button" aria-label="4 lượt thích">👍 <span>4</span></button>
+              <button type="button" aria-label="2 lượt thả tim">❤️ <span>2</span></button>
+              <button type="button" aria-label="Thêm cảm xúc"><i class="bi bi-emoji-smile" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="message">
+          <img class="avatar" src="../images/user-tran-phuong.webp" alt="" width="48" height="48">
+          <div class="message-content">
+            <header><strong>Trần Phương</strong><time datetime="2026-10-08T09:30">09:30</time></header>
+            <p><a class="mention" href="#">@all</a> Nhớ xem lại yêu cầu trong tài liệu nhé!</p>
+            <div class="attachment">
+              <span class="file-icon file-icon--pdf" aria-hidden="true"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+              <span><strong>Yeu_cau_do_an_NT208.pdf</strong><small>2.4 MB</small></span>
+              <button type="button" aria-label="Tải yêu cầu đồ án NT208"><i class="bi bi-download" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <form class="composer">
+        <button class="add-button" type="button" aria-label="Thêm nội dung"><i class="bi bi-plus-lg" aria-hidden="true"></i></button>
+        <label class="visually-hidden" for="message-input">Nhắn tin trong nhóm chung</label>
+        <input id="message-input" type="text" placeholder="Nhắn tin trong #chung..." autocomplete="off">
+        <button type="button" aria-label="Chọn biểu tượng cảm xúc"><i class="bi bi-emoji-smile" aria-hidden="true"></i></button>
+        <button type="button" aria-label="Đính kèm tệp"><i class="bi bi-paperclip" aria-hidden="true"></i></button>
+        <button class="send-button" type="submit" aria-label="Gửi tin nhắn"><i class="bi bi-send-fill" aria-hidden="true"></i></button>
+      </form>
+
+      <nav class="mobile-nav" aria-label="Điều hướng di động">
+        <a href="#"><i class="bi bi-house-door" aria-hidden="true"></i><span>Trang chủ</span></a>
+        <a class="is-current" href="#" aria-current="page"><i class="bi bi-kanban" aria-hidden="true"></i><span>Server</span></a>
+        <a href="#"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>Tài liệu</span></a>
+        <a href="#"><i class="bi bi-bell" aria-hidden="true"></i><span>Thông báo</span></a>
+      </nav>
+    </main>
+
+    <aside class="members" aria-labelledby="members-title">
+      <h2 id="members-title">Thành viên (28)</h2>
+      <label class="member-search">
+        <span class="visually-hidden">Tìm thành viên</span>
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" placeholder="Tìm thành viên...">
+      </label>
+
+      <section class="member-group" aria-labelledby="owners-title">
+        <h3 id="owners-title">Owner — 3</h3>
+        <ul>
+          <li><span class="member-avatar"><img src="../images/user-hoang-an.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Hoàng An</strong><i class="bi bi-crown-fill crown" aria-label="Chủ nhóm"></i><button type="button" aria-label="Tùy chọn cho Hoàng An"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-nguyen-minh.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Nguyễn Minh</strong><i class="bi bi-crown-fill crown" aria-label="Chủ nhóm"></i><button type="button" aria-label="Tùy chọn cho Nguyễn Minh"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-tran-phuong.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Trần Phương</strong><i class="bi bi-crown-fill crown" aria-label="Chủ nhóm"></i><button type="button" aria-label="Tùy chọn cho Trần Phương"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+        </ul>
+      </section>
+
+      <section class="member-group" aria-labelledby="members-list-title">
+        <h3 id="members-list-title">Thành viên — 24</h3>
+        <ul>
+          <li><span class="member-avatar"><img src="../images/user-le-duc.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Lê Đức</strong><button type="button" aria-label="Tùy chọn cho Lê Đức"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-pham-mai.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Phạm Mai</strong><button type="button" aria-label="Tùy chọn cho Phạm Mai"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-nguyen-thao.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Nguyễn Thảo</strong><button type="button" aria-label="Tùy chọn cho Nguyễn Thảo"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li class="is-busy"><span class="member-avatar"><img src="../images/user-bui-long.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Bùi Long</strong><button type="button" aria-label="Tùy chọn cho Bùi Long"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-dang-khoa.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Đặng Khoa</strong><button type="button" aria-label="Tùy chọn cho Đặng Khoa"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-tran-vy.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Trần Vy</strong><button type="button" aria-label="Tùy chọn cho Trần Vy"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li class="is-away"><span class="member-avatar"><img src="../images/user-vu-minh.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Vũ Minh</strong><button type="button" aria-label="Tùy chọn cho Vũ Minh"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li><span class="member-avatar"><img src="../images/user-ngo-khanh.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Ngô Khánh</strong><button type="button" aria-label="Tùy chọn cho Ngô Khánh"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+          <li class="is-away"><span class="member-avatar"><img src="../images/user-phan-huy.webp" alt="" width="44" height="44"><i aria-hidden="true"></i></span><strong>Phan Huy</strong><button type="button" aria-label="Tùy chọn cho Phan Huy"><i class="bi bi-three-dots" aria-hidden="true"></i></button></li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</body>
+</html>
