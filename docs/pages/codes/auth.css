@@ -295,6 +295,7 @@ a:focus-visible {
   transform: translateY(-50%);
   pointer-events: none;
 }
+.field-icon::before { display: block; }
 
 .password-toggle {
   position: absolute;

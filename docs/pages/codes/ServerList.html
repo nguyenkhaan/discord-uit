@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8fbff">
+  <title>Server của tôi | UIT Connect</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="server-list.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
+  <aside class="sidebar" aria-label="Điều hướng chính">
+    <a class="brand" href="#" aria-label="UIT Connect - Trang chủ">
+      <img src="../images/uit-connect-mark.webp" alt="" width="42" height="42">
+      <span>UIT Connect</span>
+    </a>
+
+    <nav class="primary-nav">
+      <a href="#"><i class="bi bi-house-door" aria-hidden="true"></i><span>Trang chủ</span></a>
+      <a class="is-current" href="#" aria-current="page"><i class="bi bi-kanban" aria-hidden="true"></i><span>Server</span></a>
+      <a href="#"><i class="bi bi-file-text" aria-hidden="true"></i><span>Tài liệu</span></a>
+      <a href="#"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Diễn đàn</span></a>
+      <a href="#"><i class="bi bi-bell" aria-hidden="true"></i><span>Thông báo</span></a>
+    </nav>
+
+    <button class="sidebar-user" type="button" aria-label="Mở menu tài khoản Hoàng An">
+      <img src="../images/user-hoang-an.webp" alt="" width="40" height="40">
+      <span>Hoàng An</span>
+      <i class="bi bi-chevron-down" aria-hidden="true"></i>
+    </button>
+  </aside>
+
+  <header class="topbar">
+    <label class="search">
+      <span class="visually-hidden">Tìm server</span>
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" placeholder="Tìm server của bạn...">
+    </label>
+
+    <div class="account-actions">
+      <button class="notification-button" type="button" aria-label="Thông báo mới">
+        <i class="bi bi-bell" aria-hidden="true"></i>
+        <span class="notification-dot" aria-hidden="true"></span>
+      </button>
+      <button class="account-menu" type="button" aria-label="Mở menu tài khoản">
+        <img src="../images/user-hoang-an.webp" alt="" width="44" height="44">
+        <span><strong>Hoàng An</strong><small>Sinh viên UIT</small></span>
+        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard" id="main-content" tabindex="-1">
+    <section aria-labelledby="page-title">
+      <div class="page-heading">
+        <div>
+          <h1 id="page-title">Server của tôi</h1>
+          <p>Quản lý và truy cập các server mà bạn tham gia</p>
+        </div>
+        <button class="create-button" type="button"><i class="bi bi-plus-lg" aria-hidden="true"></i><span>Tạo server mới</span></button>
+      </div>
+
+      <div class="server-toolbar">
+        <div class="tabs" role="tablist" aria-label="Lọc server">
+          <button class="is-active" type="button" role="tab" aria-selected="true">Tất cả (5)</button>
+          <button type="button" role="tab" aria-selected="false">Đang hoạt động (4)</button>
+          <button type="button" role="tab" aria-selected="false">Đã rời (1)</button>
+        </div>
+        <div class="view-controls" aria-label="Tùy chọn hiển thị">
+          <button class="is-active" type="button" aria-label="Hiển thị dạng lưới" aria-pressed="true"><i class="bi bi-grid" aria-hidden="true"></i></button>
+          <button type="button" aria-label="Hiển thị dạng danh sách" aria-pressed="false"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+          <label class="sort-select">
+            <span class="visually-hidden">Sắp xếp server</span>
+            <select><option>Mới tham gia</option><option>Tên server</option><option>Nhiều thành viên</option></select>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+          </label>
+        </div>
+      </div>
+
+      <div class="server-grid">
+        <article class="server-card">
+          <div class="server-cover">
+            <img src="../images/server-nt208.webp" alt="Khuôn viên trường Đại học Công nghệ Thông tin" width="407" height="110" fetchpriority="high">
+            <button class="card-menu" type="button" aria-label="Tùy chọn cho Nhóm đồ án NT208"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+          </div>
+          <div class="server-body">
+            <div class="server-identity server-identity--text" aria-hidden="true">UIT</div>
+            <h2>Nhóm đồ án NT208</h2>
+            <div class="server-meta"><span><i class="bi bi-people" aria-hidden="true"></i>28 thành viên</span><span class="status is-online">Đang hoạt động</span></div>
+            <p>Thảo luận, chia sẻ tài liệu và hỗ trợ làm đồ án Nhập môn Công nghệ thông tin.</p>
+            <a class="enter-server" href="#">Vào server<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          </div>
+        </article>
+
+        <article class="server-card">
+          <div class="server-cover">
+            <img src="../images/server-programming.webp" alt="Màn hình hiển thị mã lập trình" width="391" height="110">
+            <button class="card-menu" type="button" aria-label="Tùy chọn cho CLB Lập trình"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+          </div>
+          <div class="server-body">
+            <div class="server-identity identity-code" aria-hidden="true"><i class="bi bi-code-slash"></i></div>
+            <h2>CLB Lập trình</h2>
+            <div class="server-meta"><span><i class="bi bi-people" aria-hidden="true"></i>156 thành viên</span><span class="status is-online">Đang hoạt động</span></div>
+            <p>Cộng đồng sinh viên yêu thích lập trình, chia sẻ kiến thức và tổ chức workshop.</p>
+            <a class="enter-server" href="#">Vào server<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          </div>
+        </article>
+
+        <article class="server-card">
+          <div class="server-cover">
+            <img src="../images/server-database.webp" alt="Sách và máy tính xách tay trong thư viện" width="389" height="110">
+            <button class="card-menu" type="button" aria-label="Tùy chọn cho Ôn thi CSDL"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+          </div>
+          <div class="server-body">
+            <div class="server-identity identity-database" aria-hidden="true"><i class="bi bi-database-fill"></i></div>
+            <h2>Ôn thi CSDL</h2>
+            <div class="server-meta"><span><i class="bi bi-people" aria-hidden="true"></i>64 thành viên</span><span class="status is-online">Đang hoạt động</span></div>
+            <p>Chia sẻ tài liệu, đề cương, thảo luận về môn Cơ sở dữ liệu.</p>
+            <a class="enter-server" href="#">Vào server<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          </div>
+        </article>
+
+        <article class="server-card">
+          <div class="server-cover">
+            <img src="../images/server-game-dev.webp" alt="Tay cầm chơi game dưới ánh đèn xanh" width="407" height="96" loading="lazy">
+            <button class="card-menu" type="button" aria-label="Tùy chọn cho UIT Game Dev"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+          </div>
+          <div class="server-body">
+            <div class="server-identity identity-game" aria-hidden="true"><i class="bi bi-controller"></i></div>
+            <h2>UIT Game Dev</h2>
+            <div class="server-meta"><span><i class="bi bi-people" aria-hidden="true"></i>42 thành viên</span><span class="status is-online">Đang hoạt động</span></div>
+            <p>Cộng đồng làm game, chia sẻ tài nguyên và kinh nghiệm phát triển game.</p>
+            <a class="enter-server" href="#">Vào server<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          </div>
+        </article>
+
+        <article class="server-card">
+          <div class="server-cover">
+            <img src="../images/server-internship.webp" alt="Chồng sách trên bàn học" width="391" height="96" loading="lazy">
+            <button class="card-menu" type="button" aria-label="Tùy chọn cho Kinh nghiệm thực tập"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+          </div>
+          <div class="server-body">
+            <div class="server-identity identity-internship" aria-hidden="true"><i class="bi bi-mortarboard-fill"></i></div>
+            <h2>Kinh nghiệm thực tập</h2>
+            <div class="server-meta"><span><i class="bi bi-people" aria-hidden="true"></i>37 thành viên</span><span class="status is-offline">Không hoạt động</span></div>
+            <p>Chia sẻ kinh nghiệm, cơ hội thực tập và định hướng nghề nghiệp.</p>
+            <a class="enter-server" href="#">Vào server<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          </div>
+        </article>
+
+        <button class="new-server-card" type="button">
+          <span class="new-server-icon"><i class="bi bi-plus-lg" aria-hidden="true"></i></span>
+          <strong>Tạo server mới</strong>
+          <span>Tạo không gian riêng để học tập,<br>làm việc và kết nối với bạn bè.</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="invitations" aria-labelledby="invitation-title">
+      <header>
+        <h2 id="invitation-title">Lời mời tham gia (1)</h2>
+        <button type="button" aria-label="Thu gọn lời mời"><i class="bi bi-chevron-up" aria-hidden="true"></i></button>
+      </header>
+      <div class="invitation-row">
+        <span class="invite-icon" aria-hidden="true"><i class="bi bi-person-plus-fill"></i></span>
+        <p><strong>Trần Phương</strong> đã mời bạn tham gia server <strong>“Nhóm Đồ án AI”</strong><small>12 phút trước</small></p>
+        <div class="invitation-actions">
+          <button class="accept-button" type="button">Chấp nhận</button>
+          <button class="decline-button" type="button">Từ chối</button>
+          <button class="more-button" type="button" aria-label="Tùy chọn lời mời"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
