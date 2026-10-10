@@ -24,7 +24,7 @@ import com.cloudian.backend.repositories.UserAccountRepository;
 import com.cloudian.backend.utils.EmailUtil;
 
 @Service
-public class RegistrationService {
+public class AuthService {
 
     static final Duration EMAIL_VERIFICATION_TTL = Duration.ofHours(24);
 
@@ -37,7 +37,7 @@ public class RegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
 
-    public RegistrationService(
+    public AuthService(
             UserAccountRepository userAccountRepository,
             AccountTokenService accountTokenService,
             PasswordEncoder passwordEncoder,
