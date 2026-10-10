@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import org.springframework.http.HttpStatusCode;
 
-public record ErrorResponse(String message, int status, Instant timestamp , String notification) {
+public record ErrorResponse(String message, int status, Instant timestamp) {
 
 	public ErrorResponse {
 
@@ -15,7 +15,7 @@ public record ErrorResponse(String message, int status, Instant timestamp , Stri
 	}
 
 	public static ErrorResponse of(HttpStatusCode status, String message) {
-		return new ErrorResponse(message, status.value(), Instant.now() , "Cloudian Notification!!!");
+		return new ErrorResponse(message, status.value(), Instant.now());
 	}
 
 	public static String defaultMessage(HttpStatusCode status) {
@@ -32,6 +32,6 @@ public record ErrorResponse(String message, int status, Instant timestamp , Stri
 	}
 
 	public Map<String, Object> toAttributes() {
-		return Map.of("message", message, "status", status, "timestamp", timestamp , "notification", notification);
+		return Map.of("message", message, "status", status, "timestamp", timestamp);
 	}
 }

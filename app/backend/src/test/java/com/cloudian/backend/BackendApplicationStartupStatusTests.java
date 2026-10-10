@@ -13,12 +13,12 @@ class BackendApplicationStartupStatusTests {
 				"4000", LocalDateTime.of(2026, 9, 14, 10, 30, 0));
 
 		assertThat(startupStatus)
-				.contains("Developer: Cloudian")
-				.contains("Times: 14/09/2026 10:30:00")
-				.contains("API docs: http://localhost:4000/api/docs")
-				.contains("PORT: 4000")
+				.contains("Developer ", "Cloudian")
+				.contains("Times ", "14/09/2026 10:30:00")
+				.contains("API docs ", "http://localhost:4000/api/docs")
+				.contains("PORT:", "4000")
 				.startsWith("\n╔")
-				.endsWith("╚══════════════════════════════════════════════════════════════╝");
+				.endsWith("╚══════════════════════════════════════════════════════════════╝\n");
 	}
 
 }

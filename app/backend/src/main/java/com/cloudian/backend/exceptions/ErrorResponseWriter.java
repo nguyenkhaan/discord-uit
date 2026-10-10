@@ -23,11 +23,10 @@ public class ErrorResponseWriter {
 	}
 
 	private String toJson(ErrorResponse errorResponse) {
-		return "{\"message\":\"%s\",\"status\":%d,\"timestamp\":\"%s\",\"notification\":\"%s\"}".formatted(
+		return "{\"message\":\"%s\",\"status\":%d,\"timestamp\":\"%s\"}".formatted(
 			escapeJson(errorResponse.message()),
 			errorResponse.status(),
-			errorResponse.timestamp(),
-			escapeJson(errorResponse.notification()));
+			errorResponse.timestamp());
 	}
 
 	private String escapeJson(String value) {
