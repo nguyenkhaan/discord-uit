@@ -67,7 +67,7 @@ public class SecurityConfig {
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email").permitAll()
                 .requestMatchers("/health/**").permitAll()
                 .requestMatchers(("/kafka/notification/**")).permitAll()
                 .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()

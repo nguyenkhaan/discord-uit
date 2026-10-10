@@ -1,5 +1,6 @@
 package com.cloudian.backend.services;
 
+import com.cloudian.backend.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
