@@ -1,10 +1,11 @@
 package com.cloudian.backend.filters;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import com.cloudian.backend.commons.enums.TokenType;
 import com.cloudian.backend.exceptions.ErrorResponseWriter;
-import com.cloudian.backend.services.CustomUserDetails;
+import com.cloudian.backend.security.CustomUserDetails;
 import com.cloudian.backend.services.CustomUserDetailsService;
 import com.cloudian.backend.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
@@ -64,15 +65,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     private boolean authenticate(String jwt, HttpServletRequest request) {
-        String username = jwtUtil.extractUsername(jwt, TokenType.ACCESS);
-        if (username == null) {
+        // The JWT subject is the user id (see JwtUtil.generateToken), not the email.
+        String userId = jwtUtil.extractUsername(jwt, TokenType.ACCESS);
+        if (userId == null) {
             return false;
         }
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             return true;
         }
 
-        CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(username);
+        CustomUserDetails userDetails = customUserDetailsService.loadUserById(UUID.fromString(userId));
         if (!jwtUtil.validateToken(jwt, userDetails.getUserId(), TokenType.ACCESS)) {
             return false;
         }
