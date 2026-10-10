@@ -2,7 +2,9 @@ package com.cloudian.backend.modules.auth;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -10,43 +12,53 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cloudian.backend.commons.constants.RedisKey;
 import com.cloudian.backend.commons.enums.AccountStatus;
-import com.cloudian.backend.commons.enums.AccountTokenPurpose;
 import com.cloudian.backend.commons.enums.AccountType;
 import com.cloudian.backend.commons.enums.SystemRole;
+import com.cloudian.backend.commons.enums.TokenType;
 import com.cloudian.backend.events.AccountVerificationRequestedEvent;
 import com.cloudian.backend.exceptions.ApiException;
-import com.cloudian.backend.models.AccountToken;
 import com.cloudian.backend.models.UserAccount;
 import com.cloudian.backend.modules.auth.dto.RegisterRequest;
 import com.cloudian.backend.modules.auth.dto.RegisterResponse;
 import com.cloudian.backend.repositories.UserAccountRepository;
+import com.cloudian.backend.services.RedisService;
 import com.cloudian.backend.utils.EmailUtil;
+import com.cloudian.backend.utils.JwtUtil;
+import com.cloudian.backend.utils.TokenHashUtil;
+
+import io.jsonwebtoken.JwtException;
 
 @Service
 public class AuthService {
 
-    static final Duration EMAIL_VERIFICATION_TTL = Duration.ofHours(24);
-
     private static final String UIT_EMAIL_MESSAGE =
             "UIT email addresses cannot register a personal account. Please sign in with your UIT account.";
     private static final String EMAIL_TAKEN_MESSAGE = "This email is already registered.";
+    private static final String INVALID_TOKEN_MESSAGE = "The token is invalid or expired.";
 
     private final UserAccountRepository userAccountRepository;
-    private final AccountTokenService accountTokenService;
+    private final RedisService redisService;
+    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final Duration emailVerificationTtl;
 
     public AuthService(
             UserAccountRepository userAccountRepository,
-            AccountTokenService accountTokenService,
+            RedisService redisService,
+            JwtUtil jwtUtil,
             PasswordEncoder passwordEncoder,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            @Value("${app.jwt.email-verification-ttl:PT48H}") Duration emailVerificationTtl
     ) {
         this.userAccountRepository = userAccountRepository;
-        this.accountTokenService = accountTokenService;
+        this.redisService = redisService;
+        this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.emailVerificationTtl = emailVerificationTtl;
     }
 
     @Transactional
@@ -76,17 +88,25 @@ public class AuthService {
             throw new ApiException(HttpStatus.CONFLICT, EMAIL_TAKEN_MESSAGE);
         }
 
-        String rawToken = accountTokenService.issue(user, AccountTokenPurpose.EMAIL_VERIFICATION, EMAIL_VERIFICATION_TTL);
+        String rawToken = jwtUtil.generateEmailVerificationToken(user.getId().toString());
+        String tokenKey = RedisKey.emailVerification(TokenHashUtil.sha256Hex(rawToken));
+        redisService.set(tokenKey, user.getId().toString(), emailVerificationTtl);
         eventPublisher.publishEvent(
-                new AccountVerificationRequestedEvent(user.getId(), user.getEmail(), user.getFullName(), rawToken));
+                new AccountVerificationRequestedEvent(user.getEmail(), user.getFullName(), rawToken));
 
         return RegisterResponse.from(user);
     }
 
     @Transactional
     public void verifyEmail(String rawToken) {
-        AccountToken token = accountTokenService.consume(rawToken, AccountTokenPurpose.EMAIL_VERIFICATION);
-        UserAccount user = token.getUser();
+        UUID userId = extractVerificationUserId(rawToken);
+        String tokenKey = RedisKey.emailVerification(TokenHashUtil.sha256Hex(rawToken));
+        String storedUserId = redisService.getAndDelete(tokenKey).orElseThrow(AuthService::invalidToken);
+        if (!storedUserId.equals(userId.toString())) {
+            throw invalidToken();
+        }
+
+        UserAccount user = userAccountRepository.findById(userId).orElseThrow(AuthService::invalidToken);
 
         if (user.getEmailVerifiedAt() == null) {
             user.setEmailVerifiedAt(Instant.now());
@@ -95,5 +115,18 @@ public class AuthService {
         if (user.getAccountStatus() == AccountStatus.UNVERIFIED) {
             user.setAccountStatus(AccountStatus.ACTIVE);
         }
+    }
+
+    private UUID extractVerificationUserId(String rawToken) {
+        try {
+            String subject = jwtUtil.extractUsername(rawToken, TokenType.EMAIL_VERIFICATION);
+            return UUID.fromString(subject);
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw invalidToken();
+        }
+    }
+
+    private static ApiException invalidToken() {
+        return new ApiException(HttpStatus.BAD_REQUEST, INVALID_TOKEN_MESSAGE);
     }
 }
