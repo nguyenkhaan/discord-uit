@@ -1,13 +1,15 @@
+ m
+
 # UIT Server Discord
 
 ## Technology Badges
 
 ![Java 17](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=springboot&logoColor=white)
+![Spring Boot](<https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=springboot&logoColor=white>)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Kafka](https://img.shields.io/badge/Apache%20Kafka-4.3.1-231F20?logo=apachekafka&logoColor=white)
+![Kafka](<https://img.shields.io/badge/Apache%20Kafka-4.3.1-231F20?logo=apachekafka&logoColor=white>)
 
 ## Overview
 
@@ -21,7 +23,7 @@ It uses a Spring Boot API, React frontend, PostgreSQL, Kafka, and JWT authentica
 From the repository root, start the required services:
 
 ```bash
-docker compose up -d kafka kafka-init
+docker compose up -d kafka kafka-init mailpit minio
 ```
 
 Copy the team-provided `application.properties` file to:
