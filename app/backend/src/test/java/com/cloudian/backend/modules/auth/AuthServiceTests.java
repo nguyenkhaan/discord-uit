@@ -12,11 +12,13 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.cloudian.backend.repositories.RefreshSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.cloudian.backend.commons.constants.RedisKey;
@@ -42,6 +44,8 @@ class AuthServiceTests {
     private ApplicationEventPublisher eventPublisher;
     private JwtUtil jwtUtil;
     private AuthService authService;
+    private AuthenticationManager authenticationManager;
+    private RefreshSessionRepository refreshSessionRepository;
 
     @BeforeEach
     void setUp() {
@@ -50,13 +54,17 @@ class AuthServiceTests {
         passwordEncoder = mock(PasswordEncoder.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
         jwtUtil = new JwtUtil(TOKEN_SECRET, TOKEN_TTL);
+        refreshSessionRepository = mock(RefreshSessionRepository.class);
+        authenticationManager = mock(AuthenticationManager.class);
         authService = new AuthService(
                 userAccountRepository,
                 redisService,
                 jwtUtil,
                 passwordEncoder,
                 eventPublisher,
-                TOKEN_TTL);
+                TOKEN_TTL,
+                refreshSessionRepository,
+                authenticationManager);
     }
 
     @Test

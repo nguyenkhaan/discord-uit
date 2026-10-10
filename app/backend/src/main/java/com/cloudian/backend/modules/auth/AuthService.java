@@ -4,10 +4,18 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.cloudian.backend.models.RefreshSession;
+import com.cloudian.backend.modules.auth.dto.LoginRequest;
+import com.cloudian.backend.modules.auth.dto.LoginResponse;
+import com.cloudian.backend.repositories.RefreshSessionRepository;
+import com.cloudian.backend.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +52,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     private final Duration emailVerificationTtl;
+    private final RefreshSessionRepository refreshSessionRepository;
+    private final AuthenticationManager authenticationManager;
 
     public AuthService(
             UserAccountRepository userAccountRepository,
@@ -51,7 +61,9 @@ public class AuthService {
             JwtUtil jwtUtil,
             PasswordEncoder passwordEncoder,
             ApplicationEventPublisher eventPublisher,
-            @Value("${app.jwt.email-verification-ttl:PT48H}") Duration emailVerificationTtl
+            @Value("${app.jwt.email-verification-ttl:PT48H}") Duration emailVerificationTtl,
+            RefreshSessionRepository refreshSessionRepository,
+            AuthenticationManager authenticationManager
     ) {
         this.userAccountRepository = userAccountRepository;
         this.redisService = redisService;
@@ -59,7 +71,37 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
         this.emailVerificationTtl = emailVerificationTtl;
+        this.refreshSessionRepository = refreshSessionRepository;
+        this.authenticationManager = authenticationManager;
     }
+
+    // ============ LOG IN ============
+
+    @Transactional
+    public LoginResponse login(LoginRequest request) {
+        // check email and password
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        // generate token for this log in session
+        return issueTokens(UUID.fromString(userDetails.getUserId()), userDetails.getUsername());
+    }
+
+    private LoginResponse issueTokens(UUID userId, String email) {
+        String[] tokens = jwtUtil.generateToken(userId.toString(), email);
+        String accessToken = tokens[0];
+        String refreshToken = tokens[1];
+
+        RefreshSession session = new RefreshSession();
+        session.setUser(userAccountRepository.getReferenceById(userId));
+        session.setTokenHash(TokenHashUtil.sha256Hex(refreshToken));
+        session.setExpiresAt(jwtUtil.extractExpiration(refreshToken, TokenType.REFRESH).toInstant());
+        refreshSessionRepository.save(session);
+
+        return new LoginResponse(accessToken, refreshToken);
+    }
+
 
     @Transactional
     public RegisterResponse registerPersonalAccount(RegisterRequest request) {
