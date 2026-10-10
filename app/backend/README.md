@@ -56,12 +56,12 @@ Run this command from the project root. The root `docker-compose.yaml` is the so
 docker compose up -d kafka kafka-init mailpit minio
 ```
 
-| Service | Use |
-| --- | --- |
-| `kafka` | Sends notification events. |
-| `kafka-init` | Creates the notification topic, then exits. |
-| `mailpit` | Receives local emails. SMTP uses port `1025`; the web inbox uses port `8025`. |
-| `minio` | Stores local files. The API uses port `9000`; the console uses port `9001`. |
+| Service        | Use                                                                              |
+| -------------- | -------------------------------------------------------------------------------- |
+| `kafka`      | Sends notification events.                                                       |
+| `kafka-init` | Creates the notification topic, then exits.                                      |
+| `mailpit`    | Receives local emails. SMTP uses port`1025`; the web inbox uses port `8025`. |
+| `minio`      | Stores local files. The API uses port`9000`; the console uses port `9001`.   |
 
 PostgreSQL and Upstash Redis are external services in the current configuration. Do not start `app/backend/compose.yaml` for the normal setup.
 
@@ -100,3 +100,53 @@ Open these URLs after startup:
 cd app/backend
 ./gradlew test
 ```
+
+## Role authorization
+
+The backend supports two system roles from `SystemRole`:
+
+- `USER`: the default role for a registered account.
+- `ADMIN`: access to administrator-only features.
+
+The backend loads the role from `user_account.system_role` for each authenticated request. JWT tokens do not store the role, so a role change takes effect on the next request.
+
+### Assign an admin role
+
+There is no public role-management endpoint. Assign this role only through a trusted database operation:
+
+```sql
+UPDATE user_account
+SET system_role = 'ADMIN'
+WHERE email = 'admin@example.com';
+```
+
+### Protect a controller method
+
+Use `@PreAuthorize` on a controller or service method:
+
+```java
+@PreAuthorize("hasRole('ADMIN')")
+@GetMapping("/admin/status")
+public String getAdminStatus() {
+    return "Admin access granted";
+}
+```
+
+Allow more than one role when needed:
+
+```java
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+```
+
+Use `ADMIN`, not `ROLE_ADMIN`, with `hasRole`. Spring adds the `ROLE_` prefix automatically.
+
+### Call a protected endpoint
+
+Send the access token returned by `/api/auth/login`:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+- Missing or invalid token: `401 Unauthorized`
+- Valid token without the required role: `403 Forbidden`

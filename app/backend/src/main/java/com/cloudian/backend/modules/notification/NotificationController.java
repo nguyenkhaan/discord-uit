@@ -3,6 +3,7 @@ package com.cloudian.backend.modules.notification;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ public class NotificationController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 	public ResponseEntity<Map<String, String>> publish(@RequestBody NotificationRequest request) {
 		producer.publish("notification.events.v1", request.recipientId(), request.message());
 		return ResponseEntity.accepted().body(Map.of("status", "event accepted"));

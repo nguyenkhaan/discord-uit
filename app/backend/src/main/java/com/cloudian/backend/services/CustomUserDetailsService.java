@@ -45,6 +45,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private static CustomUserDetails toUserDetails(UserAccount user) {
         // password_hash is null for UIT accounts, so password login always fails for them.
-        return new CustomUserDetails(user.getId().toString(), user.getEmail(), user.getPasswordHash());
+        return new CustomUserDetails(user);
     }
 }
