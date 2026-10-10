@@ -9,15 +9,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import com.cloudian.backend.exceptions.ApiException;
-import com.cloudian.backend.messagings.RabbitMQProducer;
 import com.cloudian.backend.modules.health.dto.HealthResponse;
 
 @RestController
 @RequestMapping("/health")
 public class HealthController {
     private final JdbcTemplate jdbcTemplate; 
-    @Autowired  
-    RabbitMQProducer rabbitMQProducer;
     public HealthController(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -43,11 +40,5 @@ public class HealthController {
             "database", "connected", 
             "result", result
         );
-    }
-    @GetMapping("/rabbitmq") 
-    public Map<String, Object> TestingRabbitMQHandler() {
-        String message = "Hello world from cloudian";
-        rabbitMQProducer.sendMessage(message);
-        return Map.of("status" , "Message sent");
     }
 }

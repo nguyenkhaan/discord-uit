@@ -44,18 +44,6 @@ services:
           --describe \
           --topic notification.events.v1 \
           --bootstrap-server kafka:9092
-  rabbitmq:
-    image: rabbitmq:3-management
-    environment:
-      RABBITMQ_DEFAULT_USER: cloudian
-      RABBITMQ_DEFAULT_PASS: cloudian
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-
 volumes:
   mailpit-data:
   minio-data:
-  rabbitmq-data:

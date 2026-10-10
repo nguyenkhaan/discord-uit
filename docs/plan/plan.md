@@ -6,7 +6,7 @@ Kế hoạch này được viết cho một nhóm phát triển sinh viên. Nhó
 
 ### Feature 0.1 — Runnable application shell and shared contracts
 
-**Outcome:** BE, FE, PostgreSQL, RabbitMQ và test tooling có thể chạy ổn định trước khi nhóm bắt đầu xử lý domain.
+**Outcome:** BE, FE, PostgreSQL, Kafka và test tooling có thể chạy ổn định trước khi nhóm bắt đầu xử lý domain.
 
 #### Step 0.1.1 — BE foundation
 
@@ -14,7 +14,7 @@ Kế hoạch này được viết cho một nhóm phát triển sinh viên. Nhó
 - Tổ chức BE theo feature trong `com.cloudian.backend.modules`; sử dụng ranh giới controller → application service → repository và các request/response record immutable.
 - Chuyển JWT keys và cấu hình external service ra khỏi `JwtUtil` sang cấu hình dựa trên environment đã được validate. Trong Phase 1, thay implementation `CustomUserDetailsService` đang hard-code bằng boundary dựa trên repository.
 - Ổn định shared error contract với `code`, `message`, `status`, `timestamp`, `path` và các lỗi field-validation, đồng thời giữ nguyên hành vi exception handler hiện có.
-- Thêm local profile PostgreSQL/RabbitMQ vào `app/backend/compose.yaml`, health/readiness checks và configuration validation.
+- Thêm local profile PostgreSQL/Kafka, health/readiness checks và configuration validation.
 - Verify: `cd app/backend && ./gradlew test` chạy thành công.
 
 #### Step 0.1.2 — FE foundation
@@ -38,7 +38,7 @@ Kế hoạch này được viết cho một nhóm phát triển sinh viên. Nhó
 
 #### Step 0.2.1 — BE/realtime foundation
 
-- Thêm outbox publisher để claim các row `PENDING`, publish qua RabbitMQ, đặt `status = PUBLISHED` và `published_at`, rồi retry bằng cách tăng `attempt_count`; chuyển các item đã hết số lần thử sang `FAILED` và phát operational alert.
+- Thêm outbox publisher để claim các row `PENDING`, publish qua Kafka, đặt `status = PUBLISHED` và `published_at`, rồi retry bằng cách tăng `attempt_count`; chuyển các item đã hết số lần thử sang `FAILED` và phát operational alert.
 - Thêm Socket.IO gateway tại `app/realtime-gateway` làm authorized realtime adapter như mô tả trong architecture. Gateway chỉ được chấp nhận room name do server tạo, ví dụ `user:{userId}` và `server:{serverId}`.
 - Kiểm thử atomic rollback: domain change và `outbox_event` phải cùng commit hoặc cùng roll back.
 
@@ -50,7 +50,7 @@ Kế hoạch này được viết cho một nhóm phát triển sinh viên. Nhó
 
 #### Step 0.2.3 — Integration
 
-- Publish một test event không chứa dữ liệu nhạy cảm qua `outbox_event`, RabbitMQ, gateway và FE client đã authenticated.
+- Publish một test event không chứa dữ liệu nhạy cảm qua `outbox_event`, Kafka, gateway và FE client đã authenticated.
 - Verify việc delivery trùng lặp không gây lỗi và reconnect sẽ trigger REST refresh.
 - Acceptance: chỉ user được chỉ định nhận event, unauthorized room subscription thất bại và không có event nào xuất hiện sau một transaction đã roll back.
 
@@ -440,7 +440,7 @@ Kế hoạch này được viết cho một nhóm phát triển sinh viên. Nhó
 
 #### Step 5.3.3 — Integration
 
-- Kết nối RabbitMQ job, retry, idempotent callback và admin queue refresh.
+- Kết nối Kafka job, retry, idempotent callback và admin queue refresh.
 - Acceptance: duplicate worker completion chỉ tạo một classification run, confidence luôn trong giới hạn và không AI result nào trực tiếp publish document.
 
 ### Feature 5.4 — Human document review, publication, rejection, and removal
@@ -685,7 +685,7 @@ Kế hoạch này được viết cho một nhóm phát triển sinh viên. Nhó
 
 #### Step 8.3.1 — BE/infrastructure
 
-- Package Spring Boot, Socket.IO gateway, worker, PostgreSQL, RabbitMQ, Redis, object storage và cấu hình LiveKit cho staging/production.
+- Package Spring Boot, Socket.IO gateway, worker, PostgreSQL, Kafka, Redis, object storage và cấu hình LiveKit cho staging/production.
 - Thêm production index dựa trên query đã đo, connection-pool limit, database backup/restore, object lifecycle safeguard và procedure migration rollback/forward-fix.
 - Chỉ load-test target đã ghi trong tài liệu: khoảng 1.000 account, 500 concurrent user, 200 concurrent call participant trên toàn hệ thống và 30 participant trên mỗi call.
 
