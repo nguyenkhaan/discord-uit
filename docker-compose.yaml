@@ -8,7 +8,7 @@ services:
       - mailpit-data:/data
 
   minio:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: cgr.dev/chainguard/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: cloudian
@@ -18,19 +18,32 @@ services:
       - "9001:9001"
     volumes:
       - minio-data:/data
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    environment:
-      RABBITMQ_DEFAULT_USER: cloudian
-      RABBITMQ_DEFAULT_PASS: cloudian
+  kafka: 
+    image: apache/kafka:4.3.1
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - 9092:9092
+  kafka-init:
+    image: apache/kafka:4.3.1
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        until /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list; do
+          sleep 2
+        done
+        /opt/kafka/bin/kafka-topics.sh \
+          --create \
+          --if-not-exists \
+          --topic notification.events.v1 \
+          --partitions 3 \
+          --replication-factor 1 \
+          --bootstrap-server kafka:9092
 
+        /opt/kafka/bin/kafka-topics.sh \
+          --describe \
+          --topic notification.events.v1 \
+          --bootstrap-server kafka:9092
 volumes:
   mailpit-data:
   minio-data:
-  rabbitmq-data:

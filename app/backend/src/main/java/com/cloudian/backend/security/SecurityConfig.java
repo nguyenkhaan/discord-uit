@@ -69,6 +69,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/health/**").permitAll()
+                .requestMatchers(("/kafka/notification/**")).permitAll()
                 .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
                 .anyRequest().authenticated()
             )

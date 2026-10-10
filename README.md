@@ -7,21 +7,21 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3-FF6600?logo=rabbitmq&logoColor=white)
+![Kafka](https://img.shields.io/badge/Apache%20Kafka-4.3.1-231F20?logo=apachekafka&logoColor=white)
 
 ## Overview
 
 UIT Server Discord is a collaboration platform for UIT students and external users.
 Users can join private servers for group chat, video calls, and screen sharing.
 The platform also provides moderated document sharing, forums, reports, notifications, and an admin dashboard.
-It uses a Spring Boot API, React frontend, PostgreSQL, RabbitMQ, and JWT authentication.
+It uses a Spring Boot API, React frontend, PostgreSQL, Kafka, and JWT authentication.
 
 ## How to Set Up the Backend
 
 From the repository root, start the required services:
 
 ```bash
-docker compose up -d mailpit rabbitmq
+docker compose up -d kafka kafka-init
 ```
 
 Copy the team-provided `application.properties` file to:
