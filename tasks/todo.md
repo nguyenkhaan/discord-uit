@@ -1,0 +1,21 @@
+# JTI Access Token Revocation Tasks
+
+- [x] Token identity
+  - Acceptance: generated tokens have distinct, extractable `jti` values.
+  - Verify: focused `JwtUtil` tests.
+  - Files: `JwtUtil`, JWT tests.
+- [x] Redis revocation
+  - Acceptance: only `jti` is stored and its key expires with the access token.
+  - Verify: revocation-service tests.
+  - Files: `RedisKey`, revocation service, service tests.
+- [x] Request enforcement
+  - Acceptance: revoked access tokens are rejected while valid tokens authenticate.
+  - Verify: JWT filter tests.
+  - Files: `JwtRequestFilter`, filter tests.
+- [x] Logout
+  - Acceptance: `POST /api/auth/logout` returns `204`, revokes the presented access token, and marks the matching refresh session revoked.
+  - Verify: logout security test.
+  - Files: logout request/controller/service and tests.
+- [x] Final verification
+  - Acceptance: focused tests pass and full-suite status is reported.
+  - Verify: Gradle test/build commands.

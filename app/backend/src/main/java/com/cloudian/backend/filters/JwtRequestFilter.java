@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.cloudian.backend.commons.enums.TokenType;
 import com.cloudian.backend.exceptions.ErrorResponseWriter;
 import com.cloudian.backend.security.CustomUserDetails;
+import com.cloudian.backend.services.AccessTokenRevocationService;
 import com.cloudian.backend.services.CustomUserDetailsService;
 import com.cloudian.backend.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
@@ -28,16 +29,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
-    private final ErrorResponseWriter errorResponseWriter;
+    private final ErrorResponseWriter errorResponseWriter = new ErrorResponseWriter();
+    private final AccessTokenRevocationService accessTokenRevocationService;
 
     public JwtRequestFilter(
             JwtUtil jwtUtil,
             CustomUserDetailsService customUserDetailsService,
-            ErrorResponseWriter errorResponseWriter
+            AccessTokenRevocationService accessTokenRevocationService
     ) {
         this.jwtUtil = jwtUtil;
         this.customUserDetailsService = customUserDetailsService;
-        this.errorResponseWriter = errorResponseWriter;
+        this.accessTokenRevocationService = accessTokenRevocationService;
     }
 
     @Override
@@ -65,6 +67,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     private boolean authenticate(String jwt, HttpServletRequest request) {
+        if (accessTokenRevocationService.isRevoked(jwt)) {
+            return false;
+        }
+
         // The JWT subject is the user id (see JwtUtil.generateToken), not the email.
         String userId = jwtUtil.extractUsername(jwt, TokenType.ACCESS);
         if (userId == null) {

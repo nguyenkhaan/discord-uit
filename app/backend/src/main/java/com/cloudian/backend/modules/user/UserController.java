@@ -28,6 +28,7 @@ public class UserController {
 
     @GetMapping
     public MeResponse getMe(@AuthenticationPrincipal CustomUserDetails principal) {
+        System.out.println("Hello world");
         return userService.getMe(currentUserId(principal));
     }
 

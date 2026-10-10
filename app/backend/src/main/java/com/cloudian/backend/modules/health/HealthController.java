@@ -11,6 +11,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.modules.health.dto.HealthResponse;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+
+@SecurityRequirements
 @RestController
 @RequestMapping("/health")
 public class HealthController {
