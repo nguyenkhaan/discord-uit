@@ -1,3 +1,9 @@
+/***
+ * Khong thuc hien luu access token lien tuc vao ben trong redis. Chi can luu access token 
+ * vao do, thuc hien danh dau REVOKED = 1 khi ma thuc hien logout. Thoi gian luu tru se dai dai 
+ * Request Filter kiem tra ben trong redis co cai key nao bang 1 khong => Neu co thi chan request
+ * mot chut, toi khi access token het han thi se duoc xoa khoi redis de tranh access token bi lam dung 
+ */
 package com.cloudian.backend.modules.auth;
 
 import java.time.Duration;

@@ -36,12 +36,14 @@ public class AccessTokenRevocationService {
                 REVOKED_VALUE,
                 roundUpToWholeSeconds(remaining));
     }
-
+    //Dung de kiem tra xem access token nay hien tai co bij revoke chua 
     public boolean isRevoked(String accessToken) {
         String tokenId = requiredTokenId(accessToken);
+        System.out.println(tokenId); 
+        //Kiem, tra no co that su luu vao ben trong redis khong 
         return redisService.get(RedisKey.revokedAccessToken(tokenId)).isPresent();
     }
-
+    //Access token phai co jti de co the luu tru vao ben trong redis 
     private String requiredTokenId(String accessToken) {
         String tokenId = jwtUtil.extractTokenId(accessToken, TokenType.ACCESS);
         if (tokenId == null || tokenId.isBlank()) {
