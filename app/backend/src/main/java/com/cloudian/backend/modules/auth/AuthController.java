@@ -35,10 +35,11 @@ public class AuthController {
 
     @PostMapping ("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        String[] result = authenticationService.authenticate(request.getUsername() , request.getPassword());
-        return ResponseEntity.ok(new LoginResponse(
-            result[0] , result[1] 
-        )); 
+//        String[] result = authenticationService.authenticate(request.getUsername() , request.getPassword());
+//        return ResponseEntity.ok(new LoginResponse(
+//            result[0] , result[1]
+//        ));
+        return ResponseEntity.ok( authService.login(request));
     }
 
     /** POST /api/auth/register — personal (non-UIT) account registration. */
