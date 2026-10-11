@@ -24,7 +24,7 @@ import com.cloudian.backend.modules.auth.dto.RegisterRequest;
 import com.cloudian.backend.modules.auth.dto.RegisterResponse;
 import com.cloudian.backend.modules.auth.dto.VerifyEmailRequest;
 import com.cloudian.backend.security.CustomUserDetails;
-
+import com.cloudian.backend.modules.auth.dto.RefreshRequest;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -67,8 +67,7 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             @Valid @RequestBody LogoutRequest request,
             HttpServletRequest servletRequest,
-            HttpServletResponse servletResponse
-    ) {
+            HttpServletResponse servletResponse) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = authenticatedUser(authentication);
         logoutService.logout(
@@ -79,9 +78,29 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        CustomUserDetails userDetails = authenticatedUser(authentication);
+
+        authService.logoutAll(UUID.fromString(userDetails.getUserId()));
+
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/test-authentication")
     public String testingAuthentication() {
         return "Authentication successfully";
+    }
+
+    @PostMapping("/refresh")
+    @SecurityRequirements
+    public ResponseEntity<LoginResponse> refresh(
+            @Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
     }
 
     private CustomUserDetails authenticatedUser(Authentication authentication) {
