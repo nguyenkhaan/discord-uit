@@ -2,7 +2,10 @@ package com.cloudian.backend.filters;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.time.Instant;
 
+import com.cloudian.backend.commons.enums.AccountStatus;
+import com.cloudian.backend.repositories.RefreshSessionRepository;
 import com.cloudian.backend.commons.enums.TokenType;
 import com.cloudian.backend.exceptions.ErrorResponseWriter;
 import com.cloudian.backend.security.CustomUserDetails;
@@ -31,23 +34,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService customUserDetailsService;
     private final ErrorResponseWriter errorResponseWriter = new ErrorResponseWriter();
     private final AccessTokenRevocationService accessTokenRevocationService;
+    private final RefreshSessionRepository refreshSessionRepository;
 
     public JwtRequestFilter(
             JwtUtil jwtUtil,
             CustomUserDetailsService customUserDetailsService,
-            AccessTokenRevocationService accessTokenRevocationService
-    ) {
+            AccessTokenRevocationService accessTokenRevocationService,
+            RefreshSessionRepository refreshSessionRepository) {
         this.jwtUtil = jwtUtil;
         this.customUserDetailsService = customUserDetailsService;
         this.accessTokenRevocationService = accessTokenRevocationService;
+        this.refreshSessionRepository = refreshSessionRepository;
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain chain
-    ) throws ServletException, IOException {
+            FilterChain chain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
@@ -71,26 +75,59 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return false;
         }
 
-        // The JWT subject is the user id (see JwtUtil.generateToken), not the email.
         String userId = jwtUtil.extractUsername(jwt, TokenType.ACCESS);
         if (userId == null) {
             return false;
         }
+
+        UUID userUuid = UUID.fromString(userId);
+
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             return true;
         }
 
-        CustomUserDetails userDetails = customUserDetailsService.loadUserById(UUID.fromString(userId));
+        CustomUserDetails userDetails = customUserDetailsService.loadUserById(userUuid);
+
         if (!jwtUtil.validateToken(jwt, userDetails.getUserId(), TokenType.ACCESS)) {
+            return false;
+        }
+
+        // Protected requests chỉ được phép với tài khoản ACTIVE.
+        if (!userDetails.isEnabled() || !userDetails.isAccountNonLocked()) {
+            return false;
+        }
+
+        // Lấy session ID từ claim sid trong access token.
+        String sessionIdClaim = jwtUtil.extractClaim(
+                jwt,
+                claims -> claims.get("sid", String.class),
+                TokenType.ACCESS);
+
+        if (sessionIdClaim == null || sessionIdClaim.isBlank()) {
+            return false;
+        }
+
+        UUID sessionId = UUID.fromString(sessionIdClaim);
+
+        // Xác minh session vẫn tồn tại, còn hạn và chưa bị thu hồi.
+        boolean validSession = refreshSessionRepository.existsValidSession(
+                sessionId,
+                userUuid,
+                Instant.now(),
+                AccountStatus.ACTIVE);
+
+        if (!validSession) {
             return false;
         }
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
-                userDetails.getAuthorities()
-        );
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                userDetails.getAuthorities());
+
+        authentication.setDetails(
+                new WebAuthenticationDetailsSource().buildDetails(request));
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return true;
     }

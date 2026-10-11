@@ -41,14 +41,14 @@ import com.cloudian.backend.services.RedisService;
 import com.cloudian.backend.utils.EmailUtil;
 import com.cloudian.backend.utils.JwtUtil;
 import com.cloudian.backend.utils.TokenHashUtil;
+import com.cloudian.backend.modules.auth.dto.RefreshRequest;
 
 import io.jsonwebtoken.JwtException;
 
 @Service
 public class AuthService {
 
-    private static final String UIT_EMAIL_MESSAGE =
-            "UIT email addresses cannot register a personal account. Please sign in with your UIT account.";
+    private static final String UIT_EMAIL_MESSAGE = "UIT email addresses cannot register a personal account. Please sign in with your UIT account.";
     private static final String EMAIL_TAKEN_MESSAGE = "This email is already registered.";
     private static final String INVALID_TOKEN_MESSAGE = "The token is invalid or expired.";
 
@@ -69,8 +69,7 @@ public class AuthService {
             ApplicationEventPublisher eventPublisher,
             @Value("${app.jwt.email-verification-ttl:PT48H}") Duration emailVerificationTtl,
             RefreshSessionRepository refreshSessionRepository,
-            AuthenticationManager authenticationManager
-    ) {
+            AuthenticationManager authenticationManager) {
         this.userAccountRepository = userAccountRepository;
         this.redisService = redisService;
         this.jwtUtil = jwtUtil;
@@ -95,23 +94,38 @@ public class AuthService {
     }
 
     private LoginResponse issueTokens(UUID userId, String email) {
-        String[] tokens = jwtUtil.generateToken(userId.toString(), email);
+        UserAccount user = userAccountRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Authentication is required."));
+
+        UUID sessionId = UUID.randomUUID();
+
+        String[] tokens = jwtUtil.generateToken(
+                userId.toString(),
+                email,
+                user.getSystemRole().name(),
+                sessionId.toString());
+
         String accessToken = tokens[0];
         String refreshToken = tokens[1];
 
         RefreshSession session = new RefreshSession();
-        session.setUser(userAccountRepository.getReferenceById(userId));
+        session.setId(sessionId);
+        session.setUser(user);
         session.setTokenHash(TokenHashUtil.sha256Hex(refreshToken));
-        session.setExpiresAt(jwtUtil.extractExpiration(refreshToken, TokenType.REFRESH).toInstant());
+        session.setExpiresAt(
+                jwtUtil.extractExpiration(refreshToken, TokenType.REFRESH).toInstant());
+
         refreshSessionRepository.save(session);
 
         return new LoginResponse(accessToken, refreshToken);
     }
 
-
     @Transactional
     public RegisterResponse registerPersonalAccount(RegisterRequest request) {
-        // Normalize first so "A@UIT.EDU.VN" cannot bypass the UIT check or create a duplicate.
+        // Normalize first so "A@UIT.EDU.VN" cannot bypass the UIT check or create a
+        // duplicate.
         String email = EmailUtil.normalize(request.email());
 
         if (EmailUtil.isUitEmail(email)) {
@@ -163,6 +177,92 @@ public class AuthService {
         if (user.getAccountStatus() == AccountStatus.UNVERIFIED) {
             user.setAccountStatus(AccountStatus.ACTIVE);
         }
+    }
+
+    @Transactional
+    public LoginResponse refresh(RefreshRequest request) {
+        String rawRefreshToken = request.getRefreshToken();
+
+        try {
+            String userId = jwtUtil.extractUsername(
+                    rawRefreshToken,
+                    TokenType.REFRESH);
+
+            String sessionIdClaim = jwtUtil.extractClaim(
+                    rawRefreshToken,
+                    claims -> claims.get("sid", String.class),
+                    TokenType.REFRESH);
+
+            if (sessionIdClaim == null || sessionIdClaim.isBlank()) {
+                throw invalidRefreshToken();
+            }
+
+            UUID userUuid = UUID.fromString(userId);
+            UUID sessionId = UUID.fromString(sessionIdClaim);
+
+            if (!jwtUtil.validateToken(
+                    rawRefreshToken,
+                    userUuid.toString(),
+                    TokenType.REFRESH)) {
+                throw invalidRefreshToken();
+            }
+
+            Instant now = Instant.now();
+
+            RefreshSession session = refreshSessionRepository
+                    .findByTokenHashForUpdate(
+                            TokenHashUtil.sha256Hex(rawRefreshToken))
+                    .filter(s -> sessionId.equals(s.getId()))
+                    .filter(s -> userUuid.equals(s.getUser().getId()))
+                    .filter(s -> s.getRevokedAt() == null)
+                    .filter(s -> s.getExpiresAt().isAfter(now))
+                    .orElseThrow(AuthService::invalidRefreshToken);
+
+            UserAccount user = session.getUser();
+
+            if (user.getAccountStatus() != AccountStatus.ACTIVE) {
+                session.setRevokedAt(now);
+                throw invalidRefreshToken();
+            }
+
+            String[] tokens = jwtUtil.generateToken(
+                    user.getId().toString(),
+                    user.getEmail(),
+                    user.getSystemRole().name(),
+                    session.getId().toString());
+
+            String newAccessToken = tokens[0];
+            String newRefreshToken = tokens[1];
+
+            session.setTokenHash(
+                    TokenHashUtil.sha256Hex(newRefreshToken));
+            session.setExpiresAt(
+                    jwtUtil.extractExpiration(
+                            newRefreshToken,
+                            TokenType.REFRESH).toInstant());
+
+            refreshSessionRepository.save(session);
+
+            return new LoginResponse(
+                    newAccessToken,
+                    newRefreshToken);
+
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw invalidRefreshToken();
+        }
+    }
+
+    @Transactional
+    public int logoutAll(UUID userId) {
+        return refreshSessionRepository.revokeAllActiveByUserId(
+                userId,
+                Instant.now());
+    }
+
+    private static ApiException invalidRefreshToken() {
+        return new ApiException(
+                HttpStatus.UNAUTHORIZED,
+                "The token is invalid or expired.");
     }
 
     private UUID extractVerificationUserId(String rawToken) {

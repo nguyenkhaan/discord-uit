@@ -30,8 +30,7 @@ public class JwtUtil {
 
     public JwtUtil(
             @Value("${app.jwt.email-verification-secret}") String emailVerificationSecret,
-            @Value("${app.jwt.email-verification-ttl:PT48H}") Duration emailVerificationTtl
-    ) {
+            @Value("${app.jwt.email-verification-ttl:PT48H}") Duration emailVerificationTtl) {
         this.emailVerificationSecret = emailVerificationSecret;
         this.emailVerificationTtlMillis = emailVerificationTtl.toMillis();
     }
@@ -79,6 +78,22 @@ public class JwtUtil {
         return new String[] { accessToken, refreshToken };
     }
 
+    public String[] generateToken(
+            String userId,
+            String username,
+            String systemRole,
+            String sessionId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("username", username);
+        claims.put("system_role", systemRole);
+        claims.put("sid", sessionId);
+
+        String accessToken = createToken(claims, userId, TokenType.ACCESS);
+        String refreshToken = createToken(claims, userId, TokenType.REFRESH);
+
+        return new String[] { accessToken, refreshToken };
+    }
+
     public String generateEmailVerificationToken(String userId) {
         return createToken(Map.of(), userId, TokenType.EMAIL_VERIFICATION);
     }
@@ -101,6 +116,7 @@ public class JwtUtil {
             case EMAIL_VERIFICATION -> emailVerificationTtlMillis;
         };
     }
+
     private Boolean isTokenExpired(String token, TokenType type) {
         return extractExpiration(token, type).before(new Date());
     }
