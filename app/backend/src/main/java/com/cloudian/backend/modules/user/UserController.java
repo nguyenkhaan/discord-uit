@@ -2,12 +2,11 @@ package com.cloudian.backend.modules.user;
 
 import java.util.UUID;
 
+import com.cloudian.backend.modules.user.dto.EmailChangeRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.cloudian.backend.modules.user.dto.MeResponse;
 import com.cloudian.backend.modules.user.dto.UpdateMeRequest;
@@ -18,13 +17,15 @@ import jakarta.validation.Valid;
 /** /api/me — the current user reads and updates their own profile. Requires a valid access token. */
 @RestController
 @RequestMapping("/me")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final EmailChangeService emailChangeService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+//    public UserController(UserService userService) {
+//        this.userService = userService;
+//    }
 
     @GetMapping
     public MeResponse getMe(@AuthenticationPrincipal CustomUserDetails principal) {
@@ -38,6 +39,13 @@ public class UserController {
             @Valid @RequestBody UpdateMeRequest request
     ) {
         return userService.updateMe(currentUserId(principal), request);
+    }
+
+    @PostMapping ("/email-change")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void requestEmailChange(@AuthenticationPrincipal CustomUserDetails principal,
+                                   @Valid @RequestBody EmailChangeRequest request) {
+        emailChangeService.request(UUID.fromString(principal.getUserId()), request);
     }
 
     private static UUID currentUserId(CustomUserDetails principal) {

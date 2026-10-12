@@ -3,6 +3,9 @@ package com.cloudian.backend.modules.auth;
 import java.util.Map;
 import java.util.UUID;
 
+import com.cloudian.backend.modules.user.EmailChangeService;
+import com.cloudian.backend.modules.user.dto.ConfirmEmailChangeRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,12 +38,15 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailChangeService emailChangeService;
     private final CurrentSessionLogoutService logoutService;
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
-    public AuthController(AuthService authService, CurrentSessionLogoutService logoutService) {
+    public AuthController(AuthService authService, CurrentSessionLogoutService logoutService,
+                          EmailChangeService emailChangeService) {
         this.authService = authService;
         this.logoutService = logoutService;
+        this.emailChangeService = emailChangeService;
     }
 
     @PostMapping("/login")
@@ -101,6 +107,16 @@ public class AuthController {
     public ResponseEntity<LoginResponse> refresh(
             @Valid @RequestBody RefreshRequest request) {
         return ResponseEntity.ok(authService.refresh(request));
+    }
+
+    @PostMapping ("/confirm-email-change")
+    @SecurityRequirements
+    public Map<String, String> confirmEmailChange(
+            @Valid @RequestBody ConfirmEmailChangeRequest request
+            )
+    {
+        emailChangeService.confirm(request.token());
+        return Map.of("message", "Email changed successfully.");
     }
 
     private CustomUserDetails authenticatedUser(Authentication authentication) {
