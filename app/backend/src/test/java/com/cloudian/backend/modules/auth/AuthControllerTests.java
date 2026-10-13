@@ -33,7 +33,8 @@ class AuthControllerTests {
     void logoutUsesTheAuthenticatedUsersCurrentTokensAndClearsTheSecurityContext() {
         UUID userId = UUID.randomUUID();
         CurrentSessionLogoutService logoutService = mock(CurrentSessionLogoutService.class);
-        AuthController controller = new AuthController(mock(AuthService.class), logoutService, mock(EmailChangeService.class));
+        AuthController controller = new AuthController(mock(AuthService.class), logoutService, mock(EmailChangeService.class),
+                mock(PasswordResetService.class));
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.addHeader("Authorization", "Bearer access-token");
         MockHttpServletResponse servletResponse = new MockHttpServletResponse();

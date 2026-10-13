@@ -3,6 +3,7 @@ package com.cloudian.backend.modules.auth;
 import java.util.Map;
 import java.util.UUID;
 
+import com.cloudian.backend.modules.auth.dto.*;
 import com.cloudian.backend.modules.user.EmailChangeService;
 import com.cloudian.backend.modules.user.dto.ConfirmEmailChangeRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cloudian.backend.exceptions.ApiException;
-import com.cloudian.backend.modules.auth.dto.LoginRequest;
-import com.cloudian.backend.modules.auth.dto.LoginResponse;
-import com.cloudian.backend.modules.auth.dto.LogoutRequest;
-import com.cloudian.backend.modules.auth.dto.RegisterRequest;
-import com.cloudian.backend.modules.auth.dto.RegisterResponse;
-import com.cloudian.backend.modules.auth.dto.VerifyEmailRequest;
 import com.cloudian.backend.security.CustomUserDetails;
-import com.cloudian.backend.modules.auth.dto.RefreshRequest;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,13 +34,16 @@ public class AuthController {
     private final AuthService authService;
     private final EmailChangeService emailChangeService;
     private final CurrentSessionLogoutService logoutService;
+    private final PasswordResetService passwordResetService;
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
     public AuthController(AuthService authService, CurrentSessionLogoutService logoutService,
-                          EmailChangeService emailChangeService) {
+                          EmailChangeService emailChangeService,
+                          PasswordResetService passwordResetService) {
         this.authService = authService;
         this.logoutService = logoutService;
         this.emailChangeService = emailChangeService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/login")
@@ -117,6 +114,22 @@ public class AuthController {
     {
         emailChangeService.confirm(request.token());
         return Map.of("message", "Email changed successfully.");
+    }
+
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @SecurityRequirements
+    public Map<String, String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestReset(request);
+        // Same answer whether the email exists or not (no account enumeration).
+        return Map.of("message", "If this email is registered, a password reset link has been sent.");
+    }
+
+    @PostMapping("/reset-password")
+    @SecurityRequirements
+    public Map<String, String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request);
+        return Map.of("message", "Password reset successfully. Please sign in again.");
     }
 
     private CustomUserDetails authenticatedUser(Authentication authentication) {
