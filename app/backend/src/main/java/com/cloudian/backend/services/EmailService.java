@@ -12,6 +12,10 @@ public class EmailService {
 
     private static final String VERIFICATION_TEMPLATE = "email/email-verification";
     private static final String VERIFICATION_SUBJECT = "Verify your UIT Connect email";
+    private static final String EMAIL_CHANGE_TEMPLATE = "email/email-change";
+    private static final String EMAIL_CHANGED_TEMPLATE = "email/email-change-notification";
+    private static final String EMAIL_CHANGE_SUBJECT = "Confirm your new UIT Connect email";
+    private static final String EMAIL_CHANGED_SUBJECT = "Your UIT Connect email was changed";
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
@@ -35,6 +39,20 @@ public class EmailService {
         context.setVariable("fullName", fullName);
         context.setVariable("verificationUrl", verificationUrl);
         send(recipient, VERIFICATION_SUBJECT, templateEngine.process(VERIFICATION_TEMPLATE, context));
+    }
+
+    public void sendEmailChangeConfirmation(String recipient, String fullName, String confirmationUrl) {
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("confirmationUrl", confirmationUrl);
+        send(recipient, EMAIL_CHANGE_SUBJECT, templateEngine.process(EMAIL_CHANGE_TEMPLATE, context));
+    }
+
+    public void sendEmailChangedNotice(String oldEmail, String fullName, String newEmail) {
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("newEmail", newEmail);
+        send(oldEmail, EMAIL_CHANGED_SUBJECT,templateEngine.process(EMAIL_CHANGED_TEMPLATE, context));
     }
 
     public void send(String recipient, String subject, String htmlBody) {

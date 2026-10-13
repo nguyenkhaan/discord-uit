@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import java.util.UUID;
 
+import com.cloudian.backend.modules.user.EmailChangeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,7 @@ class AuthControllerTests {
     void logoutUsesTheAuthenticatedUsersCurrentTokensAndClearsTheSecurityContext() {
         UUID userId = UUID.randomUUID();
         CurrentSessionLogoutService logoutService = mock(CurrentSessionLogoutService.class);
-        AuthController controller = new AuthController(mock(AuthService.class), logoutService);
+        AuthController controller = new AuthController(mock(AuthService.class), logoutService, mock(EmailChangeService.class));
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.addHeader("Authorization", "Bearer access-token");
         MockHttpServletResponse servletResponse = new MockHttpServletResponse();

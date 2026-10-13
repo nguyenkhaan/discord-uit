@@ -64,7 +64,8 @@ public class SecurityConfig {
                 })
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email", "/auth/refresh")
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email", "/auth/refresh",
+                                "/auth/confirm-email-change")
                         .permitAll()
                         .requestMatchers("/health/**").permitAll()
                         .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 
+import com.cloudian.backend.repositories.RefreshSessionRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -39,7 +40,8 @@ class JwtRequestFilterTests {
         JwtRequestFilter filter = new JwtRequestFilter(
                 mock(JwtUtil.class),
                 mock(CustomUserDetailsService.class),
-                revocationService);
+                revocationService,
+                mock(RefreshSessionRepository.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer access-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -58,7 +60,8 @@ class JwtRequestFilterTests {
         CustomUserDetailsService userDetailsService = mock(CustomUserDetailsService.class);
         AccessTokenRevocationService revocationService = mock(AccessTokenRevocationService.class);
         FilterChain chain = mock(FilterChain.class);
-        JwtRequestFilter filter = new JwtRequestFilter(jwtUtil, userDetailsService, revocationService);
+        RefreshSessionRepository refreshSessionRepository = mock(RefreshSessionRepository.class);
+        JwtRequestFilter filter = new JwtRequestFilter(jwtUtil, userDetailsService, revocationService, refreshSessionRepository);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer access-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
