@@ -46,6 +46,23 @@ public class RedisService {
         execute(List.of("DEL", key));
     }
 
+    public long increment(String key, Duration ttl) {
+        Objects.requireNonNull(key, "key must not be null");
+        Objects.requireNonNull(ttl, "ttl must not be null");
+
+        long ttlSeconds = ttl.toSeconds();
+        if (ttlSeconds < 1) {
+            throw new IllegalArgumentException("ttl must be at least one second");
+        }
+
+        Object result = execute(List.of("INCR", key));
+        long count = result instanceof Number number ? number.longValue() : Long.parseLong(result.toString());
+        if (count == 1) {
+            execute(List.of("EXPIRE", key, ttlSeconds));
+        }
+        return count;
+    }
+
     private Object execute(List<?> command) {
         UpstashResponse response = restClient.post()
                 .body(command)
