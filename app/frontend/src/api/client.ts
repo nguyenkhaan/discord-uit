@@ -6,11 +6,11 @@ import type {
 } from "axios";
 
 import {
+  clearTokens,
   getAccessToken,
   getRefreshToken,
   setTokens,
-  clearTokens,
-} from "../features/auth/token-storage";
+} from "@/features/auth/token-storage";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 

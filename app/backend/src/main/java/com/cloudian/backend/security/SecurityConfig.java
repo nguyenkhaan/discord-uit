@@ -69,7 +69,7 @@ public class SecurityConfig {
                                 "/auth/reset-password")
                         .permitAll()
                         .requestMatchers("/health/**").permitAll()
-                        .requestMatchers("/docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/docs/**", "/openapi.json/**" , "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated())
 
                 .sessionManagement(session -> session

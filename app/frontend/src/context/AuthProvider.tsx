@@ -1,42 +1,25 @@
+import { useState, type ReactNode } from "react";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
-
+import { AuthContext } from "@/context/auth-context";
 import {
   useLoginMutation,
-  useLogoutMutation,
   useLogoutAllMutation,
-} from "../features/auth/auth.hooks";
-
+  useLogoutMutation,
+} from "@/features/auth/auth.hooks";
+import type { LoginRequest } from "@/features/auth/auth.service";
 import {
+  clearTokens,
   getAccessToken,
   getRefreshToken,
-  clearTokens,
-} from "../features/auth/token-storage";
-
-import type { LoginRequest } from "../features/auth/auth.service";
-
-interface AuthContextValue {
-  isAuthenticated: boolean;
-  isLoggingIn: boolean;
-  login: (request: LoginRequest) => Promise<void>;
-  logout: () => Promise<void>;
-  logoutAll: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+} from "@/features/auth/token-storage";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => Boolean(getAccessToken())
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    Boolean(getAccessToken()),
   );
 
   const loginMutation = useLoginMutation();
@@ -46,7 +29,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function login(request: LoginRequest): Promise<void> {
     const tokens = await loginMutation.mutateAsync(request);
 
-    // useLoginMutation đã lưu token trong token-storage.
     if (tokens.accessToken) {
       setIsAuthenticated(true);
     }
@@ -87,14 +69,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-
-  return context;
 }

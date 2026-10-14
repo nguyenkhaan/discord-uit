@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
-import AuthPageImage from "../../assets/images/AuthPageImage.webp";
-import Logo from "../../assets/images/Logo.webp";
+
+import { cn } from "@/lib/utils";
 
 /* ---------- Icons (SVG) ---------- */
 
@@ -66,14 +65,6 @@ export function EyeOffIcon({ className }: IconProps) {
   );
 }
 
-export function ChevronRightIcon({ className }: IconProps) {
-  return (
-    <svg {...svgProps} className={className} width={20} height={20}>
-      <path d="m9 6 6 6-6 6" />
-    </svg>
-  );
-}
-
 export function LogInIcon({ className }: IconProps) {
   return (
     <svg {...svgProps} className={className}>
@@ -84,34 +75,65 @@ export function LogInIcon({ className }: IconProps) {
   );
 }
 
-/* ---------- Left panel dùng chung cho Login / Register ---------- */
-
 type VisualPanelProps = {
-  title: ReactNode;
+  backgroundImage: string;
   description: string;
+  title: ReactNode;
+  titleId: string;
+  variant: "login" | "register";
 };
 
-export function VisualPanel({ title, description }: VisualPanelProps) {
+export function VisualPanel({
+  backgroundImage,
+  description,
+  title,
+  titleId,
+  variant,
+}: VisualPanelProps) {
+  const isLogin = variant === "login";
+
   return (
-    <section className="visual-panel">
+    <section
+      aria-labelledby={titleId}
+      className={cn(
+        "relative isolate min-h-[clamp(23rem,54svh,30rem)] overflow-hidden md:min-h-svh",
+        isLogin ? "text-on-brand" : "text-heading",
+      )}
+    >
       <img
-        className="visual-background"
-        src={AuthPageImage}
         alt=""
         aria-hidden="true"
+        className="absolute inset-0 -z-20 size-full object-cover object-[center_52%] md:object-[center_58%]"
+        fetchPriority="high"
+        src={backgroundImage}
       />
 
-      <div className="visual-shade" aria-hidden="true" />
+      <div
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-0 -z-10 bg-linear-to-b",
+          isLogin
+            ? "from-brand-panel/10 via-brand-panel/20 to-heading/50"
+            : "from-white/5 via-transparent to-white/10 max-md:from-white/15 max-md:to-white/35",
+        )}
+      />
 
-      <Link className="visual-brand" to="/" aria-label="UIT Connect">
-        <img className="brand-logo" src={Logo} alt="UIT Connect" />
-      </Link>
-
-      <div className="hero-copy">
-        <h1>{title}</h1>
-        <p>{description}</p>
+      <div className="absolute inset-x-6 bottom-13 md:inset-x-auto md:top-[clamp(9.5rem,21vh,13rem)] md:bottom-auto md:left-10 md:w-[calc(100%-5rem)] lg:left-[clamp(2rem,6vw,6rem)] lg:w-[min(30rem,calc(100%-clamp(4rem,12vw,12rem)))]">
+        <h1
+          className="m-0 max-w-[29rem] text-[clamp(2.15rem,9vw,3.25rem)] leading-[1.08] font-extrabold tracking-[-0.045em] [text-wrap:balance] md:text-[clamp(2.25rem,4.5vw,3.4rem)] lg:text-[clamp(2.5rem,4vw,4.5rem)]"
+          id={titleId}
+        >
+          {title}
+        </h1>
+        <p
+          className={cn(
+            "mt-3.5 max-w-[29rem] text-[0.95rem] leading-[1.55] md:mt-[1.4rem] lg:text-[clamp(0.95rem,1.15vw,1.12rem)] lg:leading-[1.65]",
+            isLogin ? "text-white/90" : "text-foreground-secondary",
+          )}
+        >
+          {description}
+        </p>
       </div>
-
     </section>
   );
 }

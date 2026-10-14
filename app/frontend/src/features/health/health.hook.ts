@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getHealthLiveness } from "./health.service";
+import { getHealthLiveness } from "@/features/health/health.service";
 
 export function useGetHealthLivenessQuery() {
     return useQuery({
@@ -9,7 +9,7 @@ export function useGetHealthLivenessQuery() {
 }
 export function useCreateSomethingMutation() {
     return useMutation({
-        mutationKey: ["key-name"], 
+        mutationKey: ["key-name"],
         mutationFn: undefined //service function
     })
-} 
+}
