@@ -1,49 +1,61 @@
+import { privateClient, publicClient } from '@/api/client';
+import type {
+    AuthenticationTokens,
+    LoginRequest,
+    LoginResponse,
+    LogoutRequest,
+    RefreshRequest,
+} from '@/features/auth/auth.type';
 
-import { privateClient, publicClient } from "@/api/client";
-export interface LoginRequest {
-    username: string;
-  password: string;
-}
+const AUTH_ENDPOINTS = {
+    login: '/api/auth/login',
+    refresh: '/api/auth/refresh',
+    logout: '/api/auth/logout',
+    logoutAll: '/api/auth/logout-all',
+} as const;
 
-export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+function requireAuthenticationTokens(
+    response: LoginResponse
+): AuthenticationTokens {
+    const { accessToken, refreshToken } = response;
 
-export interface RefreshRequest {
-  refreshToken: string;
+    if (!accessToken || !refreshToken) {
+        throw new Error('Login response is missing authentication tokens.');
+    }
+
+    return { accessToken, refreshToken };
 }
 
 export async function login(
-  request: LoginRequest
-): Promise<LoginResponse> {
-  const { data } = await publicClient.post<LoginResponse>(
-    "/api/auth/login",
-    request
-  );
+    request: LoginRequest
+): Promise<AuthenticationTokens> {
+    const { data } = await publicClient.post<LoginResponse>(
+        AUTH_ENDPOINTS.login,
+        request
+    );
 
-  return data;
+    return requireAuthenticationTokens(data);
 }
 
 export async function refreshToken(
-  request: RefreshRequest
-): Promise<LoginResponse> {
-  const { data } = await publicClient.post<LoginResponse>(
-    "/api/auth/refresh",
-    request
-  );
+    request: RefreshRequest
+): Promise<AuthenticationTokens> {
+    const { data } = await publicClient.post<LoginResponse>(
+        AUTH_ENDPOINTS.refresh,
+        request
+    );
 
-  return data;
+    return requireAuthenticationTokens(data);
 }
 
 export async function logout(
-  refreshTokenValue: string
+    refreshTokenValue: LogoutRequest['refreshToken']
 ): Promise<void> {
-  await privateClient.post("/api/auth/logout", {
-    refreshToken: refreshTokenValue,
-  });
+    await privateClient.post(AUTH_ENDPOINTS.logout, {
+        refreshToken: refreshTokenValue,
+    });
 }
 
 export async function logoutAll(): Promise<void> {
-  await privateClient.post("/api/auth/logout-all");
+    await privateClient.post(AUTH_ENDPOINTS.logoutAll);
 }
