@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/me/password-change": {
+    '/me/password-change': {
         parameters: {
             query?: never;
             header?: never;
@@ -13,14 +13,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["changePassword"];
+        post: operations['changePassword'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/me/email-change": {
+    '/me/email-change': {
         parameters: {
             query?: never;
             header?: never;
@@ -29,14 +29,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["requestEmailChange"];
+        post: operations['requestEmailChange'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/kafka/notification": {
+    '/kafka/notification': {
         parameters: {
             query?: never;
             header?: never;
@@ -45,14 +45,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish"];
+        post: operations['publish'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/verify-email": {
+    '/auth/verify-email': {
         parameters: {
             query?: never;
             header?: never;
@@ -61,14 +61,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["verifyEmail"];
+        post: operations['verifyEmail'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/reset-password": {
+    '/auth/reset-password': {
         parameters: {
             query?: never;
             header?: never;
@@ -77,14 +77,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["resetPassword"];
+        post: operations['resetPassword'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/register": {
+    '/auth/register': {
         parameters: {
             query?: never;
             header?: never;
@@ -93,14 +93,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["register"];
+        post: operations['register'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/refresh": {
+    '/auth/refresh': {
         parameters: {
             query?: never;
             header?: never;
@@ -109,14 +109,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["refresh"];
+        post: operations['refresh'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/logout": {
+    '/auth/logout': {
         parameters: {
             query?: never;
             header?: never;
@@ -125,14 +125,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["logout"];
+        post: operations['logout'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/logout-all": {
+    '/auth/logout-all': {
         parameters: {
             query?: never;
             header?: never;
@@ -141,14 +141,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["logoutAll"];
+        post: operations['logoutAll'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/login": {
+    '/auth/login': {
         parameters: {
             query?: never;
             header?: never;
@@ -157,14 +157,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["login"];
+        post: operations['login'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/forgot-password": {
+    '/auth/forgot-password': {
         parameters: {
             query?: never;
             header?: never;
@@ -173,14 +173,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["forgotPassword"];
+        post: operations['forgotPassword'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/confirm-email-change": {
+    '/auth/confirm-email-change': {
         parameters: {
             query?: never;
             header?: never;
@@ -189,53 +189,37 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["confirmEmailChange"];
+        post: operations['confirmEmailChange'];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/me": {
+    '/me': {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getMe"];
+        get: operations['getMe'];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["updateMe"];
+        patch: operations['updateMe'];
         trace?: never;
     };
-    "/health": {
+    '/health': {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["liveness"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/health/message": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["readness"];
+        get: operations['liveness'];
         put?: never;
         post?: never;
         delete?: never;
@@ -244,14 +228,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/health/error": {
+    '/health/message': {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["HealthError"];
+        get: operations['readness'];
         put?: never;
         post?: never;
         delete?: never;
@@ -260,14 +244,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/health/database": {
+    '/health/error': {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["TestingHealth"];
+        get: operations['HealthError'];
         put?: never;
         post?: never;
         delete?: never;
@@ -276,14 +260,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/test-authentication": {
+    '/health/database': {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["testingAuthentication"];
+        get: operations['TestingHealth'];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/auth/test-authentication': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations['testingAuthentication'];
         put?: never;
         post?: never;
         delete?: never;
@@ -329,7 +329,7 @@ export interface components {
             email?: string;
             fullName?: string;
             /** @enum {string} */
-            accountStatus?: "UNVERIFIED" | "ACTIVE" | "BANNED";
+            accountStatus?: 'UNVERIFIED' | 'ACTIVE' | 'BANNED';
         };
         RefreshRequest: {
             refreshToken: string;
@@ -361,11 +361,11 @@ export interface components {
             email?: string;
             fullName?: string;
             /** @enum {string} */
-            accountType?: "PERSONAL" | "UIT";
+            accountType?: 'PERSONAL' | 'UIT';
             /** @enum {string} */
-            accountStatus?: "UNVERIFIED" | "ACTIVE" | "BANNED";
+            accountStatus?: 'UNVERIFIED' | 'ACTIVE' | 'BANNED';
             /** @enum {string} */
-            systemRole?: "USER" | "ADMIN";
+            systemRole?: 'USER' | 'ADMIN';
             /** Format: date-time */
             emailVerifiedAt?: string;
             /** Format: date-time */
@@ -394,7 +394,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ChangePasswordRequest"];
+                'application/json': components['schemas']['ChangePasswordRequest'];
             };
         };
         responses: {
@@ -416,7 +416,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EmailChangeRequest"];
+                'application/json': components['schemas']['EmailChangeRequest'];
             };
         };
         responses: {
@@ -438,7 +438,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NotificationRequest"];
+                'application/json': components['schemas']['NotificationRequest'];
             };
         };
         responses: {
@@ -448,7 +448,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    '*/*': {
                         [key: string]: string;
                     };
                 };
@@ -464,7 +464,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VerifyEmailRequest"];
+                'application/json': components['schemas']['VerifyEmailRequest'];
             };
         };
         responses: {
@@ -474,7 +474,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    '*/*': {
                         [key: string]: string;
                     };
                 };
@@ -490,7 +490,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResetPasswordRequest"];
+                'application/json': components['schemas']['ResetPasswordRequest'];
             };
         };
         responses: {
@@ -500,7 +500,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    '*/*': {
                         [key: string]: string;
                     };
                 };
@@ -516,7 +516,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RegisterRequest"];
+                'application/json': components['schemas']['RegisterRequest'];
             };
         };
         responses: {
@@ -526,7 +526,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RegisterResponse"];
+                    '*/*': components['schemas']['RegisterResponse'];
                 };
             };
         };
@@ -540,7 +540,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RefreshRequest"];
+                'application/json': components['schemas']['RefreshRequest'];
             };
         };
         responses: {
@@ -550,7 +550,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LoginResponse"];
+                    '*/*': components['schemas']['LoginResponse'];
                 };
             };
         };
@@ -564,7 +564,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LogoutRequest"];
+                'application/json': components['schemas']['LogoutRequest'];
             };
         };
         responses: {
@@ -604,7 +604,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LoginRequest"];
+                'application/json': components['schemas']['LoginRequest'];
             };
         };
         responses: {
@@ -614,7 +614,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LoginResponse"];
+                    '*/*': components['schemas']['LoginResponse'];
                 };
             };
         };
@@ -628,7 +628,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ForgotPasswordRequest"];
+                'application/json': components['schemas']['ForgotPasswordRequest'];
             };
         };
         responses: {
@@ -638,7 +638,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    '*/*': {
                         [key: string]: string;
                     };
                 };
@@ -654,7 +654,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ConfirmEmailChangeRequest"];
+                'application/json': components['schemas']['ConfirmEmailChangeRequest'];
             };
         };
         responses: {
@@ -664,7 +664,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    '*/*': {
                         [key: string]: string;
                     };
                 };
@@ -686,7 +686,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MeResponse"];
+                    '*/*': components['schemas']['MeResponse'];
                 };
             };
         };
@@ -700,7 +700,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateMeRequest"];
+                'application/json': components['schemas']['UpdateMeRequest'];
             };
         };
         responses: {
@@ -710,7 +710,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MeResponse"];
+                    '*/*': components['schemas']['MeResponse'];
                 };
             };
         };
@@ -730,7 +730,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": string;
+                    '*/*': string;
                 };
             };
         };
@@ -750,7 +750,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["HealthResponse"];
+                    '*/*': components['schemas']['HealthResponse'];
                 };
             };
         };
@@ -788,7 +788,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    '*/*': {
                         [key: string]: unknown;
                     };
                 };
@@ -810,7 +810,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": string;
+                    '*/*': string;
                 };
             };
         };

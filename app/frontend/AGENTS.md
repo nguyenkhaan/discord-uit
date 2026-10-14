@@ -55,9 +55,9 @@ frontend/
 - Dùng `import type` cho type chỉ tồn tại lúc compile.
 
 ```ts
-import { Button } from "@/components/common/Button";
-import { useAuth } from "@/context/useAuth";
-import type { LoginRequest } from "@/features/auth/auth.service";
+import { Button } from '@/components/common/Button';
+import { useAuth } from '@/context/useAuth';
+import type { LoginRequest } from '@/features/auth/auth.service';
 ```
 
 ## TypeScript và React
@@ -94,8 +94,8 @@ import type { LoginRequest } from "@/features/auth/auth.service";
 - Xóa variant không còn nơi sử dụng.
 
 ```tsx
-<Button className={cn(isActive && "text-brand")} variant="tab">
-  Tài khoản cá nhân
+<Button className={cn(isActive && 'text-brand')} variant="tab">
+    Tài khoản cá nhân
 </Button>
 ```
 

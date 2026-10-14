@@ -8,6 +8,7 @@ import com.cloudian.backend.commons.enums.AccountStatus;
 import com.cloudian.backend.repositories.RefreshSessionRepository;
 import com.cloudian.backend.commons.enums.TokenType;
 import com.cloudian.backend.exceptions.ErrorResponseWriter;
+import com.cloudian.backend.modules.auth.AuthenticationCookieService;
 import com.cloudian.backend.security.CustomUserDetails;
 import com.cloudian.backend.services.AccessTokenRevocationService;
 import com.cloudian.backend.services.CustomUserDetailsService;
@@ -18,6 +19,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,22 +31,26 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private static final String INVALID_ACCESS_TOKEN_MESSAGE = "The access token is invalid or expired.";
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final ErrorResponseWriter errorResponseWriter = new ErrorResponseWriter();
     private final AccessTokenRevocationService accessTokenRevocationService;
     private final RefreshSessionRepository refreshSessionRepository;
+    private final AuthenticationCookieService authenticationCookieService;
 
     public JwtRequestFilter(
             JwtUtil jwtUtil,
             CustomUserDetailsService customUserDetailsService,
             AccessTokenRevocationService accessTokenRevocationService,
-            RefreshSessionRepository refreshSessionRepository) {
+            RefreshSessionRepository refreshSessionRepository,
+            AuthenticationCookieService authenticationCookieService) {
         this.jwtUtil = jwtUtil;
         this.customUserDetailsService = customUserDetailsService;
         this.accessTokenRevocationService = accessTokenRevocationService;
         this.refreshSessionRepository = refreshSessionRepository;
+        this.authenticationCookieService = authenticationCookieService;
     }
 
     @Override
@@ -52,14 +58,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain chain) throws ServletException, IOException {
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        String accessToken = accessToken(request);
+        if (accessToken == null) {
             chain.doFilter(request, response);
             return;
         }
 
         try {
-            if (!authenticate(authorizationHeader.substring(7), request)) {
+            if (!authenticate(accessToken, request)) {
                 writeInvalidAccessToken(response);
                 return;
             }
@@ -68,6 +74,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             writeInvalidAccessToken(response);
         }
+    }
+
+    private String accessToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (authorizationHeader != null && !authorizationHeader.isBlank()) {
+            return authorizationHeader.startsWith(BEARER_PREFIX)
+                    ? authorizationHeader.substring(BEARER_PREFIX.length())
+                    : authorizationHeader;
+        }
+
+        return authenticationCookieService.accessToken(request).orElse(null);
     }
 
     private boolean authenticate(String jwt, HttpServletRequest request) {

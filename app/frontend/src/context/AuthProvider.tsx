@@ -1,72 +1,56 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode } from 'react';
 
-import { AuthContext } from "@/context/auth-context";
+import { AuthContext } from '@/context/auth-context';
 import {
-  useLoginMutation,
-  useLogoutAllMutation,
-  useLogoutMutation,
-} from "@/features/auth/auth.hooks";
-import type { LoginRequest } from "@/features/auth/auth.service";
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-} from "@/features/auth/token-storage";
+    useLoginMutation,
+    useLogoutAllMutation,
+    useLogoutMutation,
+} from '@/features/auth/auth.hooks';
+import type { LoginRequest } from '@/features/auth/auth.type';
 
 interface AuthProviderProps {
-  children: ReactNode;
+    children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() =>
-    Boolean(getAccessToken()),
-  );
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const loginMutation = useLoginMutation();
-  const logoutMutation = useLogoutMutation();
-  const logoutAllMutation = useLogoutAllMutation();
+    const loginMutation = useLoginMutation();
+    const logoutMutation = useLogoutMutation();
+    const logoutAllMutation = useLogoutAllMutation();
 
-  async function login(request: LoginRequest): Promise<void> {
-    const tokens = await loginMutation.mutateAsync(request);
-
-    if (tokens.accessToken) {
-      setIsAuthenticated(true);
+    async function login(request: LoginRequest): Promise<void> {
+        await loginMutation.mutateAsync(request);
+        setIsAuthenticated(true);
     }
-  }
 
-  async function logout(): Promise<void> {
-    const refreshToken = getRefreshToken();
-
-    try {
-      if (refreshToken) {
-        await logoutMutation.mutateAsync(refreshToken);
-      }
-    } finally {
-      clearTokens();
-      setIsAuthenticated(false);
+    async function logout(): Promise<void> {
+        try {
+            await logoutMutation.mutateAsync();
+        } finally {
+            setIsAuthenticated(false);
+        }
     }
-  }
 
-  async function logoutAll(): Promise<void> {
-    try {
-      await logoutAllMutation.mutateAsync();
-    } finally {
-      clearTokens();
-      setIsAuthenticated(false);
+    async function logoutAll(): Promise<void> {
+        try {
+            await logoutAllMutation.mutateAsync();
+        } finally {
+            setIsAuthenticated(false);
+        }
     }
-  }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        isLoggingIn: loginMutation.isPending,
-        login,
-        logout,
-        logoutAll,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider
+            value={{
+                isAuthenticated,
+                isLoggingIn: loginMutation.isPending,
+                login,
+                logout,
+                logoutAll,
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
 }
