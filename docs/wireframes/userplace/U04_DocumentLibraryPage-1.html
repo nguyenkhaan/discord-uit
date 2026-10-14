@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Document library · UIT Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+    let preferredTheme;
+    try { preferredTheme = localStorage.getItem('uit-connect-theme'); } catch {}
+    document.documentElement.dataset.theme = preferredTheme === 'light' || preferredTheme === 'dark' ? preferredTheme : systemTheme.matches ? 'dark' : 'light';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+  <style type="text/tailwindcss">@theme inline{--font-sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--color-canvas:var(--canvas);--color-surface:var(--surface);--color-raised:var(--raised);--color-rail:var(--rail);--color-ink:var(--ink);--color-support:var(--support);--color-line:var(--line);--color-primary:#5865F2;--color-primary-hover:#4752C4;--color-success-fill:#18743A;--color-danger:#F23F42;--color-danger-fill:#B42328;--radius-control:8px;--radius-card:12px}</style>
+  <style>
+    :root{color-scheme:light;--canvas:#F2F3F5;--surface:#FFF;--raised:#E8EAFE;--rail:#E3E5E8;--ink:#060607;--support:#3F4147;--line:#DCDDDE;--hover:#E3E5E8;--focus-inner:#FFF;--scrim:rgb(6 6 7/.62)}
+    :root[data-theme="dark"]{color-scheme:dark;--canvas:#1E1F22;--surface:#2B2D31;--raised:#313338;--rail:#1E1F22;--ink:#F2F3F5;--support:#B5BAC1;--line:#3F4147;--hover:#313338;--scrim:rgb(0 0 0/.72)}
+    *{scrollbar-color:var(--line) transparent}::selection{background:#5865F2;color:#FFF}body{margin:0;background:var(--canvas)}button,a,input,select{transition:background-color 150ms ease-out,border-color 150ms ease-out,color 150ms ease-out,opacity 150ms ease-out}button,a{touch-action:manipulation}button{cursor:pointer}input{caret-color:#5865F2}input[type=checkbox],input[type=radio]{accent-color:#5865F2}:where(button,a,input,select):focus-visible{outline:2px solid #5865F2;outline-offset:2px;box-shadow:0 0 0 2px var(--focus-inner)}.neutral:hover,.neutral:active{background:var(--hover)}[data-theme="dark"] .text-primary{color:#E8EAFE}.rail-link:hover .rail-tooltip,.rail-link:focus-visible .rail-tooltip{opacity:1;transform:translateX(0)}dialog{color:var(--ink);background:var(--surface)}dialog::backdrop{background:var(--scrim)}[hidden]{display:none!important}
+    .tab[aria-selected="true"]{background:#5865F2;color:#FFF;border-color:#5865F2}
+    .cover-pdf{background:#B42328}.cover-doc{background:#2B5CC8}.cover-ppt{background:#B4501A}.cover-img{background:#18743A}.cover-other{background:#4E5058}
+    @keyframes pulse{50%{opacity:.5}}.skeleton{background:var(--line);animation:pulse 1.4s ease-in-out infinite}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body class="min-h-dvh overflow-hidden font-sans text-ink antialiased">
+  <a href="#main" class="fixed left-3 top-3 z-50 -translate-y-20 rounded-control bg-primary px-4 py-3 font-semibold text-white focus:translate-y-0">Skip to main content</a>
+  <div class="flex h-dvh min-w-0">
+    <!-- Rail: same as U01, Documents is the current page -->
+    <aside aria-label="Primary workspace navigation" class="relative z-30 hidden w-20 shrink-0 flex-col items-center border-r border-line bg-rail py-3 md:flex">
+      <a href="/servers" aria-label="UIT Connect home" class="rail-link relative grid size-12 place-items-center rounded-card bg-primary text-sm font-bold text-white"><span aria-hidden="true">UIT</span><span aria-hidden="true" class="rail-tooltip pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-control bg-ink px-3 py-2 text-xs font-semibold text-surface opacity-0 shadow-lg">UIT Connect</span></a>
+      <div aria-hidden="true" class="my-3 h-px w-8 bg-line"></div>
+      <nav aria-label="Product areas" class="flex flex-col items-center gap-2">
+        <a href="/servers" aria-label="Servers" class="rail-link neutral relative grid size-12 place-items-center rounded-[16px] text-support"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><rect x="4" y="5" width="16" height="6" rx="2"/><rect x="4" y="13" width="16" height="6" rx="2"/><path d="M8 8h.01M8 16h.01"/></svg><span aria-hidden="true" class="rail-tooltip pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-control bg-ink px-3 py-2 text-xs font-semibold text-surface opacity-0 shadow-lg">Servers</span></a>
+        <a href="/documents" aria-current="page" aria-label="Documents" class="rail-link relative grid size-12 place-items-center rounded-[16px] bg-primary text-white"><span aria-hidden="true" class="absolute -left-[17px] h-8 w-1 rounded-r-full bg-ink"></span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span aria-hidden="true" class="rail-tooltip pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-control bg-ink px-3 py-2 text-xs font-semibold text-surface opacity-0 shadow-lg">Documents</span></a>
+        <a href="/forum" aria-label="Forum" class="rail-link neutral relative grid size-12 place-items-center rounded-[16px] text-support"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><path d="M7 18 3 21v-5a8 8 0 1 1 4 2Z"/><path d="M8 9h8M8 13h5"/></svg><span aria-hidden="true" class="rail-tooltip pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-control bg-ink px-3 py-2 text-xs font-semibold text-surface opacity-0 shadow-lg">Forum</span></a>
+      </nav>
+      <div class="mt-auto flex flex-col items-center gap-2">
+        <button id="notifications-button" type="button" aria-label="Notifications, 2 unread" class="rail-link neutral relative grid size-12 place-items-center rounded-[16px] text-support"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="absolute right-0 top-0 min-w-5 rounded-full border-2 border-rail bg-danger-fill px-1 text-center text-[11px] font-bold leading-4 text-white">2</span><span aria-hidden="true" class="rail-tooltip pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-control bg-ink px-3 py-2 text-xs font-semibold text-surface opacity-0 shadow-lg">Notifications</span></button>
+        <button data-theme-toggle type="button" aria-label="Switch to dark mode" class="rail-link neutral relative grid size-12 place-items-center rounded-[16px] text-support"><svg data-theme-icon="dark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z"/></svg><svg data-theme-icon="light" hidden aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M2 12h2M20 12h2M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5"/></svg><span data-theme-label aria-hidden="true" class="rail-tooltip pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-control bg-ink px-3 py-2 text-xs font-semibold text-surface opacity-0 shadow-lg">Dark mode</span></button>
+        <div class="relative"><button id="account-button" type="button" aria-label="Open account menu for Minh Anh" aria-controls="account-menu" aria-expanded="false" class="grid size-12 place-items-center rounded-[16px] bg-success-fill font-bold text-white">MA</button><div id="account-menu" hidden class="absolute bottom-0 left-14 z-50 w-56 rounded-card border border-line bg-surface p-2 shadow-xl"><p class="px-3 pb-2 pt-1 text-sm font-bold">Minh Anh</p><a href="/settings/account" class="neutral block rounded-control px-3 py-2.5 text-sm font-semibold">Account settings</a><a href="/my-content" class="neutral block rounded-control px-3 py-2.5 text-sm font-semibold">My content</a><div class="my-1 h-px bg-line"></div><button type="button" class="neutral w-full rounded-control px-3 py-2.5 text-left text-sm font-semibold">Sign out</button></div></div>
+      </div>
+    </aside>
+
+    <section class="flex min-w-0 flex-1 flex-col">
+      <!-- Header: global search like the mockup -->
+      <header class="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-surface px-4 md:px-6">
+        <button id="mobile-menu-button" type="button" aria-label="Open navigation" aria-controls="mobile-menu" aria-expanded="false" class="neutral grid size-11 place-items-center rounded-control md:hidden"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <a href="/servers" class="text-base font-bold tracking-tight md:hidden">UIT <span class="font-medium">Connect</span></a>
+        <div class="hidden min-w-0 shrink-0 md:block"><p class="text-xs font-semibold text-support">LIBRARY</p><p class="truncate text-sm font-bold">Documents</p></div>
+        <form id="header-search-form" role="search" class="mx-auto hidden w-full max-w-xl md:block"><label for="header-search" class="sr-only">Search documents</label><div class="relative"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-support"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="header-search" type="search" autocomplete="off" placeholder="Search documents, authors, topics…" class="min-h-11 w-full rounded-control border border-line bg-canvas pl-10 pr-3 text-sm"></div></form>
+        <div class="ml-auto flex items-center gap-1 md:hidden"><button id="mobile-notifications-button" type="button" aria-label="Notifications, 2 unread" class="neutral relative grid size-11 place-items-center rounded-control"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="absolute right-0 top-0 min-w-5 rounded-full bg-danger-fill px-1 text-[11px] font-bold leading-5 text-white">2</span></button><a href="/documents/new" class="inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-3 text-sm font-semibold text-white hover:bg-primary-hover"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>Upload</a></div>
+      </header>
+
+      <div class="flex min-h-0 flex-1">
+        <main id="main" class="min-w-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
+          <div class="mx-auto max-w-5xl">
+            <!-- Title + actions -->
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div><h1 class="text-[28px] font-bold leading-9 tracking-[-0.02em]">Document library</h1><p class="mt-2 max-w-2xl text-support">Find and share study materials from the UIT community.</p></div>
+              <div class="hidden gap-2 md:flex"><a href="/my-content" class="neutral inline-flex min-h-11 items-center gap-2 rounded-control border border-line bg-surface px-4 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5"><path d="M4 5h6l2 2h8v12H4z"/></svg>My documents</a><a href="/documents/new" class="inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>Upload document</a></div>
+            </div>
+
+            <!-- Mobile/tablet: search + filters button (right panel is a drawer below xl) -->
+            <div class="mt-5 flex gap-2 xl:hidden"><label for="mobile-search" class="sr-only">Search documents</label><input id="mobile-search" type="search" placeholder="Search documents…" class="min-h-11 min-w-0 flex-1 rounded-control border border-line bg-surface px-3 text-sm md:hidden"><button data-open-filters type="button" class="neutral inline-flex min-h-11 items-center gap-2 rounded-control border border-line bg-surface px-3 text-sm font-semibold"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters</button></div>
+
+            <!-- Topic tabs -->
+            <div id="topic-tabs" role="tablist" aria-label="Topics" class="mt-6 flex gap-2 overflow-x-auto pb-1"></div>
+
+            <!-- Hero banner -->
+            <section aria-labelledby="hero-title" class="relative mt-6 overflow-hidden rounded-card bg-primary px-6 py-7 text-white md:px-8">
+              <div class="relative z-10 max-w-lg"><h2 id="hero-title" class="text-[22px] font-bold leading-[30px]">Thousands of study documents from UIT students</h2><p class="mt-2 text-sm leading-6 text-white/90">Share what you know, learn from your classmates, and grow together.</p><a href="/documents/new" class="mt-4 inline-flex min-h-11 items-center gap-2 rounded-control bg-white px-4 text-sm font-semibold text-[#4752C4] hover:bg-[#E8EAFE]">Upload a document</a></div>
+              <svg aria-hidden="true" viewBox="0 0 200 160" class="absolute -right-4 bottom-0 hidden h-40 sm:block"><rect x="40" y="30" width="80" height="110" rx="8" fill="#fff" opacity=".18"/><rect x="70" y="14" width="80" height="110" rx="8" fill="#fff" opacity=".3"/><rect x="100" y="40" width="80" height="110" rx="8" fill="#fff"/><path d="M115 70h50M115 85h50M115 100h34" stroke="#5865F2" stroke-width="6" stroke-linecap="round"/></svg>
+            </section>
+
+            <!-- Featured -->
+            <section id="featured-section" aria-labelledby="featured-title" class="mt-8">
+              <div class="flex items-center justify-between gap-4"><h2 id="featured-title" class="text-lg font-bold">Featured documents</h2><button data-sort-shortcut="popular" type="button" class="neutral min-h-11 rounded-control px-3 text-sm font-semibold text-primary">View all</button></div>
+              <ul id="featured-list" class="mt-3 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4"></ul>
+            </section>
+
+            <!-- All documents -->
+            <section aria-labelledby="all-title" class="mt-8 rounded-card border border-line bg-surface">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 md:px-5">
+                <div><h2 id="all-title" class="text-lg font-bold">All documents</h2><p id="result-count" role="status" aria-live="polite" class="text-sm text-support"></p></div>
+                <div class="flex items-center gap-2"><label for="sort-select" class="text-sm font-semibold text-support">Sort:</label><select id="sort-select" class="min-h-11 rounded-control border border-line bg-surface px-3 text-sm font-semibold"><option value="newest">Newest</option><option value="popular">Most popular</option><option value="downloads">Most downloaded</option><option value="likes">Most liked</option></select></div>
+              </div>
+              <div id="active-chips" class="flex flex-wrap gap-2 px-4 pt-3 empty:hidden md:px-5"></div>
+
+              <div id="table-wrap" class="overflow-x-auto">
+                <table class="w-full min-w-[720px] text-left text-sm">
+                  <thead class="text-xs font-bold uppercase tracking-wide text-support"><tr class="border-b border-line"><th scope="col" class="px-5 py-3">Document</th><th scope="col" class="px-3 py-3">Author</th><th scope="col" class="px-3 py-3">Topic</th><th scope="col" class="px-3 py-3">Uploaded</th><th scope="col" class="px-3 py-3 text-right">Downloads</th><th scope="col" class="px-3 py-3"><span class="sr-only">Actions</span></th></tr></thead>
+                  <tbody id="doc-rows"></tbody>
+                </table>
+              </div>
+
+              <div id="skeleton" hidden class="space-y-3 p-5"><div class="skeleton h-12 rounded-control"></div><div class="skeleton h-12 rounded-control"></div><div class="skeleton h-12 rounded-control"></div><div class="skeleton h-12 rounded-control"></div></div>
+              <div id="empty-filtered" hidden class="px-6 py-12 text-center"><h3 class="text-lg font-bold">No documents match</h3><p class="mx-auto mt-2 max-w-md text-sm text-support">Try another keyword or clear some filters.</p><button data-clear-filters type="button" class="neutral mt-4 min-h-11 rounded-control border border-line px-4 text-sm font-semibold">Clear filters</button></div>
+              <div id="empty-library" hidden class="px-6 py-12 text-center"><h3 class="text-lg font-bold">No documents yet</h3><p class="mx-auto mt-2 max-w-md text-sm text-support">Be the first to share study material with your classmates.</p><a href="/documents/new" class="mt-4 inline-flex min-h-11 items-center rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover">Upload document</a></div>
+              <div id="error-state" hidden class="px-6 py-12 text-center"><h3 class="text-lg font-bold">Couldn't load documents</h3><p class="mx-auto mt-2 max-w-md text-sm text-support">Check your connection and try again.</p><button id="retry-button" type="button" class="mt-4 min-h-11 rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover">Try again</button></div>
+
+              <div id="load-more-wrap" class="border-t border-line p-4 text-center"><button id="load-more" type="button" class="neutral min-h-11 rounded-control border border-line px-5 text-sm font-semibold">Load more</button></div>
+            </section>
+          </div>
+        </main>
+
+        <!-- Right panel: Search + Filters + Sort by (moves into a drawer below xl) -->
+        <aside id="filter-aside" aria-label="Search and filters" class="hidden w-80 shrink-0 overflow-y-auto border-l border-line bg-surface xl:block">
+          <div id="filter-panel" class="space-y-6 p-5">
+            <section><h2 class="text-base font-bold">Search</h2><label for="keyword" class="sr-only">Keyword</label><input id="keyword" type="search" autocomplete="off" placeholder="Enter a keyword…" class="mt-3 min-h-11 w-full rounded-control border border-line bg-surface px-3 text-sm"></section>
+            <div class="h-px bg-line"></div>
+            <section><div class="flex items-center justify-between"><h2 class="text-base font-bold">Filters</h2><button data-clear-filters type="button" class="neutral min-h-9 rounded-control px-2 text-sm font-semibold text-primary">Clear all</button></div>
+              <fieldset class="mt-4"><legend class="text-sm font-bold">Topic</legend><div id="topic-filters" class="mt-2 space-y-1"></div></fieldset>
+              <fieldset class="mt-5"><legend class="text-sm font-bold">File type</legend><div id="type-filters" class="mt-2 space-y-1"></div></fieldset>
+            </section>
+            <div class="h-px bg-line"></div>
+            <fieldset><legend class="text-base font-bold">Sort by</legend><div id="sort-radios" class="mt-3 space-y-1"></div></fieldset>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <dialog id="filters-dialog" aria-labelledby="filters-dialog-title" class="m-0 ml-auto h-dvh w-full max-w-sm max-h-none rounded-none border-0 border-l border-line p-0 shadow-2xl"><div class="flex h-full flex-col"><div class="flex h-16 shrink-0 items-center justify-between border-b border-line px-4"><h2 id="filters-dialog-title" class="text-lg font-bold">Search &amp; filters</h2><button data-close-filters type="button" aria-label="Close filters" class="neutral grid size-11 place-items-center rounded-control"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div id="filters-dialog-body" class="flex-1 overflow-y-auto"></div><div class="border-t border-line p-4"><button data-close-filters type="button" class="min-h-11 w-full rounded-control bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover">Show results</button></div></div></dialog>
+
+  <dialog id="mobile-menu" aria-labelledby="mobile-menu-title" class="m-0 h-dvh w-[min(88vw,340px)] max-h-none max-w-none rounded-none border-0 border-r border-line p-0 shadow-2xl"><div class="flex h-full flex-col"><div class="flex h-16 items-center justify-between border-b border-line px-4"><h2 id="mobile-menu-title" class="text-lg font-bold">UIT Connect</h2><button data-close-menu type="button" aria-label="Close navigation" class="neutral grid size-11 place-items-center rounded-control"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><nav aria-label="Mobile workspace navigation" class="space-y-1 p-3"><a href="/servers" class="neutral flex min-h-12 items-center rounded-control px-3 font-semibold">Servers</a><a href="/documents" aria-current="page" class="flex min-h-12 items-center gap-3 rounded-control bg-raised px-3 font-bold">Documents</a><a href="/forum" class="neutral flex min-h-12 items-center rounded-control px-3 font-semibold">Forum</a></nav><div class="mx-4 h-px bg-line"></div><nav aria-label="Your servers" class="flex-1 overflow-y-auto p-3"><p class="px-3 pb-2 text-xs font-bold text-support">YOUR SERVERS</p><a href="/servers/se347" class="neutral flex min-h-12 items-center gap-3 rounded-control px-3"><span class="grid size-8 place-items-center rounded-control bg-primary text-xs font-bold text-white">S</span><span class="font-semibold">SE347 Project</span></a><a href="/servers/ml-study" class="neutral flex min-h-12 items-center gap-3 rounded-control px-3"><span class="grid size-8 place-items-center rounded-control bg-success-fill text-xs font-bold text-white">M</span><span class="font-semibold">Machine Learning Study</span></a><a href="/servers/book-club" class="neutral flex min-h-12 items-center gap-3 rounded-control px-3"><span class="grid size-8 place-items-center rounded-control bg-raised text-xs font-bold text-primary">B</span><span class="font-semibold">Book Club</span></a></nav><div class="space-y-1 border-t border-line p-3"><button data-theme-toggle type="button" class="neutral flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left font-semibold"><span data-theme-label>Dark mode</span></button><a href="/settings/account" class="neutral flex min-h-12 items-center gap-3 rounded-control px-3 font-semibold"><span class="grid size-8 place-items-center rounded-control bg-success-fill text-xs font-bold text-white">MA</span>Account settings</a><a href="/my-content" class="neutral flex min-h-12 items-center rounded-control px-3 font-semibold">My documents</a></div></div></dialog>
+
+  <dialog id="notifications" aria-labelledby="notifications-title" class="m-0 ml-auto h-dvh w-full max-w-md max-h-none rounded-none border-0 border-l border-line p-0 shadow-2xl"><div class="flex min-h-full flex-col p-5"><div class="flex items-center justify-between gap-4"><div><p class="text-sm font-semibold text-support">INBOX</p><h2 id="notifications-title" class="mt-1 text-[22px] font-bold">Notifications</h2></div><button data-close-notifications type="button" class="neutral min-h-11 rounded-control px-3 font-semibold">Close</button></div><div class="mt-5 space-y-3"><article class="rounded-card border border-line p-4"><div class="flex justify-between gap-3"><p class="font-semibold">Your document was approved.</p><time class="shrink-0 text-xs tabular-nums text-support">1 hr</time></div><p class="mt-1 text-sm text-support">Unread · Document</p></article><article class="rounded-card border border-line p-4"><div class="flex justify-between gap-3"><p class="font-semibold">You were invited to “Final Exam Study.”</p><time class="shrink-0 text-xs tabular-nums text-support">3 hr</time></div><p class="mt-1 text-sm text-support">Unread · Direct invitation</p></article></div></div></dialog>
+
+  <div id="row-menu" hidden role="menu" class="fixed z-50 w-48 rounded-card border border-line bg-surface p-1.5 shadow-xl"><a role="menuitem" data-menu="open" href="#" class="neutral block rounded-control px-3 py-2.5 text-sm font-semibold">Open details</a><button role="menuitem" data-menu="copy" type="button" class="neutral w-full rounded-control px-3 py-2.5 text-left text-sm font-semibold">Copy link</button><button role="menuitem" data-menu="report" type="button" class="neutral w-full rounded-control px-3 py-2.5 text-left text-sm font-semibold text-danger">Report</button></div>
+  <div id="toast" hidden role="status" aria-live="polite" class="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-control bg-ink px-4 py-3 text-sm font-semibold text-surface shadow-lg"></div>
+
+  <script>
+    const byId = (id) => document.getElementById(id);
+    /* ---------- Shell (same as U01) ---------- */
+    function syncThemeControls(){const isDark=document.documentElement.dataset.theme==='dark';document.querySelectorAll('[data-theme-label]').forEach((l)=>{l.textContent=isDark?'Light mode':'Dark mode'});document.querySelectorAll('[data-theme-toggle]').forEach((b)=>{b.setAttribute('aria-label',isDark?'Switch to light mode':'Switch to dark mode')});document.querySelectorAll('[data-theme-icon="dark"]').forEach((i)=>{i.hidden=isDark});document.querySelectorAll('[data-theme-icon="light"]').forEach((i)=>{i.hidden=!isDark})}
+    function toggleTheme(){preferredTheme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=preferredTheme;try{localStorage.setItem('uit-connect-theme',preferredTheme)}catch{}syncThemeControls()}
+    document.querySelectorAll('[data-theme-toggle]').forEach((b)=>b.addEventListener('click',toggleTheme));systemTheme.addEventListener('change',()=>{if(preferredTheme==='light'||preferredTheme==='dark')return;document.documentElement.dataset.theme=systemTheme.matches?'dark':'light';syncThemeControls()});syncThemeControls();
+    function showDialog(d){if(!d.open)d.showModal()}
+    byId('mobile-menu-button').addEventListener('click',()=>{byId('mobile-menu-button').setAttribute('aria-expanded','true');showDialog(byId('mobile-menu'))});document.querySelector('[data-close-menu]').addEventListener('click',()=>byId('mobile-menu').close());byId('mobile-menu').addEventListener('close',()=>{byId('mobile-menu-button').setAttribute('aria-expanded','false')});
+    function toggleAccountMenu(){const m=byId('account-menu'),opening=m.hidden;m.hidden=!opening;byId('account-button').setAttribute('aria-expanded',String(opening));if(opening)m.querySelector('a,button').focus()}
+    byId('account-button').addEventListener('click',toggleAccountMenu);
+    const openNotifications=()=>showDialog(byId('notifications'));byId('notifications-button').addEventListener('click',openNotifications);byId('mobile-notifications-button').addEventListener('click',openNotifications);document.querySelector('[data-close-notifications]').addEventListener('click',()=>byId('notifications').close());
+    function showToast(msg){const t=byId('toast');t.textContent=msg;t.hidden=false;clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>{t.hidden=true},2200)}
+
+    /* ---------- Demo data ---------- */
+    const TOPICS=['Information Technology','Economics','Education','Soft skills','Foreign languages','Other'];
+    const TYPES=[{id:'pdf',label:'PDF'},{id:'doc',label:'DOC/DOCX'},{id:'ppt',label:'PPT/PPTX'},{id:'img',label:'Image'},{id:'other',label:'Other'}];
+    const SORTS=[{id:'newest',label:'Newest'},{id:'popular',label:'Most popular'},{id:'downloads',label:'Most downloaded'},{id:'likes',label:'Most liked'}];
+    const DOCUMENTS=[
+      {slug:'data-structures-algorithms',title:'Data Structures and Algorithms – Lecture notes',author:'Nguyen Van A',topic:'Information Technology',type:'pdf',file:'dsa-lecture-notes.pdf',size:'4.2 MB',date:'2026-10-08',downloads:1240,likes:320,featured:true},
+      {slug:'oop-java-basics',title:'Object-Oriented Programming with Java',author:'Tran Thi B',topic:'Information Technology',type:'ppt',file:'oop-java.pptx',size:'8.6 MB',date:'2026-10-06',downloads:980,likes:256,featured:true},
+      {slug:'microeconomics-summary',title:'Microeconomics – Chapter summaries',author:'Le Van C',topic:'Economics',type:'doc',file:'micro-summary.docx',size:'1.1 MB',date:'2026-10-05',downloads:640,likes:190,featured:true},
+      {slug:'ielts-writing-task-2',title:'IELTS Writing Task 2 – Sample essays',author:'Pham Thi D',topic:'Foreign languages',type:'pdf',file:'ielts-task2.pdf',size:'2.4 MB',date:'2026-10-03',downloads:1520,likes:410,featured:true},
+      {slug:'database-systems-exam',title:'Database Systems – Final exam review',author:'Hoang Van E',topic:'Information Technology',type:'pdf',file:'db-final-review.pdf',size:'3.0 MB',date:'2026-10-02',downloads:870,likes:205},
+      {slug:'presentation-skills',title:'Presentation skills for group projects',author:'Vo Thi F',topic:'Soft skills',type:'ppt',file:'presentation-skills.pptx',size:'5.7 MB',date:'2026-09-29',downloads:310,likes:98},
+      {slug:'teaching-methods',title:'Modern teaching methods – Reading pack',author:'Dang Van G',topic:'Education',type:'doc',file:'teaching-methods.docx',size:'900 KB',date:'2026-09-27',downloads:150,likes:41},
+      {slug:'computer-network-osi',title:'Computer Networks – OSI model cheat sheet',author:'Bui Thi H',topic:'Information Technology',type:'img',file:'osi-cheatsheet.png',size:'1.6 MB',date:'2026-09-25',downloads:720,likes:233},
+      {slug:'macroeconomics-slides',title:'Macroeconomics – Week 1–6 slides',author:'Do Van I',topic:'Economics',type:'ppt',file:'macro-w1-6.pptx',size:'12.3 MB',date:'2026-09-22',downloads:410,likes:87},
+      {slug:'japanese-n4-vocab',title:'Japanese N4 vocabulary list',author:'Ngo Thi K',topic:'Foreign languages',type:'pdf',file:'n4-vocab.pdf',size:'780 KB',date:'2026-09-20',downloads:560,likes:150},
+      {slug:'time-management',title:'Time management for students',author:'Ly Van L',topic:'Soft skills',type:'pdf',file:'time-management.pdf',size:'1.3 MB',date:'2026-09-18',downloads:280,likes:76},
+      {slug:'thesis-template',title:'UIT thesis template (LaTeX)',author:'Mai Thi M',topic:'Other',type:'other',file:'uit-thesis-template.zip',size:'2.1 MB',date:'2026-09-15',downloads:1340,likes:388},
+      {slug:'operating-systems-labs',title:'Operating Systems – Lab exercises',author:'Phan Van N',topic:'Information Technology',type:'pdf',file:'os-labs.pdf',size:'2.8 MB',date:'2026-09-12',downloads:495,likes:120},
+      {slug:'english-grammar',title:'English grammar in use – Notes',author:'Truong Thi O',topic:'Foreign languages',type:'doc',file:'grammar-notes.docx',size:'1.0 MB',date:'2026-09-10',downloads:330,likes:64}
+    ];
+    const PAGE_SIZE=8;
+    const state={topic:'all',keyword:'',topics:new Set(),types:new Set(),sort:'newest',visible:PAGE_SIZE};
+
+    /* ---------- Helpers ---------- */
+    const fold=(s)=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
+    const fmtDate=(d)=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const fmtNum=(n)=>n.toLocaleString('en-US');
+    const typeLabel=(t)=>TYPES.find((x)=>x.id===t).label.split('/')[0].replace('Image','IMG').replace('Other','FILE');
+    const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e};
+    const icon=(path,cls='size-4')=>{const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');s.setAttribute('stroke-width','2');s.setAttribute('aria-hidden','true');s.setAttribute('class',cls);s.innerHTML=path;return s};
+    const ICON={download:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/>',more:'<circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>',calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};
+    function highlight(text){const k=state.keyword.trim();if(!k)return document.createTextNode(text);const i=fold(text).indexOf(fold(k));if(i<0)return document.createTextNode(text);const f=document.createDocumentFragment();f.append(text.slice(0,i),el('mark','rounded bg-[#FFE58F] px-0.5 text-[#060607]',text.slice(i,i+k.length)),text.slice(i+k.length));return f}
+    function fileBadge(type){const b=el('span',`cover-${type} grid size-10 shrink-0 place-items-center rounded-control text-[11px] font-bold text-white`,typeLabel(type));b.setAttribute('aria-hidden','true');return b}
+
+    /* ---------- Filtering ---------- */
+    function filtered(){const k=fold(state.keyword.trim());const list=DOCUMENTS.filter((d)=>{if(state.topic!=='all'&&d.topic!==state.topic)return false;if(state.topics.size&&!state.topics.has(d.topic))return false;if(state.types.size&&!state.types.has(d.type))return false;if(k&&![d.title,d.author,d.topic,d.file].some((v)=>fold(v).includes(k)))return false;return true});
+      const by={newest:(a,b)=>b.date.localeCompare(a.date),popular:(a,b)=>(b.downloads+b.likes*2)-(a.downloads+a.likes*2),downloads:(a,b)=>b.downloads-a.downloads,likes:(a,b)=>b.likes-a.likes};return list.sort(by[state.sort])}
+    const countBy=(key,val)=>DOCUMENTS.filter((d)=>d[key]===val&&(key==='topic'||state.topic==='all'||d.topic===state.topic)).length;
+
+    /* ---------- Render: tabs + filter panel ---------- */
+    function renderTabs(){const wrap=byId('topic-tabs');wrap.replaceChildren();[['all','All'],...TOPICS.map((t)=>[t,t])].forEach(([id,label])=>{const b=el('button','tab neutral min-h-11 shrink-0 whitespace-nowrap rounded-full border border-line bg-surface px-4 text-sm font-semibold',label);b.type='button';b.dataset.topic=id;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(state.topic===id));b.tabIndex=state.topic===id?0:-1;b.addEventListener('click',()=>{state.topic=id;state.visible=PAGE_SIZE;renderAll()});wrap.append(b)})}
+    byId('topic-tabs').addEventListener('keydown',(e)=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;const tabs=[...e.currentTarget.children],i=tabs.indexOf(document.activeElement);if(i<0)return;const next=tabs[(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length].dataset.topic;state.topic=next;state.visible=PAGE_SIZE;renderAll();e.currentTarget.querySelector(`[data-topic="${CSS.escape(next)}"]`).focus()});
+    function checkRow(name,id,label,count,checked,onChange){const l=el('label','neutral flex min-h-10 cursor-pointer items-center gap-3 rounded-control px-2 text-sm');const c=el('input','size-4');c.type='checkbox';c.name=name;c.value=id;c.checked=checked;c.addEventListener('change',()=>onChange(c.checked));l.append(c,el('span','flex-1',label),el('span','text-xs tabular-nums text-support',String(count)));return l}
+    function renderFilters(){byId('topic-filters').replaceChildren(...TOPICS.map((t)=>checkRow('topic',t,t,countBy('topic',t),state.topics.has(t),(on)=>{on?state.topics.add(t):state.topics.delete(t);state.visible=PAGE_SIZE;renderAll()})));
+      byId('type-filters').replaceChildren(...TYPES.map((t)=>checkRow('type',t.id,t.label,countBy('type',t.id),state.types.has(t.id),(on)=>{on?state.types.add(t.id):state.types.delete(t.id);state.visible=PAGE_SIZE;renderAll()})));
+      byId('sort-radios').replaceChildren(...SORTS.map((s)=>{const l=el('label','neutral flex min-h-10 cursor-pointer items-center gap-3 rounded-control px-2 text-sm');const r=el('input','size-4');r.type='radio';r.name='sort';r.value=s.id;r.checked=state.sort===s.id;r.addEventListener('change',()=>{state.sort=s.id;renderAll()});l.append(r,el('span','',s.label));return l}));
+      byId('sort-select').value=state.sort}
+    function renderChips(){const wrap=byId('active-chips');wrap.replaceChildren();const chips=[];if(state.keyword.trim())chips.push([`“${state.keyword.trim()}”`,()=>setKeyword('')]);state.topics.forEach((t)=>chips.push([t,()=>state.topics.delete(t)]));state.types.forEach((t)=>chips.push([TYPES.find((x)=>x.id===t).label,()=>state.types.delete(t)]));chips.forEach(([label,remove])=>{const b=el('button','inline-flex min-h-9 items-center gap-1.5 rounded-full bg-raised px-3 text-xs font-bold text-primary');b.type='button';b.setAttribute('aria-label',`Remove filter ${label}`);b.append(label,icon(ICON.close,'size-3.5'));b.addEventListener('click',()=>{remove();state.visible=PAGE_SIZE;renderAll()});wrap.append(b)})}
+
+    /* ---------- Render: featured cards ---------- */
+    function renderFeatured(){const list=byId('featured-list');list.replaceChildren();DOCUMENTS.filter((d)=>d.featured&&(state.topic==='all'||d.topic===state.topic)).slice(0,4).forEach((d)=>{const li=el('li','flex flex-col overflow-hidden rounded-card border border-line bg-surface');
+      const cover=el('a',`cover-${d.type} relative grid h-28 place-items-center text-white`);cover.href=`/documents/${d.slug}`;cover.tabIndex=-1;cover.setAttribute('aria-hidden','true');cover.append(icon(ICON.file,'size-10'),el('span','absolute left-3 top-3 rounded-full bg-black/30 px-2 py-0.5 text-[11px] font-bold',typeLabel(d.type)));
+      const body=el('div','flex flex-1 flex-col p-4');const h=el('h3','line-clamp-2 text-sm font-bold leading-5');const a=el('a','hover:underline');a.href=`/documents/${d.slug}`;a.append(highlight(d.title));h.append(a);
+      const meta=el('div','mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-support');const m1=el('span','inline-flex items-center gap-1');m1.append(icon(ICON.calendar,'size-3.5'),fmtDate(d.date));const m2=el('span','inline-flex items-center gap-1');m2.append(icon(ICON.download,'size-3.5'),fmtNum(d.downloads),el('span','sr-only',' downloads'));const m3=el('span','inline-flex items-center gap-1');m3.append(icon(ICON.heart,'size-3.5'),fmtNum(d.likes),el('span','sr-only',' likes'));meta.append(m1,m2,m3);
+      body.append(h,el('p','mt-1 truncate text-xs text-support',`by ${d.author}`),meta,el('span','mt-3 self-start rounded-full bg-raised px-2.5 py-1 text-xs font-bold text-primary',d.topic));li.append(cover,body);list.append(li)});
+      byId('featured-section').hidden=!list.children.length}
+
+    /* ---------- Render: table ---------- */
+    function renderRows(){const rows=byId('doc-rows');rows.replaceChildren();const list=filtered(),shown=list.slice(0,state.visible);
+      shown.forEach((d)=>{const tr=el('tr','border-b border-line last:border-0 hover:bg-[var(--hover)]');
+        const c1=el('td','max-w-80 px-5 py-3');const w=el('div','flex items-center gap-3');const tt=el('div','min-w-0');const a=el('a','block truncate font-semibold hover:underline');a.href=`/documents/${d.slug}`;a.append(highlight(d.title));tt.append(a,el('p','truncate text-xs text-support',`${d.file} · ${d.size}`));w.append(fileBadge(d.type),tt);c1.append(w);
+        const c2=el('td','whitespace-nowrap px-3 py-3');c2.append(highlight(d.author));
+        const c3=el('td','px-3 py-3');c3.append(el('span','whitespace-nowrap rounded-full bg-raised px-2.5 py-1 text-xs font-bold text-primary',d.topic));
+        const c4=el('td','whitespace-nowrap px-3 py-3 tabular-nums text-support',fmtDate(d.date));
+        const c5=el('td','px-3 py-3 text-right tabular-nums',fmtNum(d.downloads));
+        const c6=el('td','px-3 py-3');const act=el('div','flex justify-end gap-1');
+        const dl=el('button','neutral grid size-10 place-items-center rounded-control text-support');dl.type='button';dl.setAttribute('aria-label',`Download ${d.title}`);dl.append(icon(ICON.download,'size-5'));dl.addEventListener('click',()=>showToast(`Downloading ${d.file}…`));
+        const more=el('button','neutral grid size-10 place-items-center rounded-control text-support');more.type='button';more.setAttribute('aria-label',`More actions for ${d.title}`);more.setAttribute('aria-haspopup','menu');more.setAttribute('aria-expanded','false');more.append(icon(ICON.more,'size-5'));more.addEventListener('click',(e)=>{e.stopPropagation();openRowMenu(more,d)});
+        act.append(dl,more);c6.append(act);tr.append(c1,c2,c3,c4,c5,c6);rows.append(tr)});
+      const total=list.length;byId('result-count').textContent=total?`Showing ${shown.length} of ${total} documents`:'0 documents';
+      byId('table-wrap').hidden=!total;byId('empty-filtered').hidden=!!total;byId('load-more-wrap').hidden=state.visible>=total}
+
+    function renderAll(){const f=document.activeElement,key=f&&f.closest('#filter-panel')&&(f.name?`[name="${f.name}"][value="${CSS.escape(f.value)}"]`:null);renderTabs();renderFilters();renderChips();renderFeatured();renderRows();if(key)byId('filter-panel').querySelector(key)?.focus()}
+
+    /* ---------- Search inputs (header, mobile, panel stay in sync) ---------- */
+    const searchInputs=['header-search','mobile-search','keyword'].map(byId);
+    function setKeyword(v){state.keyword=v;state.visible=PAGE_SIZE;searchInputs.forEach((i)=>{if(i.value!==v)i.value=v})}
+    let debounce;searchInputs.forEach((i)=>i.addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(()=>{setKeyword(i.value);renderAll()},250)}));
+    byId('header-search-form').addEventListener('submit',(e)=>{e.preventDefault();setKeyword(byId('header-search').value);renderAll()});
+    byId('sort-select').addEventListener('change',(e)=>{state.sort=e.target.value;renderAll()});
+    document.querySelectorAll('[data-sort-shortcut]').forEach((b)=>b.addEventListener('click',()=>{state.sort=b.dataset.sortShortcut;renderAll();byId('all-title').scrollIntoView({behavior:'smooth'})}));
+    document.querySelectorAll('[data-clear-filters]').forEach((b)=>b.addEventListener('click',()=>{state.topics.clear();state.types.clear();state.topic='all';setKeyword('');renderAll()}));
+    byId('load-more').addEventListener('click',()=>{state.visible+=PAGE_SIZE;renderRows()});
+
+    /* ---------- Row ⋮ menu ---------- */
+    let menuTrigger=null;
+    function closeRowMenu(){byId('row-menu').hidden=true;if(menuTrigger){menuTrigger.setAttribute('aria-expanded','false');menuTrigger=null}}
+    function openRowMenu(btn,d){const m=byId('row-menu');if(menuTrigger===btn){closeRowMenu();return}closeRowMenu();menuTrigger=btn;btn.setAttribute('aria-expanded','true');m.querySelector('[data-menu="open"]').href=`/documents/${d.slug}`;m.dataset.slug=d.slug;m.hidden=false;const r=btn.getBoundingClientRect();m.style.top=Math.min(r.bottom+4,innerHeight-m.offsetHeight-8)+'px';m.style.left=Math.max(8,r.right-m.offsetWidth)+'px';m.querySelector('[role=menuitem]').focus()}
+    byId('row-menu').addEventListener('click',(e)=>{const a=e.target.closest('[data-menu]');if(!a)return;if(a.dataset.menu==='copy'){try{navigator.clipboard.writeText(`${location.origin}/documents/${byId('row-menu').dataset.slug}`)}catch{}showToast('Link copied.')}if(a.dataset.menu==='report')showToast('Report sent. Thanks for letting us know.');if(a.dataset.menu!=='open'){e.preventDefault();closeRowMenu()}});
+    document.addEventListener('click',(e)=>{if(!byId('row-menu').contains(e.target))closeRowMenu();const am=byId('account-menu');if(!am.hidden&&!am.contains(e.target)&&!byId('account-button').contains(e.target)){am.hidden=true;byId('account-button').setAttribute('aria-expanded','false')}});
+    document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&!byId('row-menu').hidden){const t=menuTrigger;closeRowMenu();t?.focus()}});
+    byId('main').addEventListener('scroll',closeRowMenu);
+
+    /* ---------- Filter panel: right aside on xl, drawer below ---------- */
+    const wide=matchMedia('(min-width:1280px)');
+    function placePanel(){const p=byId('filter-panel');if(wide.matches){byId('filter-aside').append(p);if(byId('filters-dialog').open)byId('filters-dialog').close()}else byId('filters-dialog-body').append(p)}
+    wide.addEventListener('change',placePanel);placePanel();
+    document.querySelectorAll('[data-open-filters]').forEach((b)=>b.addEventListener('click',()=>showDialog(byId('filters-dialog'))));
+    document.querySelectorAll('[data-close-filters]').forEach((b)=>b.addEventListener('click',()=>byId('filters-dialog').close()));
+
+    /* ---------- Demo states: ?state=loading|empty|error ---------- */
+    function showOnly(id){['table-wrap','empty-filtered','empty-library','error-state','skeleton'].forEach((x)=>byId(x).hidden=x!==id);byId('load-more-wrap').hidden=true}
+    renderAll();
+    const demo=new URLSearchParams(location.search).get('state');
+    if(demo==='loading'){showOnly('skeleton');byId('result-count').textContent='Loading documents…'}
+    if(demo==='empty'){DOCUMENTS.length=0;renderAll();showOnly('empty-library')}
+    if(demo==='error'){showOnly('error-state');byId('result-count').textContent=''}
+    byId('retry-button').addEventListener('click',()=>{showOnly('skeleton');setTimeout(()=>renderAll(),600)});
+  </script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8fbff">
+  <title>Kho tài liệu | UIT Connect</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="document-inventory.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
+  <aside class="sidebar" aria-label="Điều hướng chính">
+    <a class="brand" href="#" aria-label="UIT Connect - Trang chủ">
+      <img src="../images/uit-connect-mark.webp" alt="" width="42" height="42">
+      <span>UIT Connect</span>
+    </a>
+
+    <nav class="primary-nav">
+      <a href="#"><i class="bi bi-house-door" aria-hidden="true"></i><span>Trang chủ</span></a>
+      <a href="ServerList.html"><i class="bi bi-kanban" aria-hidden="true"></i><span>Server</span></a>
+      <a class="is-current" href="#" aria-current="page"><i class="bi bi-file-text" aria-hidden="true"></i><span>Tài liệu</span></a>
+      <a href="#"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Diễn đàn</span></a>
+      <a href="#"><i class="bi bi-bell" aria-hidden="true"></i><span>Thông báo</span></a>
+    </nav>
+
+    <section class="sidebar-servers" aria-labelledby="sidebar-servers-title">
+      <header>
+        <h2 id="sidebar-servers-title">Server của bạn</h2>
+        <button type="button" aria-label="Tạo server mới"><i class="bi bi-plus-lg" aria-hidden="true"></i></button>
+      </header>
+      <ul>
+        <li><a href="#"><span class="mini-identity mini-identity--text" aria-hidden="true">UIT</span><span>Nhóm đồ án NT208</span></a></li>
+        <li><a href="#"><span class="mini-identity identity-code" aria-hidden="true"><i class="bi bi-code-slash"></i></span><span>CLB Lập trình</span></a></li>
+        <li><a href="#"><span class="mini-identity identity-database" aria-hidden="true"><i class="bi bi-database-fill"></i></span><span>Ôn thi CSDL</span></a></li>
+        <li><a href="#"><span class="mini-identity identity-game" aria-hidden="true"><i class="bi bi-controller"></i></span><span>UIT Game Dev</span></a></li>
+        <li><a href="#"><span class="mini-identity identity-internship" aria-hidden="true"><i class="bi bi-mortarboard-fill"></i></span><span>Kinh nghiệm thực tập</span></a></li>
+      </ul>
+    </section>
+
+    <div class="sidebar-user">
+      <img src="../images/user-hoang-an.webp" alt="" width="40" height="40">
+      <span><strong>Hoàng An</strong><small>Sinh viên UIT</small></span>
+      <button type="button" aria-label="Cài đặt tài khoản"><i class="bi bi-gear" aria-hidden="true"></i></button>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <label class="search">
+      <span class="visually-hidden">Tìm kiếm tài liệu</span>
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" placeholder="Tìm kiếm tài liệu, chủ đề, tác giả...">
+    </label>
+
+    <div class="account-actions">
+      <button class="notification-button" type="button" aria-label="Thông báo mới">
+        <i class="bi bi-bell" aria-hidden="true"></i>
+        <span class="notification-dot" aria-hidden="true"></span>
+      </button>
+      <button class="account-menu" type="button" aria-label="Mở menu tài khoản">
+        <img src="../images/user-hoang-an.webp" alt="" width="44" height="44">
+        <span><strong>Hoàng An</strong><small>Sinh viên UIT</small></span>
+        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard" id="main-content" tabindex="-1">
+    <div class="library-layout">
+      <div class="page-heading">
+        <div>
+          <h1>Kho tài liệu</h1>
+          <p>Khám phá, chia sẻ và học tập cùng cộng đồng sinh viên UIT</p>
+        </div>
+        <div class="heading-actions">
+          <a class="secondary-button" href="#"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>Tài liệu của tôi</span></a>
+          <a class="primary-button" href="#"><i class="bi bi-upload" aria-hidden="true"></i><span>Đăng tài liệu</span></a>
+        </div>
+      </div>
+
+      <div class="library-main">
+        <div class="tabs" role="tablist" aria-label="Chủ đề tài liệu">
+          <button class="is-active" type="button" role="tab" aria-selected="true">Tất cả</button>
+          <button type="button" role="tab" aria-selected="false">Công nghệ thông tin</button>
+          <button type="button" role="tab" aria-selected="false">Kinh tế</button>
+          <button type="button" role="tab" aria-selected="false">Giáo dục</button>
+          <button type="button" role="tab" aria-selected="false">Kỹ năng mềm</button>
+          <button type="button" role="tab" aria-selected="false">Ngoại ngữ</button>
+          <button type="button" role="tab" aria-selected="false">Khác</button>
+        </div>
+
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <h2 id="hero-title">Hàng ngàn tài liệu học tập từ sinh viên UIT</h2>
+            <p>Tìm kiếm theo chủ đề, tag hoặc tên tài liệu để khám phá ngay!</p>
+          </div>
+          <img class="hero-art" src="../images/document-inventory-hero.webp" alt="" width="850" height="244">
+        </section>
+
+        <section class="panel featured" aria-labelledby="featured-title">
+          <header class="panel-header">
+            <h2 id="featured-title">Tài liệu nổi bật</h2>
+            <a class="text-link" href="#">Xem tất cả<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+          </header>
+          <div class="featured-grid">
+            <article class="doc-card">
+              <div class="doc-cover">
+                <img src="../images/doc-csdl-outline.webp" alt="Trang bìa đề cương môn Cơ sở dữ liệu" width="436" height="248">
+                <span class="file-badge is-pdf">PDF</span>
+              </div>
+              <div class="doc-body">
+                <h3><a href="#">Đề cương CSDL</a></h3>
+                <p class="doc-author"><img src="../images/user-dang-khoa.webp" alt="" width="22" height="22">Nguyễn Văn A</p>
+                <p class="doc-date">12 thg 9, 2024</p>
+                <p class="doc-stats"><span><i class="bi bi-download" aria-hidden="true"></i>2.1k<span class="visually-hidden"> lượt tải</span></span><span><i class="bi bi-heart" aria-hidden="true"></i>86<span class="visually-hidden"> lượt thích</span></span></p>
+                <ul class="tag-list" aria-label="Tag"><li>CSDL</li><li>Cơ sở dữ liệu</li><li>UIT</li></ul>
+              </div>
+            </article>
+
+            <article class="doc-card">
+              <div class="doc-cover">
+                <img src="../images/doc-oop-lecture.webp" alt="Slide bài giảng Lập trình hướng đối tượng, tuần 1" width="438" height="248">
+                <span class="file-badge is-ppt">PPT</span>
+              </div>
+              <div class="doc-body">
+                <h3><a href="#">Bài giảng OOP - Tuần 1</a></h3>
+                <p class="doc-author"><img src="../images/user-tran-vy.webp" alt="" width="22" height="22">Trần Thị B</p>
+                <p class="doc-date">5 thg 10, 2024</p>
+                <p class="doc-stats"><span><i class="bi bi-download" aria-hidden="true"></i>1.5k<span class="visually-hidden"> lượt tải</span></span><span><i class="bi bi-heart" aria-hidden="true"></i>64<span class="visually-hidden"> lượt thích</span></span></p>
+                <ul class="tag-list" aria-label="Tag"><li>OOP</li><li>Java</li><li>Lập trình</li></ul>
+              </div>
+            </article>
+
+            <article class="doc-card">
+              <div class="doc-cover">
+                <img src="../images/doc-network-slides.webp" alt="Slide môn Mạng máy tính với sơ đồ mạng" width="436" height="248">
+                <span class="file-badge is-doc">DOC</span>
+              </div>
+              <div class="doc-body">
+                <h3><a href="#">Slide Mạng máy tính</a></h3>
+                <p class="doc-author"><img src="../images/user-le-duc.webp" alt="" width="22" height="22">Lê Minh</p>
+                <p class="doc-date">20 thg 8, 2024</p>
+                <p class="doc-stats"><span><i class="bi bi-download" aria-hidden="true"></i>3.1k<span class="visually-hidden"> lượt tải</span></span><span><i class="bi bi-heart" aria-hidden="true"></i>112<span class="visually-hidden"> lượt thích</span></span></p>
+                <ul class="tag-list" aria-label="Tag"><li>Mạng máy tính</li><li>Slide</li><li>UIT</li></ul>
+              </div>
+            </article>
+
+            <article class="doc-card">
+              <div class="doc-cover">
+                <img src="../images/doc-internship-experience.webp" alt="Hai màn hình hiển thị mã nguồn trong phòng tối" width="434" height="248">
+                <span class="file-badge is-pdf">PDF</span>
+              </div>
+              <div class="doc-body">
+                <h3><a href="#">Kinh nghiệm thực tập tại doanh nghiệp</a></h3>
+                <p class="doc-author"><img src="../images/user-pham-mai.webp" alt="" width="22" height="22">Phạm Mai</p>
+                <p class="doc-stats doc-stats--inline"><span class="doc-date">15 thg 9, 2024</span><span><i class="bi bi-download" aria-hidden="true"></i>980<span class="visually-hidden"> lượt tải</span></span><span><i class="bi bi-heart" aria-hidden="true"></i>45<span class="visually-hidden"> lượt thích</span></span></p>
+                <ul class="tag-list" aria-label="Tag"><li>Thực tập</li><li>Kinh nghiệm</li><li>IT</li></ul>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel all-docs" aria-labelledby="all-title">
+          <header class="panel-header">
+            <h2 id="all-title">Tất cả tài liệu</h2>
+            <label class="sort-select">
+              <span>Sắp xếp:</span>
+              <span class="select-wrap">
+                <select><option>Mới nhất</option><option>Phổ biến nhất</option><option>Nhiều lượt tải nhất</option><option>Nhiều lượt thích nhất</option></select>
+                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+              </span>
+            </label>
+          </header>
+          <table class="doc-table">
+            <thead>
+              <tr><th scope="col">Tên tài liệu</th><th scope="col">Tác giả</th><th scope="col">Chủ đề</th><th scope="col">Ngày đăng</th><th scope="col">Lượt tải</th><th scope="col"><span class="visually-hidden">Thao tác</span></th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><a href="#"><span class="file-icon is-pdf" aria-hidden="true"><i class="bi bi-file-earmark-pdf-fill"></i></span>Tài liệu ôn thi CSDL - Tổng hợp câu hỏi</a></th>
+                <td data-label="Tác giả">Hoàng An</td>
+                <td data-label="Chủ đề"><span class="chip">CSDL</span><span class="chip">Ôn thi</span></td>
+                <td data-label="Ngày đăng">08/10/2024</td>
+                <td data-label="Lượt tải">320</td>
+                <td class="row-actions"><button type="button" aria-label="Tải xuống Tài liệu ôn thi CSDL"><i class="bi bi-download" aria-hidden="true"></i></button><button type="button" aria-label="Tùy chọn cho Tài liệu ôn thi CSDL"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button></td>
+              </tr>
+              <tr>
+                <th scope="row"><a href="#"><span class="file-icon is-doc" aria-hidden="true"><i class="bi bi-file-earmark-word-fill"></i></span>Báo cáo đồ án Quản lý sinh viên</a></th>
+                <td data-label="Tác giả">Nguyễn Minh</td>
+                <td data-label="Chủ đề"><span class="chip">Đồ án</span><span class="chip">Báo cáo</span></td>
+                <td data-label="Ngày đăng">07/10/2024</td>
+                <td data-label="Lượt tải">215</td>
+                <td class="row-actions"><button type="button" aria-label="Tải xuống Báo cáo đồ án Quản lý sinh viên"><i class="bi bi-download" aria-hidden="true"></i></button><button type="button" aria-label="Tùy chọn cho Báo cáo đồ án Quản lý sinh viên"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button></td>
+              </tr>
+              <tr>
+                <th scope="row"><a href="#"><span class="file-icon is-ppt" aria-hidden="true"><i class="bi bi-file-earmark-ppt-fill"></i></span>Giới thiệu Spring Boot - Slide</a></th>
+                <td data-label="Tác giả">Trần Phương</td>
+                <td data-label="Chủ đề"><span class="chip">Spring Boot</span><span class="chip">Backend</span></td>
+                <td data-label="Ngày đăng">06/10/2024</td>
+                <td data-label="Lượt tải">418</td>
+                <td class="row-actions"><button type="button" aria-label="Tải xuống Giới thiệu Spring Boot"><i class="bi bi-download" aria-hidden="true"></i></button><button type="button" aria-label="Tùy chọn cho Giới thiệu Spring Boot"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button></td>
+              </tr>
+              <tr>
+                <th scope="row"><a href="#"><span class="file-icon is-pdf" aria-hidden="true"><i class="bi bi-file-earmark-pdf-fill"></i></span>Bài tập lớn Lập trình Web</a></th>
+                <td data-label="Tác giả">Lê Đức</td>
+                <td data-label="Chủ đề"><span class="chip">Web</span><span class="chip">Frontend</span></td>
+                <td data-label="Ngày đăng">05/10/2024</td>
+                <td data-label="Lượt tải">362</td>
+                <td class="row-actions"><button type="button" aria-label="Tải xuống Bài tập lớn Lập trình Web"><i class="bi bi-download" aria-hidden="true"></i></button><button type="button" aria-label="Tùy chọn cho Bài tập lớn Lập trình Web"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <aside class="filter-panel" aria-label="Tìm kiếm và bộ lọc">
+        <section>
+          <h2>Tìm kiếm</h2>
+          <label class="filter-search">
+            <span class="visually-hidden">Từ khóa</span>
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" placeholder="Nhập từ khóa...">
+          </label>
+        </section>
+
+        <section>
+          <h2>Bộ lọc</h2>
+          <fieldset>
+            <legend>Chủ đề</legend>
+            <label class="check-row"><input type="checkbox" checked><span>Công nghệ thông tin</span><small>1.234</small></label>
+            <label class="check-row"><input type="checkbox"><span>Kinh tế</span><small>342</small></label>
+            <label class="check-row"><input type="checkbox"><span>Giáo dục</span><small>210</small></label>
+            <label class="check-row"><input type="checkbox"><span>Kỹ năng mềm</span><small>185</small></label>
+            <label class="check-row"><input type="checkbox"><span>Ngoại ngữ</span><small>98</small></label>
+            <label class="check-row"><input type="checkbox"><span>Khác</span><small>76</small></label>
+          </fieldset>
+          <fieldset>
+            <legend>Loại tài liệu</legend>
+            <label class="check-row"><input type="checkbox"><span>PDF</span><small>2.180</small></label>
+            <label class="check-row"><input type="checkbox"><span>DOC/DOCX</span><small>856</small></label>
+            <label class="check-row"><input type="checkbox"><span>PPT/PPTX</span><small>641</small></label>
+            <label class="check-row"><input type="checkbox"><span>Hình ảnh</span><small>320</small></label>
+            <label class="check-row"><input type="checkbox"><span>Khác</span><small>115</small></label>
+          </fieldset>
+        </section>
+
+        <section>
+          <fieldset>
+            <legend class="legend-title">Sắp xếp theo</legend>
+            <label class="check-row"><input type="radio" name="sort-by" checked><span>Mới nhất</span></label>
+            <label class="check-row"><input type="radio" name="sort-by"><span>Phổ biến nhất</span></label>
+            <label class="check-row"><input type="radio" name="sort-by"><span>Nhiều lượt tải nhất</span></label>
+            <label class="check-row"><input type="radio" name="sort-by"><span>Nhiều lượt thích nhất</span></label>
+          </fieldset>
+        </section>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
