@@ -2,13 +2,13 @@
 import { useMutation } from "@tanstack/react-query";
 import {
   login,
-  refreshToken,
   logout,
   logoutAll,
+  refreshToken,
   type LoginRequest,
   type RefreshRequest,
-} from "./services/auth.service";
-import { setTokens } from "./token-storage";
+} from "@/features/auth/auth.service";
+import { setTokens } from "@/features/auth/token-storage";
 
 export function useLoginMutation() {
   return useMutation({

@@ -16,6 +16,10 @@ public class EmailService {
     private static final String EMAIL_CHANGED_TEMPLATE = "email/email-change-notification";
     private static final String EMAIL_CHANGE_SUBJECT = "Confirm your new UIT Connect email";
     private static final String EMAIL_CHANGED_SUBJECT = "Your UIT Connect email was changed";
+    private static final String PASSWORD_RESET_TEMPLATE = "email/password-reset";
+    private static final String PASSWORD_RESET_SUBJECT = "Reset your UIT Connect password";
+    private static final String PASSWORD_CHANGED_TEMPLATE = "email/password-changed-notification";
+    private static final String PASSWORD_CHANGED_SUBJECT = "Your UIT Connect password was changed";
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
@@ -53,6 +57,19 @@ public class EmailService {
         context.setVariable("fullName", fullName);
         context.setVariable("newEmail", newEmail);
         send(oldEmail, EMAIL_CHANGED_SUBJECT,templateEngine.process(EMAIL_CHANGED_TEMPLATE, context));
+    }
+
+    public void sendPasswordResetEmail(String recipient, String fullName, String resetUrl) {
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("resetUrl", resetUrl);
+        send(recipient, PASSWORD_RESET_SUBJECT, templateEngine.process(PASSWORD_RESET_TEMPLATE, context));
+    }
+
+    public void sendPasswordChangedNotice(String recipient, String fullName) {
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        send(recipient, PASSWORD_CHANGED_SUBJECT, templateEngine.process(PASSWORD_CHANGED_TEMPLATE, context));
     }
 
     public void send(String recipient, String subject, String htmlBody) {

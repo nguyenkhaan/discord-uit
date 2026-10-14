@@ -12,6 +12,7 @@
 	],
 	"settings": {
 		"java.configuration.updateBuildConfiguration": "interactive",
-		"liveServer.settings.multiRootWorkspaceName": "se347-project"
+		"liveServer.settings.multiRootWorkspaceName": "se347-project",
+		"java.compile.nullAnalysis.mode": "automatic"
 	}
 }

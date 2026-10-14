@@ -2,6 +2,7 @@ package com.cloudian.backend.modules.user;
 
 import java.util.UUID;
 
+import com.cloudian.backend.modules.user.dto.ChangePasswordRequest;
 import com.cloudian.backend.modules.user.dto.EmailChangeRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,13 +16,14 @@ import com.cloudian.backend.security.CustomUserDetails;
 import jakarta.validation.Valid;
 
 /** /api/me — the current user reads and updates their own profile. Requires a valid access token. */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/me")
-@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final EmailChangeService emailChangeService;
+    private final PasswordChangeService passwordChangeService;
 
 //    public UserController(UserService userService) {
 //        this.userService = userService;
@@ -46,6 +48,13 @@ public class UserController {
     public void requestEmailChange(@AuthenticationPrincipal CustomUserDetails principal,
                                    @Valid @RequestBody EmailChangeRequest request) {
         emailChangeService.request(UUID.fromString(principal.getUserId()), request);
+    }
+
+    @PostMapping("/password-change")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(@AuthenticationPrincipal CustomUserDetails principal,
+                               @Valid @RequestBody ChangePasswordRequest request) {
+        passwordChangeService.change(currentUserId(principal), request);
     }
 
     private static UUID currentUserId(CustomUserDetails principal) {
