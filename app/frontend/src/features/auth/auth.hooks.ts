@@ -7,7 +7,7 @@ import {
   logoutAll,
   type LoginRequest,
   type RefreshRequest,
-} from "./services/auth.service";
+} from "./auth.service";
 import { setTokens } from "./token-storage";
 
 export function useLoginMutation() {

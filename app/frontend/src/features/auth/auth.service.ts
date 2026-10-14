@@ -1,5 +1,5 @@
 
-import { publicClient, privateClient } from "./../../../api/client";
+import { publicClient, privateClient } from "../../api/client";
 export interface LoginRequest {
     username: string;
   password: string;

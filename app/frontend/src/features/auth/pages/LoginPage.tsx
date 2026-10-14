@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import "../../styles/AuthPage.css";
 import {
   ChevronRightIcon,
@@ -9,7 +9,7 @@ import {
   LockIcon,
   MailIcon,
   VisualPanel,
-} from "./AuthShared";
+} from "../components/AuthShared";
 
 export default function LoginPage() {
   const { login, isLoggingIn } = useAuth();
@@ -33,7 +33,6 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="auth-page">
       <div className="auth-card">
         <VisualPanel
           title={
@@ -51,7 +50,7 @@ export default function LoginPage() {
         <section className="form-panel">
           <div className="form-shell">
             <header className="form-header">
-              <h2>Chào mừng trở lại 👋</h2>
+              <h2>Chào mừng trở lại</h2>
               <p className="subtitle">
                 Đăng nhập để tiếp tục khám phá cộng đồng
               </p>
@@ -174,6 +173,6 @@ export default function LoginPage() {
           </div>
         </section>
       </div>
-    </main>
+
   );
 }

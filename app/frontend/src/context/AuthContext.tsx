@@ -18,7 +18,7 @@ import {
   clearTokens,
 } from "../features/auth/token-storage";
 
-import type { LoginRequest } from "../features/auth/services/auth.service";
+import type { LoginRequest } from "../features/auth/auth.service";
 
 interface AuthContextValue {
   isAuthenticated: boolean;

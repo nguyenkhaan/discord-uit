@@ -35,13 +35,13 @@ body {
 .auth-card {
   display: grid;
   grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
-  width: 100%;
-  max-width: 1600px;
+  width: "100%"; 
+  /* max-width: 1600px; */
   height: calc(100vh - 48px);
   min-height: 620px;
   overflow: hidden;
-  border: 1px solid #e3eaf6;
-  border-radius: 22px;
+  /* border: 1px solid #e3eaf6; */
+  /* border-radius: 22px; */
   background: #fff;
   box-shadow: 0 18px 50px rgb(25 54 100 / 12%);
 }
@@ -178,6 +178,7 @@ body {
   width: 100%;
   max-width: 680px;
   margin: auto;
+  padding: 0 60px; 
 }
 
 .form-header {

@@ -16,9 +16,9 @@ import com.cloudian.backend.security.CustomUserDetails;
 import jakarta.validation.Valid;
 
 /** /api/me — the current user reads and updates their own profile. Requires a valid access token. */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/me")
-@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;

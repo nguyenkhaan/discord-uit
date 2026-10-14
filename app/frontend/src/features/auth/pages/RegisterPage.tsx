@@ -9,7 +9,7 @@ import {
   MailIcon,
   UserIcon,
   VisualPanel,
-} from "./AuthShared";
+} from "../components/AuthShared";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="auth-page">
+
       <div className="auth-card">
         <VisualPanel
           title={
@@ -168,6 +168,6 @@ export default function RegisterPage() {
           </div>
         </section>
       </div>
-    </main>
+
   );
 }
