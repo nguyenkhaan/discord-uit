@@ -27,7 +27,7 @@ function mockPublicPost(response: unknown) {
 }
 
 describe("login", () => {
-  it("posts credentials to the login endpoint and returns authentication tokens", async () => {
+  it("posts credentials to the login endpoint without retaining authentication tokens", async () => {
     const tokens = {
       accessToken: "access-token",
       refreshToken: "refresh-token",
@@ -35,24 +35,18 @@ describe("login", () => {
     const post = mockPublicPost(tokens);
 
     try {
-      assert.deepEqual(await login(credentials), tokens);
+      assert.equal(await login(credentials), undefined);
       assert.deepEqual(post.calls, [["/api/auth/login", credentials]]);
     } finally {
       post.restore();
     }
   });
 
-  it("rejects a login response without both authentication tokens", async () => {
+  it("does not depend on tokens in the response body", async () => {
     const post = mockPublicPost({ accessToken: "access-token" });
 
     try {
-      await assert.rejects(login(credentials), (error: Error) => {
-        assert.equal(
-          error.message,
-          "Login response is missing authentication tokens.",
-        );
-        return true;
-      });
+      assert.equal(await login(credentials), undefined);
     } finally {
       post.restore();
     }

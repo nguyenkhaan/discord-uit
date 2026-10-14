@@ -1,82 +1,80 @@
-# React + TypeScript + Vite
+# Frontend
 
-Api contract:
+React single-page application for the SE347 project. It uses feature-based modules, typed API contracts, and TanStack Query for server state.
 
-```Shell
-bunx openapi-typescript http://localhost:4000/api/docs/openapi --output src/contract/api-contract.ts
+## Overview
+
+- **React 19** + **TypeScript** (strict mode)
+- **Vite 8** for local development and production builds
+- **Tailwind CSS v4** for styling
+- **React Router** for client-side routing
+- **TanStack Query** for queries and mutations
+- **Axios** for HTTP requests
+- **Bun** for package management and scripts
+
+## Folder structure
+
+```text
+frontend/
+├── public/                 # Static files served from the site root
+├── src/
+│   ├── api/                # Axios clients and HTTP configuration
+│   ├── assets/             # Source-imported assets
+│   ├── components/         # Reusable common and layout components
+│   ├── context/            # React context, providers, and consumer hooks
+│   ├── contract/           # Generated OpenAPI TypeScript types
+│   ├── features/           # Feature modules: pages, components, hooks, services
+│   ├── lib/                # Shared framework-independent utilities
+│   ├── routes/             # Route definitions
+│   ├── App.tsx             # Application shell
+│   ├── index.css           # Tailwind setup, global styles, and design tokens
+│   └── main.tsx            # Application entry point
+├── tests/                  # Tests mirroring the source structure
+├── package.json
+└── vite.config.ts
 ```
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Keep feature-specific code in `src/features/<feature>`. Pages compose the UI; API calls belong in `*.service.ts`, while query and mutation logic belongs in `*.hooks.ts`.
 
-Currently, two official plugins are available:
+## How to set up
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Technology requirements
 
-## React Compiler
+- [Bun](https://bun.sh/) (latest stable version)
+- A running backend API, normally available at `http://localhost:4000`
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+### Commands
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-    globalIgnores(['dist']),
-    {
-        files: ['**/*.{ts,tsx}'],
-        extends: [
-            // Other configs...
-
-            // Remove tseslint.configs.recommended and replace with this
-            tseslint.configs.recommendedTypeChecked,
-            // Alternatively, use this for stricter rules
-            tseslint.configs.strictTypeChecked,
-            // Optionally, add this for stylistic rules
-            tseslint.configs.stylisticTypeChecked,
-
-            // Other configs...
-        ],
-        languageOptions: {
-            parserOptions: {
-                project: ['./tsconfig.json'],
-                tsconfigRootDir: import.meta.dirname,
-            },
-            // other options...
-        },
-    },
-]);
+```bash
+cd app/frontend
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Create a `.env.local` file and point the frontend to the API:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+```env
+VITE_BASE_URL=http://localhost:4000
+```
 
-export default defineConfig([
-    globalIgnores(['dist']),
-    {
-        files: ['**/*.{ts,tsx}'],
-        extends: [
-            // Other configs...
-            // Enable lint rules for React
-            reactX.configs['recommended-typescript'],
-            // Enable lint rules for React DOM
-            reactDom.configs.recommended,
-        ],
-        languageOptions: {
-            parserOptions: {
-                project: ['./tsconfig.json'],
-                tsconfigRootDir: import.meta.dirname,
-            },
-            // other options...
-        },
-    },
-]);
+Start the development server:
+
+```bash
+bun run dev
+```
+
+Useful checks:
+
+```bash
+bun run lint
+bun run build
+bun test
+```
+
+## API contract generation
+
+`src/contract/api-contract.ts` is generated from the backend OpenAPI specification. Do not edit it manually. With the backend running, regenerate it from the frontend directory:
+
+```bash
+bunx openapi-typescript http://localhost:4000/api/docs/openapi \
+  --output src/contract/api-contract.ts
 ```

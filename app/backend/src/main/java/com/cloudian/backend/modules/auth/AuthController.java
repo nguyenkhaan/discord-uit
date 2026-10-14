@@ -6,7 +6,6 @@ import java.util.UUID;
 import com.cloudian.backend.modules.auth.dto.*;
 import com.cloudian.backend.modules.user.EmailChangeService;
 import com.cloudian.backend.modules.user.dto.ConfirmEmailChangeRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,21 +34,28 @@ public class AuthController {
     private final EmailChangeService emailChangeService;
     private final CurrentSessionLogoutService logoutService;
     private final PasswordResetService passwordResetService;
+    private final AuthenticationCookieService authenticationCookieService;
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
     public AuthController(AuthService authService, CurrentSessionLogoutService logoutService,
                           EmailChangeService emailChangeService,
-                          PasswordResetService passwordResetService) {
+                          PasswordResetService passwordResetService,
+                          AuthenticationCookieService authenticationCookieService) {
         this.authService = authService;
         this.logoutService = logoutService;
         this.emailChangeService = emailChangeService;
         this.passwordResetService = passwordResetService;
+        this.authenticationCookieService = authenticationCookieService;
     }
 
     @PostMapping("/login")
     @SecurityRequirements
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse servletResponse) {
+        LoginResponse tokens = authService.login(request);
+        authenticationCookieService.writeAuthenticationCookies(servletResponse, tokens);
+        return ResponseEntity.ok(tokens);
     }
 
     @PostMapping("/register")
@@ -68,7 +74,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @Valid @RequestBody LogoutRequest request,
+            @Valid @RequestBody(required = false) LogoutRequest request,
             HttpServletRequest servletRequest,
             HttpServletResponse servletResponse) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -76,13 +82,14 @@ public class AuthController {
         logoutService.logout(
                 UUID.fromString(userDetails.getUserId()),
                 accessToken(servletRequest),
-                request.refreshToken());
+                refreshToken(servletRequest, request));
         logoutHandler.logout(servletRequest, servletResponse, authentication);
+        authenticationCookieService.clearAuthenticationCookies(servletResponse);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/logout-all")
-    public ResponseEntity<Void> logoutAll() {
+    public ResponseEntity<Void> logoutAll(HttpServletResponse servletResponse) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         CustomUserDetails userDetails = authenticatedUser(authentication);
@@ -90,6 +97,7 @@ public class AuthController {
         authService.logoutAll(UUID.fromString(userDetails.getUserId()));
 
         SecurityContextHolder.clearContext();
+        authenticationCookieService.clearAuthenticationCookies(servletResponse);
 
         return ResponseEntity.noContent().build();
     }
@@ -102,8 +110,15 @@ public class AuthController {
     @PostMapping("/refresh")
     @SecurityRequirements
     public ResponseEntity<LoginResponse> refresh(
-            @Valid @RequestBody RefreshRequest request) {
-        return ResponseEntity.ok(authService.refresh(request));
+            @Valid @RequestBody(required = false) RefreshRequest request,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        RefreshRequest refreshRequest = new RefreshRequest();
+        refreshRequest.setRefreshToken(refreshToken(servletRequest, request));
+
+        LoginResponse tokens = authService.refresh(refreshRequest);
+        authenticationCookieService.writeAuthenticationCookies(servletResponse, tokens);
+        return ResponseEntity.ok(tokens);
     }
 
     @PostMapping ("/confirm-email-change")
@@ -141,9 +156,46 @@ public class AuthController {
 
     private String accessToken(HttpServletRequest request) {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+
+        if (authorization != null && !authorization.isBlank()) {
+            if (!authorization.startsWith("Bearer ")) {
+                throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+            }
+
+            return authorization.substring(7);
         }
-        return authorization.substring(7);
+
+        return authenticationCookieService.accessToken(request)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Authentication is required."));
+    }
+
+    private String refreshToken(
+            HttpServletRequest request,
+            LogoutRequest logoutRequest) {
+        return authenticationCookieService.refreshToken(request)
+                .orElseGet(() -> {
+                    if (logoutRequest != null && logoutRequest.refreshToken() != null
+                            && !logoutRequest.refreshToken().isBlank()) {
+                        return logoutRequest.refreshToken();
+                    }
+
+                    throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+                });
+    }
+
+    private String refreshToken(
+            HttpServletRequest request,
+            RefreshRequest refreshRequest) {
+        return authenticationCookieService.refreshToken(request)
+                .orElseGet(() -> {
+                    if (refreshRequest != null && refreshRequest.getRefreshToken() != null
+                            && !refreshRequest.getRefreshToken().isBlank()) {
+                        return refreshRequest.getRefreshToken();
+                    }
+
+                    throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication is required.");
+                });
     }
 }
