@@ -185,9 +185,14 @@ export default function LoginPage() {
                                     />
                                     Ghi nhớ đăng nhập
                                 </label>
-                                <span className="font-semibold text-brand">
+                                
+                                {/* ĐÃ SỬA: Chuyển thẻ span thành thẻ Link */}
+                                <Link 
+                                    to="/forgot-password"
+                                    className="font-semibold text-brand hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                                >
                                     Quên mật khẩu?
-                                </span>
+                                </Link>
                             </div>
 
                             {error && (
