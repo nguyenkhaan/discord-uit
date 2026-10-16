@@ -4,6 +4,7 @@ import { useForgotPasswordMutation } from '../auth.hooks';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { AuthHeader } from './AuthHeader';
+import { Link } from 'react-router-dom';
 
 export const ForgotPasswordForm = () => {
   const [email, setEmail] = useState('');
@@ -47,13 +48,13 @@ export const ForgotPasswordForm = () => {
     <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
       <AuthHeader title="Quên mật khẩu?" icon={KeyIcon} />
       <p className="text-sm text-center text-gray-600">
-        Nhập email sinh viên của bạn để nhận liên kết khôi phục mật khẩu.
+        Nhập email của bạn để nhận liên kết khôi phục mật khẩu.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email UIT <span className="text-red-500">*</span>
+            Email <span className="text-red-500">*</span>
           </label>
           <div className="relative">
              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -79,9 +80,11 @@ export const ForgotPasswordForm = () => {
         </Button>
 
         <div className="text-center">
-          <button type="button" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            &larr; Quay lại Đăng nhập
-          </button>
+          <Link to={'/login'}>
+            <button type="button" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              &larr; Quay lại Đăng nhập
+            </button>
+          </Link>
         </div>
       </form>
     </div>

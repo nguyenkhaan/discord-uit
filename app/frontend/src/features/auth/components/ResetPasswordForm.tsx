@@ -5,6 +5,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { AuthHeader } from './AuthHeader';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 export const ResetPasswordForm = ({ token }: { token: string }) => {
   // SỬA LỖI HÌNH 1: Đổi tên state thành newPassword cho khớp với schema
@@ -48,9 +49,11 @@ export const ResetPasswordForm = ({ token }: { token: string }) => {
            Nếu liên kết hợp lệ, mật khẩu của bạn đã được thay đổi.
         </p>
         {/* SỬA LỖI HÌNH 2: Button mặc định thường là primary, không cần định nghĩa lại nếu thiếu class */}
-        <Button className="w-full">
-          Quay lại Đăng nhập
-        </Button>
+        <Link to={'/login'}>
+          <Button className="w-full">
+            Quay lại Đăng nhập
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -135,9 +138,11 @@ export const ResetPasswordForm = ({ token }: { token: string }) => {
           Xác nhận đổi mật khẩu
         </Button>
          <div className="text-center">
-          <button type="button" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            &larr; Quay lại Đăng nhập
-          </button>
+          <Link to={"/login"}>
+            <button type="button" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              &larr; Quay lại Đăng nhập
+            </button>
+          </Link>
         </div>
       </form>
     </div>

@@ -1,6 +1,6 @@
 // src/features/auth/components/ChangeEmailForm.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useChangeEmailMutation, useLogoutMutation } from '../auth.hooks';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -52,23 +52,25 @@ export const ChangeEmailForm = () => {
         <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm text-left space-y-2">
             <p>1. Chúng tôi đã gửi một liên kết xác thực đến <strong>{newEmail}</strong>.</p>
             <p>2. Phiên đăng nhập hiện tại đã tự động kết thúc để bảo vệ tài khoản.</p>
-            <p>3. Vui lòng kiểm tra hộp thư đến, nhấn vào liên kết xác thực để hoàn tất quá trình đổi Email.</p>
+            <p>3. Vui lòng kiểm tra hộp thư đến, nhấn vào liên kết xác thực để hoàn tất quá trình cập nhật Email.</p>
         </div>
-         <Button 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2" 
-            onClick={() => navigate('/login')}
-         >
-            Đi đến trang Đăng nhập
-        </Button>
+        <Link to={'/login'}>
+            <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2" 
+            >
+                Đi đến trang Đăng nhập
+            </Button>
+        </Link>
+
       </div>
     );
   }
 
   return (
     <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-      <AuthHeader title="Đổi Email" icon={AtIcon} />
+      <AuthHeader title="cập nhật Email" icon={AtIcon} />
       <p className="text-sm text-center text-gray-600">
-        Cập nhật địa chỉ email liên kết với tài khoản UIT Connect của bạn.
+        Cập nhật địa chỉ email của tài khoản
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
