@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viết bài mới - UIT Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',
+                        surface: '#f9fafb',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-gray-800 font-sans flex h-screen overflow-hidden">
+
+    <!-- Left Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
+        <div class="p-4 flex items-center gap-3 font-bold text-xl text-primary border-b border-gray-100">
+            <i class="fa-solid fa-atom text-2xl"></i>
+            UIT Connect
+        </div>
+        
+        <div class="overflow-y-auto flex-1 p-4">
+            <nav class="space-y-1 mb-8">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-house w-5"></i> Trang chủ</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-server w-5"></i> Server</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-book w-5"></i> Tài liệu</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-blue-50 text-primary font-medium rounded-lg"><i class="fa-solid fa-comments w-5"></i> Diễn đàn</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-regular fa-bell w-5"></i> Thông báo</a>
+            </nav>
+
+            <div class="mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Diễn đàn</div>
+            <nav class="space-y-1 mb-8">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-list w-5"></i> Tất cả bài viết</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-regular fa-user w-5"></i> Bài viết của tôi</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><i class="fa-regular fa-bookmark w-5"></i> Bài viết đã lưu</a>
+            </nav>
+
+            <div class="flex items-center justify-between mb-2">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Chủ đề nổi bật</div>
+                <button class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <nav class="space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><span class="text-pink-500 font-bold">#</span> Công nghệ thông tin</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><span class="text-pink-500 font-bold">#</span> Kinh nghiệm học tập</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><span class="text-pink-500 font-bold">#</span> Kỹ năng mềm</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><span class="text-pink-500 font-bold">#</span> Cơ hội việc làm</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50"><span class="text-pink-500 font-bold">#</span> Cuộc sống sinh viên</a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-gray-200 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://i.pravatar.cc/150?u=hoangan" alt="Avatar" class="w-10 h-10 rounded-full">
+                <div>
+                    <div class="text-sm font-bold">Hoàng An</div>
+                    <div class="text-xs text-gray-500">Sinh viên UIT</div>
+                </div>
+            </div>
+            <button class="text-gray-500 hover:text-gray-700"><i class="fa-solid fa-gear"></i></button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 flex-shrink-0">
+            <div class="relative w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                <input type="text" placeholder="Tìm kiếm bài viết, chủ đề, người dùng..." class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                <span class="absolute right-3 top-2.5 text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Ctrl K</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="relative cursor-pointer text-gray-500 hover:text-gray-700">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                </div>
+                <div class="flex items-center gap-3 cursor-pointer">
+                    <div class="text-right">
+                        <div class="text-sm font-bold">Hoàng An</div>
+                        <div class="text-xs text-gray-500">Sinh viên UIT</div>
+                    </div>
+                    <img src="https://i.pravatar.cc/150?u=hoangan" alt="Avatar" class="w-10 h-10 rounded-full">
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 flex gap-8">
+            
+            <!-- Left Form Area -->
+            <main class="flex-1 max-w-4xl">
+                <div class="text-sm text-gray-500 mb-6">
+                    <i class="fa-solid fa-house mr-2"></i> Diễn đàn <i class="fa-solid fa-chevron-right text-xs mx-2"></i> <span class="text-gray-800 font-medium">Viết bài mới</span>
+                </div>
+
+                <h1 class="text-3xl font-bold mb-2">Viết bài mới</h1>
+                <p class="text-gray-500 mb-8">Chia sẻ câu hỏi, kinh nghiệm, tài liệu hoặc thảo luận với cộng đồng UIT</p>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+                    
+                    <!-- Selects -->
+                    <div class="flex gap-6">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Chọn server / diễn đàn <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select class="w-full border border-gray-300 rounded-lg py-2.5 pl-10 pr-4 appearance-none focus:outline-none focus:border-primary">
+                                    <option>Nhóm đồ án NT208</option>
+                                </select>
+                                <i class="fa-solid fa-image absolute left-3 top-3 text-gray-400"></i>
+                                <i class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Chuyên mục <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select class="w-full border border-gray-300 rounded-lg py-2.5 px-4 appearance-none focus:outline-none focus:border-primary">
+                                    <option>Hỏi & thảo luận</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-4 top-3.5 text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Title -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Tiêu đề bài viết <span class="text-red-500">*</span></label>
+                            <span class="text-xs text-gray-400">0/200</span>
+                        </div>
+                        <input type="text" placeholder="Nhập tiêu đề ngắn gọn, dễ hiểu..." class="w-full border border-gray-300 rounded-lg py-2.5 px-4 focus:outline-none focus:border-primary">
+                    </div>
+
+                    <!-- Anonymous Toggle Banner -->
+                    <div class="bg-blue-50 rounded-lg p-4 flex items-center justify-between border border-blue-100">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-primary">
+                                <i class="fa-solid fa-mask"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Đăng bài ẩn danh</h4>
+                                <p class="text-sm text-gray-500">Khi bật, tên và thông tin cá nhân của bạn sẽ được ẩn với tất cả thành viên (trừ quản trị viên).</p>
+                            </div>
+                        </div>
+                        <!-- Toggle -->
+                        <div class="w-12 h-6 bg-primary rounded-full relative cursor-pointer">
+                            <div class="w-4 h-4 bg-white rounded-full absolute right-1 top-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Editor -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nội dung <span class="text-red-500">*</span></label>
+                        <div class="border border-gray-300 rounded-lg overflow-hidden flex flex-col h-64">
+                            <!-- Toolbar -->
+                            <div class="bg-gray-50 border-b border-gray-300 px-4 py-2 flex items-center gap-4 text-gray-600 flex-shrink-0">
+                                <button class="hover:text-primary"><i class="fa-solid fa-font"></i></button>
+                                <button class="hover:text-primary flex items-center gap-1 text-sm font-medium">Đoạn văn <i class="fa-solid fa-chevron-down text-xs"></i></button>
+                                <div class="w-px h-4 bg-gray-300"></div>
+                                <button class="hover:text-primary font-bold">B</button>
+                                <button class="hover:text-primary italic">I</button>
+                                <button class="hover:text-primary underline">U</button>
+                                <button class="hover:text-primary"><i class="fa-solid fa-list-ul"></i></button>
+                                <button class="hover:text-primary"><i class="fa-solid fa-list-ol"></i></button>
+                                <div class="w-px h-4 bg-gray-300"></div>
+                                <button class="hover:text-primary"><i class="fa-solid fa-code"></i></button>
+                                <button class="hover:text-primary"><i class="fa-solid fa-link"></i></button>
+                                <button class="hover:text-primary"><i class="fa-regular fa-image"></i></button>
+                                <button class="hover:text-primary"><i class="fa-solid fa-table"></i></button>
+                                <div class="w-px h-4 bg-gray-300"></div>
+                                <button class="hover:text-primary"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button class="hover:text-primary"><i class="fa-solid fa-rotate-right"></i></button>
+                                <button class="ml-auto text-sm text-gray-500 hover:text-primary"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                            </div>
+                            <textarea class="flex-1 w-full p-4 resize-none focus:outline-none" placeholder="Viết nội dung bài viết của bạn ở đây..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Đính kèm tệp <span class="text-gray-400 font-normal">(tùy chọn)</span></label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-primary mb-3"></i>
+                            <p class="text-gray-600 font-medium">Kéo thả tệp vào đây hoặc <span class="text-primary">nhấn để chọn</span></p>
+                            <p class="text-xs text-gray-400 mt-1">Hỗ trợ: PNG, JPG, PDF, DOC, DOCX, PPT, PPTX, ZIP (tối đa 50MB)</p>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Thẻ (tag)</label>
+                        <input type="text" placeholder="Nhập thẻ và nhấn Enter..." class="w-full border border-gray-300 rounded-lg py-2.5 px-4 focus:outline-none focus:border-primary">
+                        <p class="text-xs text-gray-500 mt-2">Thêm các thẻ liên quan để mọi người dễ tìm thấy bài viết (ví dụ: java, spring-boot, đồ-án, kinh-nghiệm...).</p>
+                    </div>
+
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="mt-6 flex items-center justify-between pb-10">
+                    <button class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">Hủy</button>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                            <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"> Lưu nháp
+                        </label>
+                        <button class="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2 shadow-sm shadow-blue-200">
+                            <i class="fa-regular fa-paper-plane"></i> Đăng bài
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar Panel -->
+            <aside class="w-80 flex-shrink-0 space-y-6">
+                <!-- Rules Card -->
+                <div class="bg-orange-50 rounded-xl p-5 border border-orange-100">
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2 mb-4">
+                        <i class="fa-regular fa-file-lines text-orange-500"></i> Quy tắc diễn đàn
+                    </h3>
+                    <ul class="space-y-3 text-sm text-gray-600">
+                        <li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold flex-shrink-0">1</span> Tôn trọng thành viên khác</li>
+                        <li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold flex-shrink-0">2</span> Không đăng nội dung vi phạm pháp luật</li>
+                        <li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold flex-shrink-0">3</span> Không spam, quảng cáo</li>
+                        <li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold flex-shrink-0">4</span> Sử dụng ngôn ngữ lịch sự, văn minh</li>
+                        <li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold flex-shrink-0">5</span> Đặt tiêu đề rõ ràng, mô tả đầy đủ</li>
+                        <li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-orange-200 text-orange-700 flex items-center justify-center text-xs font-bold flex-shrink-0">6</span> Có thể đính kèm hình ảnh, mã nguồn để minh họa</li>
+                    </ul>
+                </div>
+
+                <!-- Anonymous Mode Card (Redundant, but in design) -->
+                <div class="bg-blue-50 rounded-xl p-5 border border-blue-100 flex gap-4">
+                    <div class="text-primary mt-1"><i class="fa-solid fa-mask text-xl"></i></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-bold text-gray-800">Chế độ ẩn danh</h3>
+                            <div class="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
+                                <div class="w-3.5 h-3.5 bg-white rounded-full absolute right-1 top-0.5"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 leading-relaxed">Bài viết sẽ hiển thị với tên "Ẩn danh" và avatar mặc định. Chỉ quản trị viên mới có thể xem danh tính thật của bạn.</p>
+                    </div>
+                </div>
+
+                <!-- Preview Card -->
+                <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                    <h3 class="font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Xem trước bài viết</h3>
+                    
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-mask"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm">Ẩn danh</div>
+                            <div class="text-xs text-gray-500">Vài giây trước <span class="mx-1">•</span> Trong Nhóm đồ án NT208</div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-800 mb-2">Lỗi khi deploy Spring Boot lên VPS</h4>
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-3">Chào mọi người,<br>Mình đang deploy ứng dụng Spring Boot lên VPS (Ubuntu 22.04) nhưng...</p>
+                    
+                    <div class="flex gap-2 mb-4">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">spring-boot</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">deploy</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">vps</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 text-xs text-gray-500 border-t border-gray-100 pt-3">
+                        <span><i class="fa-regular fa-comment"></i> 12</span>
+                        <span><i class="fa-regular fa-eye"></i> 256</span>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    </div>
+
+</body>
+</html>
