@@ -94,21 +94,23 @@ public class EmailChangeService {
         validateNewEmail(user, newEmail);
 
         String userIdText = userId.toString();
-        if (redisService.get(RedisKey.emailChangeCooldown(userIdText)).isPresent()) {
+        String cooldownKey = RedisKey.emailChangeCooldown(userIdText);
+
+        if (!redisService.setIfAbsent(cooldownKey, "1", cooldown)) {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, COOLDOWN_MESSAGE);
         }
 
         String rawToken = TokenHashUtil.generateToken();
         String tokenHash = TokenHashUtil.sha256Hex(rawToken);
 
-        redisService.set(RedisKey.emailChange(tokenHash), userIdText + VALUE_SEPARATOR + newEmail, tokenTtl);
-        // Only the newest link is valid: a new request silently replaces the previous one.
-        redisService.set(RedisKey.emailChangePending(userIdText), tokenHash, tokenTtl);
-
-        emailService.sendEmailChangeConfirmation(newEmail, user.getFullName(), buildConfirmLink(rawToken));
-
-        // Start the cooldown only after the email was actually sent.
-        redisService.set(RedisKey.emailChangeCooldown(userIdText), "1", cooldown);
+        try {
+            redisService.set(RedisKey.emailChange(tokenHash), userIdText + VALUE_SEPARATOR + newEmail, tokenTtl);
+            redisService.set(RedisKey.emailChangePending(userIdText), tokenHash, tokenTtl);
+            emailService.sendEmailChangeConfirmation(newEmail, user.getFullName(), buildConfirmLink(rawToken));
+        } catch (RuntimeException exception) {
+            redisService.delete(cooldownKey);
+            throw exception;   // the user is signed in, so reporting the failure reveals nothing
+        }
     }
 
 

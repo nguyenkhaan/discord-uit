@@ -1,5 +1,6 @@
 package com.cloudian.backend.security;
 
+import com.cloudian.backend.filters.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -25,14 +26,17 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
     private final ErrorResponseWriter errorResponseWriter;
+    private final RateLimitFilter rateLimitFilter;
 
     public SecurityConfig(
             CustomUserDetailsService customUserDetailsService,
             JwtRequestFilter jwtRequestFilter,
-            ErrorResponseWriter errorResponseWriter) {
+            ErrorResponseWriter errorResponseWriter,
+            RateLimitFilter rateLimitFilter) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
         this.errorResponseWriter = errorResponseWriter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -86,6 +90,7 @@ public class SecurityConfig {
                                 ErrorResponse.defaultMessage(HttpStatus.FORBIDDEN))))
 
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .addFilterBefore(
                         jwtRequestFilter,

@@ -31,6 +31,23 @@ public class RedisService {
         execute(List.of("SET", key, value, "EX", ttlSeconds));
     }
 
+    // avoid too many request be sent at the same time.
+    // Get and Set at the same time for the first request to redis
+    public boolean setIfAbsent(String key, String value, Duration ttl) {
+        Objects.requireNonNull(key, "key must not be null");
+        Objects.requireNonNull(value, "value must not be null");
+        Objects.requireNonNull(ttl, "ttl must not be null");
+
+        long ttlSeconds = ttl.toSeconds();
+        if (ttlSeconds < 1) {
+            throw new IllegalArgumentException("ttl must be at least one second");
+        }
+
+        // Upstash answers "OK" when the key was set, null when NX blocked it.
+        Object result = execute(List.of("SET", key, value, "NX", "EX", ttlSeconds));
+        return "OK".equals(result);
+    }
+
     public Optional<String> get(String key) {
         Objects.requireNonNull(key, "key must not be null");
         return stringResult(execute(List.of("GET", key)));
