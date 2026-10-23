@@ -13,6 +13,7 @@ public final class RedisKey {
     private static final String PASSWORD_RESET_PENDING_PREFIX = "auth:password-reset-pending:";
     private static final String PASSWORD_RESET_COOLDOWN_PREFIX = "auth:password-reset-cooldown:";
     private static final String PASSWORD_CHANGE_ATTEMPTS_PREFIX = "auth:password-change-attempts:";
+    private static final String RATE_LIMIT_PREFIX = "rate-limit:";
 
     private RedisKey() {
     }
@@ -58,5 +59,12 @@ public final class RedisKey {
     // count wrong currentPassword attempts when changing password in Settings
     public static String passwordChangeAttempts(String userId) {
         return PASSWORD_CHANGE_ATTEMPTS_PREFIX + Objects.requireNonNull(userId, "userId must not be null");
+    }
+
+    // rule name + client IP → number of requests in the current window
+    public static String rateLimit(String rule, String clientIp) {
+        return RATE_LIMIT_PREFIX
+                + Objects.requireNonNull(rule, "rule must not be null") + ":"
+                + Objects.requireNonNull(clientIp, "clientIp must not be null");
     }
 }
