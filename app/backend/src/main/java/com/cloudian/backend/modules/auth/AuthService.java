@@ -90,7 +90,7 @@ public class AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         // generate token for this log in session
-        return issueTokens(UUID.fromString(userDetails.getUserId()), userDetails.getUsername());
+        return issueTokens(userDetails.getUserId(), userDetails.getUsername());
     }
 
     private LoginResponse issueTokens(UUID userId, String email) {

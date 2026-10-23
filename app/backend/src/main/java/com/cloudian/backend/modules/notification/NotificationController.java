@@ -15,16 +15,17 @@ import com.cloudian.backend.modules.notification.dto.NotificationRequest;
 @RestController
 @RequestMapping("/kafka/notification")
 public class NotificationController {
-	private final KafkaEventProducer producer;
+	// private final KafkaEventProducer producer;
 
-	public NotificationController(KafkaEventProducer producer) {
-		this.producer = producer;
-	}
+	// public NotificationController(KafkaEventProducer producer) {
+	// 	this.producer = producer;
+	// }
 
-	@PostMapping
-	@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-	public ResponseEntity<Map<String, String>> publish(@RequestBody NotificationRequest request) {
-		producer.publish("notification.events.v1", request.recipientId(), request.message());
-		return ResponseEntity.accepted().body(Map.of("status", "event accepted"));
-	}
+	// @PostMapping
+	// @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+	// public ResponseEntity<Map<String, String>> publish(@RequestBody NotificationRequest request) {
+	// 	producer.publish("notification.events.v1", request.recipientId(), request.message());
+	// 	return ResponseEntity.accepted().body(Map.of("status", "event accepted"));
+	// }
+	
 }

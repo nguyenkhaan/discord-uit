@@ -19,7 +19,7 @@ public class AuthenticationService {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         
         final CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return jwtUtil.generateToken(userDetails.getUserId() , userDetails.getUsername());
+        return jwtUtil.generateToken(userDetails.getUserId().toString(), userDetails.getUsername());
     }
     // public User registerUser(User user) {
     //     user.setPassword(passwordEncoder.encode(user.getPassword()));

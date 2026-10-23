@@ -80,7 +80,7 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = authenticatedUser(authentication);
         logoutService.logout(
-                UUID.fromString(userDetails.getUserId()),
+                userDetails.getUserId(),
                 accessToken(servletRequest),
                 refreshToken(servletRequest, request));
         logoutHandler.logout(servletRequest, servletResponse, authentication);
@@ -94,7 +94,7 @@ public class AuthController {
 
         CustomUserDetails userDetails = authenticatedUser(authentication);
 
-        authService.logoutAll(UUID.fromString(userDetails.getUserId()));
+        authService.logoutAll(userDetails.getUserId());
 
         SecurityContextHolder.clearContext();
         authenticationCookieService.clearAuthenticationCookies(servletResponse);

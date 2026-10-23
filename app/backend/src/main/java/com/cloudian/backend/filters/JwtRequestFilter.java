@@ -106,7 +106,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         CustomUserDetails userDetails = customUserDetailsService.loadUserById(userUuid);
 
-        if (!jwtUtil.validateToken(jwt, userDetails.getUserId(), TokenType.ACCESS)) {
+        if (!jwtUtil.validateToken(jwt, userDetails.getUserId().toString(), TokenType.ACCESS)) {
             return false;
         }
 
