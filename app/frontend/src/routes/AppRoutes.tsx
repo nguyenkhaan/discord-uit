@@ -9,6 +9,8 @@ import ChangePasswordPage from '@/features/auth/pages/ChangePasswordPage';
 import ChangeEmailPage from '@/features/auth/pages/ChangeEmailPage';
 import NotFound from '@/pages/NotFound';
 
+import AuthGuard from '@/components/AuthGuard';
+
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -20,12 +22,25 @@ export default function AppRoutes() {
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                
-                <Route path="/change-password" element={<ChangePasswordPage />} />
-                <Route path="/change-email" element={<ChangeEmailPage />} />
-                <Route path="/not-found" element={<NotFound />} />
-                
-                <Route path="*" element={<Navigate to="/not-found" replace />} />
+                {/* Các Route cần bảo mật */}
+                <Route 
+                    path="/change-password" 
+                    element={
+                        <AuthGuard>
+                            <ChangePasswordPage />
+                        </AuthGuard>
+                    } 
+                />
+                <Route 
+                    path="/change-email" 
+                    element={
+                        <AuthGuard>
+                            <ChangeEmailPage />
+                        </AuthGuard>
+                    } 
+                />
+
+                <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </BrowserRouter>
     );

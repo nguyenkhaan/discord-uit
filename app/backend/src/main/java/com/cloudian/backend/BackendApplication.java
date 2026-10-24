@@ -1,3 +1,5 @@
+// Run from app/backend: ./gradlew seedData 
+//Xac thuc seed duoc hay khong bang dong: Database seed completed: 2026-10-23T16:06:44.305+07:00  INFO 107378 --- [backend] [           main] com.cloudian.backend.data.SeedScript : Database seed completed: 100 inserted, 0 skipped
 package com.cloudian.backend;
 
 import java.time.LocalDateTime;

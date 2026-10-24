@@ -92,19 +92,27 @@ public class PasswordResetService {
 
         // avoid spamming forgot password
         String userIdText = user.getId().toString();
-        if (redisService.get(RedisKey.passwordResetCooldown(userIdText)).isPresent()) {
-            return;
+        String cooldownKey = RedisKey.passwordResetCooldown(userIdText);
+
+        // change
+        // instead of getting then setting not we do it at the same time so that only 1 request win it
+        if (!redisService.setIfAbsent(cooldownKey, "1", cooldown)) {
+            return;   // silent: a 429 here would reveal that the email exists
         }
+
         String rawToken = TokenHashUtil.generateToken();
         String tokenHash = TokenHashUtil.sha256Hex(rawToken);
 
-        redisService.set(RedisKey.passwordReset(tokenHash), userIdText, tokenTtl);
-        // Only the newest link is valid.
-        redisService.set(RedisKey.passwordResetPending(userIdText), tokenHash, tokenTtl);
-
-        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), buildResetLink(rawToken));
-
-        redisService.set(RedisKey.passwordResetCooldown(userIdText), "1", cooldown);
+        try {
+            redisService.set(RedisKey.passwordReset(tokenHash), userIdText, tokenTtl);
+            redisService.set(RedisKey.passwordResetPending(userIdText), tokenHash, tokenTtl);
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), buildResetLink(rawToken));
+        } catch (RuntimeException exception) {
+            // Nothing was sent: free the slot so the user can retry right away.
+            redisService.delete(cooldownKey);
+            // Do not rethrow: an error here (vs 202 for unknown emails) would reveal that the account exists.
+            LOGGER.warn("Could not send password-reset email to user {}", userIdText, exception);
+        }
     }
 
     @Transactional

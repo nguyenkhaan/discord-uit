@@ -1,0 +1,345 @@
+{
+  "defaultPassword": "cloudian",
+  "tables": [
+    {
+      "name": "user_account",
+      "keyColumns": ["email"],
+      "referenceColumn": "id",
+      "rows": [
+        {
+          "_ref": "user",
+          "id": {"$uuid": "00000000-0000-0000-0000-000000000001"},
+          "email": "user@gmail.com",
+          "password_hash": {"$defaultPassword": true},
+          "account_type": "PERSONAL",
+          "account_status": "ACTIVE",
+          "email_verified_at": {"$instant": "2026-01-01T00:00:00Z"},
+          "full_name": "Cloudian User",
+          "system_role": "USER",
+          "created_at": {"$instant": "2026-01-01T00:00:00Z"},
+          "updated_at": {"$instant": "2026-01-01T00:00:00Z"}
+        },
+        {
+          "_ref": "admin",
+          "id": {"$uuid": "00000000-0000-0000-0000-000000000002"},
+          "email": "admin@gmail.com",
+          "password_hash": {"$defaultPassword": true},
+          "account_type": "PERSONAL",
+          "account_status": "ACTIVE",
+          "email_verified_at": {"$instant": "2026-01-01T00:00:00Z"},
+          "full_name": "Cloudian Admin",
+          "system_role": "ADMIN",
+          "created_at": {"$instant": "2026-01-01T00:00:00Z"},
+          "updated_at": {"$instant": "2026-01-01T00:00:00Z"}
+        }
+      ]
+    },
+    {
+      "name": "category",
+      "keyColumns": ["name"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "category-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000001001"}, "name": "Cloud Computing", "created_at": {"$instant": "2026-01-02T00:00:00Z"}, "updated_at": {"$instant": "2026-01-02T00:00:00Z"}},
+        {"_ref": "category-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000001002"}, "name": "Artificial Intelligence", "created_at": {"$instant": "2026-01-02T00:00:00Z"}, "updated_at": {"$instant": "2026-01-02T00:00:00Z"}},
+        {"_ref": "category-se", "id": {"$uuid": "00000000-0000-0000-0000-000000001003"}, "name": "Software Engineering", "created_at": {"$instant": "2026-01-02T00:00:00Z"}, "updated_at": {"$instant": "2026-01-02T00:00:00Z"}}
+      ]
+    },
+    {
+      "name": "collection",
+      "keyColumns": ["slug"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "collection-foundations", "id": {"$uuid": "00000000-0000-0000-0000-000000001101"}, "name": "Technology Foundations", "description": "Core learning materials", "slug": "technology-foundations", "created_at": {"$instant": "2026-01-02T01:00:00Z"}, "updated_at": {"$instant": "2026-01-02T01:00:00Z"}},
+        {"_ref": "collection-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000001102"}, "name": "AI Research", "description": "Selected artificial intelligence documents", "slug": "ai-research", "created_at": {"$instant": "2026-01-02T01:00:00Z"}, "updated_at": {"$instant": "2026-01-02T01:00:00Z"}},
+        {"_ref": "collection-community", "id": {"$uuid": "00000000-0000-0000-0000-000000001103"}, "name": "Community Picks", "description": "Documents recommended by the community", "slug": "community-picks", "created_at": {"$instant": "2026-01-02T01:00:00Z"}, "updated_at": {"$instant": "2026-01-02T01:00:00Z"}}
+      ]
+    },
+    {
+      "name": "react_icon",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "icon-like", "id": {"$uuid": "00000000-0000-0000-0000-000000001201"}, "icon_image": "👍", "name": "Like", "summary": "Helpful or agreeable", "created_at": {"$instant": "2026-01-02T02:00:00Z"}},
+        {"_ref": "icon-love", "id": {"$uuid": "00000000-0000-0000-0000-000000001202"}, "icon_image": "❤️", "name": "Love", "summary": "Strong appreciation", "created_at": {"$instant": "2026-01-02T02:00:00Z"}},
+        {"_ref": "icon-insightful", "id": {"$uuid": "00000000-0000-0000-0000-000000001203"}, "icon_image": "💡", "name": "Insightful", "summary": "Useful new insight", "created_at": {"$instant": "2026-01-02T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "media",
+      "keyColumns": ["object_key"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "media-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000001301"}, "uploaded_by_user_id": {"$ref": "user"}, "file_name": "cloud-computing.pdf", "mime_type": "application/pdf", "size_bytes": 245760, "object_key": "seed/documents/cloud-computing.pdf", "status": "READY", "scan_completed_at": {"$instant": "2026-01-03T00:10:00Z"}, "created_at": {"$instant": "2026-01-03T00:00:00Z"}},
+        {"_ref": "media-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000001302"}, "uploaded_by_user_id": {"$ref": "admin"}, "file_name": "ai-overview.pdf", "mime_type": "application/pdf", "size_bytes": 327680, "object_key": "seed/documents/ai-overview.pdf", "status": "READY", "scan_completed_at": {"$instant": "2026-01-03T00:20:00Z"}, "created_at": {"$instant": "2026-01-03T00:05:00Z"}},
+        {"_ref": "media-se", "id": {"$uuid": "00000000-0000-0000-0000-000000001303"}, "uploaded_by_user_id": {"$ref": "user"}, "file_name": "clean-code-notes.pdf", "mime_type": "application/pdf", "size_bytes": 196608, "object_key": "seed/documents/clean-code-notes.pdf", "status": "READY", "scan_completed_at": {"$instant": "2026-01-03T00:30:00Z"}, "created_at": {"$instant": "2026-01-03T00:15:00Z"}}
+      ]
+    },
+    {
+      "name": "server",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "server-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000001401"}, "name": "Cloud Study Group", "group_image_url": "https://example.com/seed/cloud.png", "created_by_user_id": {"$ref": "user"}, "created_at": {"$instant": "2026-01-04T00:00:00Z"}, "updated_at": {"$instant": "2026-01-04T00:00:00Z"}},
+        {"_ref": "server-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000001402"}, "name": "AI Research Hub", "group_image_url": "https://example.com/seed/ai.png", "created_by_user_id": {"$ref": "admin"}, "created_at": {"$instant": "2026-01-04T01:00:00Z"}, "updated_at": {"$instant": "2026-01-04T01:00:00Z"}},
+        {"_ref": "server-se", "id": {"$uuid": "00000000-0000-0000-0000-000000001403"}, "name": "Software Engineering Lab", "group_image_url": "https://example.com/seed/se.png", "created_by_user_id": {"$ref": "user"}, "created_at": {"$instant": "2026-01-04T02:00:00Z"}, "updated_at": {"$instant": "2026-01-04T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "forum_post",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "post-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000001501"}, "author_user_id": {"$ref": "user"}, "title": "Getting started with cloud computing", "content": {"$json": {"text": "Share your cloud learning resources here."}}, "topics": {"$textArray": ["cloud", "learning"]}, "is_anonymous": false, "status": "APPROVED", "ai_recommendation": "APPROVE", "ai_confidence": 0.98, "moderated_by_user_id": {"$ref": "admin"}, "moderated_at": {"$instant": "2026-01-05T00:30:00Z"}, "created_at": {"$instant": "2026-01-05T00:00:00Z"}, "updated_at": {"$instant": "2026-01-05T00:30:00Z"}},
+        {"_ref": "post-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000001502"}, "author_user_id": {"$ref": "admin"}, "title": "Responsible AI discussion", "content": {"$json": {"text": "What principles should guide responsible AI development?"}}, "topics": {"$textArray": ["ai", "ethics"]}, "is_anonymous": false, "status": "APPROVED", "ai_recommendation": "APPROVE", "ai_confidence": 0.96, "moderated_by_user_id": {"$ref": "admin"}, "moderated_at": {"$instant": "2026-01-05T01:30:00Z"}, "created_at": {"$instant": "2026-01-05T01:00:00Z"}, "updated_at": {"$instant": "2026-01-05T01:30:00Z"}},
+        {"_ref": "post-se", "id": {"$uuid": "00000000-0000-0000-0000-000000001503"}, "author_user_id": {"$ref": "user"}, "title": "Code review habits", "content": {"$json": {"text": "Which code review habits improve team quality?"}}, "topics": {"$textArray": ["software-engineering", "code-review"]}, "is_anonymous": true, "status": "PENDING_REVIEW", "ai_recommendation": "NEEDS_REVIEW", "ai_confidence": 0.71, "created_at": {"$instant": "2026-01-05T02:00:00Z"}, "updated_at": {"$instant": "2026-01-05T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "document",
+      "keyColumns": ["slug"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "document-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000001601"}, "uploaded_by_user_id": {"$ref": "user"}, "media_id": {"$ref": "media-cloud"}, "title": "Cloud Computing Fundamentals", "description": "An introduction to cloud service models", "tags": {"$textArray": ["cloud", "iaas", "paas"]}, "slug": "cloud-computing-fundamentals", "visibility_status": "PUBLIC", "created_at": {"$instant": "2026-01-06T00:00:00Z"}, "updated_at": {"$instant": "2026-01-06T00:00:00Z"}},
+        {"_ref": "document-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000001602"}, "uploaded_by_user_id": {"$ref": "admin"}, "media_id": {"$ref": "media-ai"}, "title": "Artificial Intelligence Overview", "description": "A survey of modern AI techniques", "tags": {"$textArray": ["ai", "machine-learning"]}, "slug": "artificial-intelligence-overview", "visibility_status": "PUBLIC", "created_at": {"$instant": "2026-01-06T01:00:00Z"}, "updated_at": {"$instant": "2026-01-06T01:00:00Z"}},
+        {"_ref": "document-se", "id": {"$uuid": "00000000-0000-0000-0000-000000001603"}, "uploaded_by_user_id": {"$ref": "user"}, "media_id": {"$ref": "media-se"}, "title": "Clean Code Notes", "description": "Practical software engineering notes", "tags": {"$textArray": ["clean-code", "engineering"]}, "slug": "clean-code-notes", "visibility_status": "HIDDEN", "created_at": {"$instant": "2026-01-06T02:00:00Z"}, "updated_at": {"$instant": "2026-01-06T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "server_membership",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "membership-cloud-owner", "id": {"$uuid": "00000000-0000-0000-0000-000000001701"}, "user_id": {"$ref": "user"}, "server_id": {"$ref": "server-cloud"}, "role": "OWNER", "joined_at": {"$instant": "2026-01-04T00:00:00Z"}},
+        {"_ref": "membership-cloud-admin", "id": {"$uuid": "00000000-0000-0000-0000-000000001702"}, "user_id": {"$ref": "admin"}, "server_id": {"$ref": "server-cloud"}, "role": "MEMBER", "joined_at": {"$instant": "2026-01-04T00:10:00Z"}},
+        {"_ref": "membership-ai-owner", "id": {"$uuid": "00000000-0000-0000-0000-000000001703"}, "user_id": {"$ref": "admin"}, "server_id": {"$ref": "server-ai"}, "role": "OWNER", "joined_at": {"$instant": "2026-01-04T01:00:00Z"}},
+        {"_ref": "membership-se-owner", "id": {"$uuid": "00000000-0000-0000-0000-000000001704"}, "user_id": {"$ref": "user"}, "server_id": {"$ref": "server-se"}, "role": "OWNER", "joined_at": {"$instant": "2026-01-04T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "server_invite",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "invite-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000001801"}, "server_id": {"$ref": "server-cloud"}, "created_by_user_id": {"$ref": "admin"}, "recipient_user_id": {"$ref": "user"}, "invite_type": "DIRECT", "status": "PENDING", "expires_at": {"$instant": "2027-01-01T00:00:00Z"}, "use_count": 0, "created_at": {"$instant": "2026-01-07T00:00:00Z"}},
+        {"_ref": "invite-ai-link", "id": {"$uuid": "00000000-0000-0000-0000-000000001802"}, "server_id": {"$ref": "server-ai"}, "created_by_user_id": {"$ref": "admin"}, "token_hash": "seed-link-token-hash-ai", "invite_type": "LINK", "status": "ACCEPTED", "expires_at": {"$instant": "2027-01-01T00:00:00Z"}, "max_uses": 10, "use_count": 2, "created_at": {"$instant": "2026-01-07T01:00:00Z"}, "accepted_at": {"$instant": "2026-01-07T02:00:00Z"}},
+        {"_ref": "invite-se", "id": {"$uuid": "00000000-0000-0000-0000-000000001803"}, "server_id": {"$ref": "server-se"}, "created_by_user_id": {"$ref": "user"}, "recipient_user_id": {"$ref": "admin"}, "invite_type": "DIRECT", "status": "DECLINED", "expires_at": {"$instant": "2027-01-01T00:00:00Z"}, "use_count": 0, "created_at": {"$instant": "2026-01-07T03:00:00Z"}, "declined_at": {"$instant": "2026-01-07T04:00:00Z"}}
+      ]
+    },
+    {
+      "name": "chat_message",
+      "keyColumns": ["server_id", "sender_user_id", "client_request_id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "message-cloud-1", "id": {"$uuid": "00000000-0000-0000-0000-000000001901"}, "server_id": {"$ref": "server-cloud"}, "sender_user_id": {"$ref": "user"}, "content_text": "Welcome to the cloud study group!", "client_request_id": "seed-cloud-message-1", "created_at": {"$instant": "2026-01-08T00:00:00Z"}},
+        {"_ref": "message-cloud-2", "id": {"$uuid": "00000000-0000-0000-0000-000000001902"}, "server_id": {"$ref": "server-cloud"}, "sender_user_id": {"$ref": "admin"}, "content_text": "Start with this document.", "client_request_id": "seed-cloud-message-2", "linked_content_type": "DOCUMENT", "linked_content_id": {"$ref": "document-cloud"}, "created_at": {"$instant": "2026-01-08T00:05:00Z"}},
+        {"_ref": "message-ai-1", "id": {"$uuid": "00000000-0000-0000-0000-000000001903"}, "server_id": {"$ref": "server-ai"}, "sender_user_id": {"$ref": "admin"}, "content_text": "Please review the AI discussion.", "client_request_id": "seed-ai-message-1", "linked_content_type": "FORUM_POST", "linked_content_id": {"$ref": "post-ai"}, "created_at": {"$instant": "2026-01-08T01:00:00Z"}},
+        {"_ref": "message-se-1", "id": {"$uuid": "00000000-0000-0000-0000-000000001904"}, "server_id": {"$ref": "server-se"}, "sender_user_id": {"$ref": "user"}, "content_text": "Let's discuss clean code practices.", "client_request_id": "seed-se-message-1", "created_at": {"$instant": "2026-01-08T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "call_session",
+      "keyColumns": ["livekit_room_name"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "call-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000002001"}, "server_id": {"$ref": "server-cloud"}, "coordinator_user_id": {"$ref": "user"}, "status": "ENDED", "livekit_room_name": "seed-cloud-call", "started_at": {"$instant": "2026-01-09T00:00:00Z"}, "ended_at": {"$instant": "2026-01-09T01:00:00Z"}},
+        {"_ref": "call-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000002002"}, "server_id": {"$ref": "server-ai"}, "coordinator_user_id": {"$ref": "admin"}, "status": "ENDED", "livekit_room_name": "seed-ai-call", "started_at": {"$instant": "2026-01-09T02:00:00Z"}, "ended_at": {"$instant": "2026-01-09T03:00:00Z"}},
+        {"_ref": "call-se", "id": {"$uuid": "00000000-0000-0000-0000-000000002003"}, "server_id": {"$ref": "server-se"}, "coordinator_user_id": {"$ref": "user"}, "status": "ACTIVE", "livekit_room_name": "seed-se-call", "active_screen_sharer_user_id": {"$ref": "user"}, "started_at": {"$instant": "2026-01-09T04:00:00Z"}}
+      ]
+    },
+    {
+      "name": "call_participation",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "participation-cloud-user", "id": {"$uuid": "00000000-0000-0000-0000-000000002101"}, "call_session_id": {"$ref": "call-cloud"}, "user_id": {"$ref": "user"}, "joined_at": {"$instant": "2026-01-09T00:00:00Z"}, "left_at": {"$instant": "2026-01-09T01:00:00Z"}},
+        {"_ref": "participation-cloud-admin", "id": {"$uuid": "00000000-0000-0000-0000-000000002102"}, "call_session_id": {"$ref": "call-cloud"}, "user_id": {"$ref": "admin"}, "joined_at": {"$instant": "2026-01-09T00:05:00Z"}, "left_at": {"$instant": "2026-01-09T00:55:00Z"}},
+        {"_ref": "participation-ai-admin", "id": {"$uuid": "00000000-0000-0000-0000-000000002103"}, "call_session_id": {"$ref": "call-ai"}, "user_id": {"$ref": "admin"}, "joined_at": {"$instant": "2026-01-09T02:00:00Z"}, "left_at": {"$instant": "2026-01-09T03:00:00Z"}},
+        {"_ref": "participation-se-user", "id": {"$uuid": "00000000-0000-0000-0000-000000002104"}, "call_session_id": {"$ref": "call-se"}, "user_id": {"$ref": "user"}, "joined_at": {"$instant": "2026-01-09T04:00:00Z"}}
+      ]
+    },
+    {
+      "name": "call_event",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "call-event-1", "id": {"$uuid": "00000000-0000-0000-0000-000000002201"}, "call_session_id": {"$ref": "call-cloud"}, "actor_user_id": {"$ref": "admin"}, "target_user_id": {"$ref": "user"}, "event_type": "FORCE_MUTE", "created_at": {"$instant": "2026-01-09T00:30:00Z"}},
+        {"_ref": "call-event-2", "id": {"$uuid": "00000000-0000-0000-0000-000000002202"}, "call_session_id": {"$ref": "call-ai"}, "actor_user_id": {"$ref": "admin"}, "event_type": "SCREEN_SHARE_STARTED", "created_at": {"$instant": "2026-01-09T02:15:00Z"}},
+        {"_ref": "call-event-3", "id": {"$uuid": "00000000-0000-0000-0000-000000002203"}, "call_session_id": {"$ref": "call-se"}, "actor_user_id": {"$ref": "user"}, "event_type": "SCREEN_SHARE_STARTED", "created_at": {"$instant": "2026-01-09T04:05:00Z"}}
+      ]
+    },
+    {
+      "name": "comment",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "comment-cloud-1", "id": {"$uuid": "00000000-0000-0000-0000-000000002301"}, "forum_post_id": {"$ref": "post-cloud"}, "author_user_id": {"$ref": "admin"}, "content": {"$json": {"text": "This is a useful starting point."}}, "is_anonymous": false, "status": "VISIBLE", "created_at": {"$instant": "2026-01-10T00:00:00Z"}, "updated_at": {"$instant": "2026-01-10T00:00:00Z"}},
+        {"_ref": "comment-cloud-reply", "id": {"$uuid": "00000000-0000-0000-0000-000000002302"}, "parent_id": {"$ref": "comment-cloud-1"}, "forum_post_id": {"$ref": "post-cloud"}, "author_user_id": {"$ref": "user"}, "content": {"$json": {"text": "Thanks for the feedback!"}}, "is_anonymous": false, "status": "VISIBLE", "created_at": {"$instant": "2026-01-10T00:10:00Z"}, "updated_at": {"$instant": "2026-01-10T00:10:00Z"}},
+        {"_ref": "comment-ai-1", "id": {"$uuid": "00000000-0000-0000-0000-000000002303"}, "forum_post_id": {"$ref": "post-ai"}, "author_user_id": {"$ref": "user"}, "content": {"$json": {"text": "Transparency should be a core principle."}}, "is_anonymous": false, "status": "VISIBLE", "created_at": {"$instant": "2026-01-10T01:00:00Z"}, "updated_at": {"$instant": "2026-01-10T01:00:00Z"}},
+        {"_ref": "comment-se-1", "id": {"$uuid": "00000000-0000-0000-0000-000000002304"}, "forum_post_id": {"$ref": "post-se"}, "author_user_id": {"$ref": "admin"}, "content": {"$json": {"text": "Small pull requests are easier to review."}}, "is_anonymous": true, "status": "VISIBLE", "created_at": {"$instant": "2026-01-10T02:00:00Z"}, "updated_at": {"$instant": "2026-01-10T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "document_submission",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "submission-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000002401"}, "document_id": {"$ref": "document-cloud"}, "submitted_by_user_id": {"$ref": "user"}, "status": "APPROVED", "submitted_at": {"$instant": "2026-01-11T00:00:00Z"}, "reviewed_by_user_id": {"$ref": "admin"}, "reviewed_at": {"$instant": "2026-01-11T00:30:00Z"}},
+        {"_ref": "submission-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000002402"}, "document_id": {"$ref": "document-ai"}, "submitted_by_user_id": {"$ref": "admin"}, "status": "PENDING_REVIEW", "submitted_at": {"$instant": "2026-01-11T01:00:00Z"}},
+        {"_ref": "submission-se", "id": {"$uuid": "00000000-0000-0000-0000-000000002403"}, "document_id": {"$ref": "document-se"}, "submitted_by_user_id": {"$ref": "user"}, "status": "REJECTED", "submitted_at": {"$instant": "2026-01-11T02:00:00Z"}, "reviewed_by_user_id": {"$ref": "admin"}, "reviewed_at": {"$instant": "2026-01-11T02:30:00Z"}, "rejection_reason": "Please add complete citation information.", "purge_at": {"$instant": "2027-01-11T00:00:00Z"}}
+      ]
+    },
+    {
+      "name": "agent_classification",
+      "keyColumns": ["classification_run_id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "classification-cloud", "id": {"$uuid": "00000000-0000-0000-0000-000000002501"}, "document_submission_id": {"$ref": "submission-cloud"}, "model_id": "cloudian-classifier-v1", "classification_run_id": "seed-classification-cloud", "ocr_text": "Cloud computing fundamentals", "created_at": {"$instant": "2026-01-11T00:05:00Z"}},
+        {"_ref": "classification-ai", "id": {"$uuid": "00000000-0000-0000-0000-000000002502"}, "document_submission_id": {"$ref": "submission-ai"}, "model_id": "cloudian-classifier-v1", "classification_run_id": "seed-classification-ai", "ocr_text": "Artificial intelligence overview", "created_at": {"$instant": "2026-01-11T01:05:00Z"}},
+        {"_ref": "classification-se", "id": {"$uuid": "00000000-0000-0000-0000-000000002503"}, "document_submission_id": {"$ref": "submission-se"}, "model_id": "cloudian-classifier-v1", "classification_run_id": "seed-classification-se", "ocr_text": "Clean code notes", "created_at": {"$instant": "2026-01-11T02:05:00Z"}}
+      ]
+    },
+    {
+      "name": "notification",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "notification-admin-message", "id": {"$uuid": "00000000-0000-0000-0000-000000002601"}, "recipient_user_id": {"$ref": "user"}, "actor_user_id": {"$ref": "admin"}, "kind": "ADMIN_MESSAGE", "content": "Welcome to Cloudian!", "created_at": {"$instant": "2026-01-12T00:00:00Z"}},
+        {"_ref": "notification-document", "id": {"$uuid": "00000000-0000-0000-0000-000000002602"}, "recipient_user_id": {"$ref": "user"}, "actor_user_id": {"$ref": "admin"}, "kind": "DOCUMENT_REJECTED", "content": "Your Clean Code Notes submission needs more citation details.", "related_entity_type": "DOCUMENT", "related_entity_id": {"$ref": "document-se"}, "read_at": {"$instant": "2026-01-12T01:30:00Z"}, "created_at": {"$instant": "2026-01-12T01:00:00Z"}},
+        {"_ref": "notification-forum", "id": {"$uuid": "00000000-0000-0000-0000-000000002603"}, "recipient_user_id": {"$ref": "user"}, "actor_user_id": {"$ref": "admin"}, "kind": "FORUM_POST_APPROVED", "content": "Your cloud computing post was approved.", "related_entity_type": "FORUM_POST", "related_entity_id": {"$ref": "post-cloud"}, "created_at": {"$instant": "2026-01-12T02:00:00Z"}},
+        {"_ref": "notification-invite", "id": {"$uuid": "00000000-0000-0000-0000-000000002604"}, "recipient_user_id": {"$ref": "admin"}, "actor_user_id": {"$ref": "user"}, "kind": "SERVER_INVITATION", "content": "You were invited to Software Engineering Lab.", "related_entity_type": "SERVER", "related_entity_id": {"$ref": "server-se"}, "created_at": {"$instant": "2026-01-12T03:00:00Z"}}
+      ]
+    },
+    {
+      "name": "refresh_session",
+      "keyColumns": ["token_hash"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "refresh-user-1", "id": {"$uuid": "00000000-0000-0000-0000-000000002701"}, "user_id": {"$ref": "user"}, "token_hash": "seed-refresh-user-one", "expires_at": {"$instant": "2027-01-01T00:00:00Z"}, "created_at": {"$instant": "2026-01-13T00:00:00Z"}},
+        {"_ref": "refresh-admin-1", "id": {"$uuid": "00000000-0000-0000-0000-000000002702"}, "user_id": {"$ref": "admin"}, "token_hash": "seed-refresh-admin-one", "expires_at": {"$instant": "2027-01-01T00:00:00Z"}, "created_at": {"$instant": "2026-01-13T01:00:00Z"}},
+        {"_ref": "refresh-user-revoked", "id": {"$uuid": "00000000-0000-0000-0000-000000002703"}, "user_id": {"$ref": "user"}, "token_hash": "seed-refresh-user-revoked", "expires_at": {"$instant": "2027-01-01T00:00:00Z"}, "revoked_at": {"$instant": "2026-01-14T00:00:00Z"}, "created_at": {"$instant": "2026-01-13T02:00:00Z"}}
+      ]
+    },
+    {
+      "name": "report",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "report-document", "id": {"$uuid": "00000000-0000-0000-0000-000000002801"}, "reported_by_user_id": {"$ref": "user"}, "target_type": "DOCUMENT", "target_id": {"$ref": "document-ai"}, "reason": "Incorrect metadata", "description": "The publication year appears incorrect.", "status": "OPEN", "assigned_admin_id": {"$ref": "admin"}, "created_at": {"$instant": "2026-01-14T00:00:00Z"}},
+        {"_ref": "report-forum", "id": {"$uuid": "00000000-0000-0000-0000-000000002802"}, "reported_by_user_id": {"$ref": "user"}, "target_type": "FORUM_POST", "target_id": {"$ref": "post-ai"}, "reason": "Needs source attribution", "description": "One claim needs a reference.", "status": "IN_REVIEW", "assigned_admin_id": {"$ref": "admin"}, "created_at": {"$instant": "2026-01-14T01:00:00Z"}},
+        {"_ref": "report-message", "id": {"$uuid": "00000000-0000-0000-0000-000000002803"}, "reported_by_user_id": {"$ref": "admin"}, "target_type": "CHAT_MESSAGE", "target_id": {"$ref": "message-se-1"}, "reason": "Resolved test report", "description": "Seeded resolved report.", "status": "RESOLVED", "assigned_admin_id": {"$ref": "admin"}, "resolved_by_admin_id": {"$ref": "admin"}, "resolution": "No policy violation found.", "created_at": {"$instant": "2026-01-14T02:00:00Z"}, "resolved_at": {"$instant": "2026-01-14T03:00:00Z"}}
+      ]
+    },
+    {
+      "name": "report_evidence",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "evidence-document", "id": {"$uuid": "00000000-0000-0000-0000-000000002901"}, "report_id": {"$ref": "report-document"}, "source_type": "DOCUMENT", "snapshot": {"$json": {"title": "Artificial Intelligence Overview", "reason": "Incorrect metadata"}}, "captured_at": {"$instant": "2026-01-14T00:01:00Z"}, "purge_at": {"$instant": "2026-07-13T00:01:00Z"}},
+        {"_ref": "evidence-forum", "id": {"$uuid": "00000000-0000-0000-0000-000000002902"}, "report_id": {"$ref": "report-forum"}, "source_type": "FORUM_POST", "snapshot": {"$json": {"title": "Responsible AI discussion", "reason": "Needs source attribution"}}, "captured_at": {"$instant": "2026-01-14T01:01:00Z"}, "purge_at": {"$instant": "2026-07-13T01:01:00Z"}},
+        {"_ref": "evidence-message", "id": {"$uuid": "00000000-0000-0000-0000-000000002903"}, "report_id": {"$ref": "report-message"}, "source_type": "CHAT_MESSAGE", "snapshot": {"$json": {"content": "Let's discuss clean code practices."}}, "captured_at": {"$instant": "2026-01-14T02:01:00Z"}, "purge_at": {"$instant": "2026-07-13T02:01:00Z"}}
+      ]
+    },
+    {
+      "name": "audit_log",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "audit-report-opened", "id": {"$uuid": "00000000-0000-0000-0000-000000003001"}, "actor_admin_id": {"$ref": "admin"}, "action": "REPORT_ASSIGNED", "target_type": "REPORT", "target_id": {"$ref": "report-document"}, "report_id": {"$ref": "report-document"}, "purpose": "Review reported document", "occurred_at": {"$instant": "2026-01-14T00:05:00Z"}, "metadata": {"$json": {"source": "seed"}}, "retain_until": {"$instant": "2027-01-14T00:05:00Z"}},
+        {"_ref": "audit-report-review", "id": {"$uuid": "00000000-0000-0000-0000-000000003002"}, "actor_admin_id": {"$ref": "admin"}, "action": "REPORT_REVIEW_STARTED", "target_type": "REPORT", "target_id": {"$ref": "report-forum"}, "report_id": {"$ref": "report-forum"}, "purpose": "Review forum report", "occurred_at": {"$instant": "2026-01-14T01:05:00Z"}, "metadata": {"$json": {"source": "seed"}}, "retain_until": {"$instant": "2027-01-14T01:05:00Z"}},
+        {"_ref": "audit-report-resolved", "id": {"$uuid": "00000000-0000-0000-0000-000000003003"}, "actor_admin_id": {"$ref": "admin"}, "action": "REPORT_RESOLVED", "target_type": "REPORT", "target_id": {"$ref": "report-message"}, "report_id": {"$ref": "report-message"}, "purpose": "Resolve message report", "occurred_at": {"$instant": "2026-01-14T03:00:00Z"}, "metadata": {"$json": {"source": "seed", "result": "no_violation"}}, "retain_until": {"$instant": "2027-01-14T03:00:00Z"}}
+      ]
+    },
+    {
+      "name": "outbox_event",
+      "keyColumns": ["id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "outbox-notification-1", "id": {"$uuid": "00000000-0000-0000-0000-000000003101"}, "entity_type": "NOTIFICATION", "entity_id": {"$ref": "notification-admin-message"}, "event_type": "NOTIFICATION_CREATED", "payload": {"$json": {"notificationId": {"$ref": "notification-admin-message"}, "recipientUserId": {"$ref": "user"}}}, "status": "PUBLISHED", "created_at": {"$instant": "2026-01-12T00:00:00Z"}, "published_at": {"$instant": "2026-01-12T00:00:01Z"}, "attempt_count": 1},
+        {"_ref": "outbox-notification-2", "id": {"$uuid": "00000000-0000-0000-0000-000000003102"}, "entity_type": "NOTIFICATION", "entity_id": {"$ref": "notification-document"}, "event_type": "NOTIFICATION_CREATED", "payload": {"$json": {"notificationId": {"$ref": "notification-document"}, "recipientUserId": {"$ref": "user"}}}, "status": "PUBLISHED", "created_at": {"$instant": "2026-01-12T01:00:00Z"}, "published_at": {"$instant": "2026-01-12T01:00:01Z"}, "attempt_count": 1},
+        {"_ref": "outbox-notification-3", "id": {"$uuid": "00000000-0000-0000-0000-000000003103"}, "entity_type": "NOTIFICATION", "entity_id": {"$ref": "notification-forum"}, "event_type": "NOTIFICATION_CREATED", "payload": {"$json": {"notificationId": {"$ref": "notification-forum"}, "recipientUserId": {"$ref": "user"}}}, "status": "PUBLISHED", "created_at": {"$instant": "2026-01-12T02:00:00Z"}, "published_at": {"$instant": "2026-01-12T02:00:01Z"}, "attempt_count": 1}
+      ]
+    },
+    {
+      "name": "anonymous_alias",
+      "keyColumns": ["forum_post_id", "user_id"],
+      "referenceColumn": "id",
+      "rows": [
+        {"_ref": "alias-se-user", "id": {"$uuid": "00000000-0000-0000-0000-000000003201"}, "forum_post_id": {"$ref": "post-se"}, "user_id": {"$ref": "user"}, "display_alias": "Anonymous Falcon", "created_at": {"$instant": "2026-01-15T00:00:00Z"}},
+        {"_ref": "alias-se-admin", "id": {"$uuid": "00000000-0000-0000-0000-000000003202"}, "forum_post_id": {"$ref": "post-se"}, "user_id": {"$ref": "admin"}, "display_alias": "Anonymous Orchid", "created_at": {"$instant": "2026-01-15T00:05:00Z"}},
+        {"_ref": "alias-cloud-user", "id": {"$uuid": "00000000-0000-0000-0000-000000003203"}, "forum_post_id": {"$ref": "post-cloud"}, "user_id": {"$ref": "user"}, "display_alias": "Anonymous Nimbus", "created_at": {"$instant": "2026-01-15T00:10:00Z"}}
+      ]
+    },
+    {
+      "name": "collection_category",
+      "keyColumns": ["collection_id", "category_id"],
+      "rows": [
+        {"collection_id": {"$ref": "collection-foundations"}, "category_id": {"$ref": "category-cloud"}, "created_at": {"$instant": "2026-01-16T00:00:00Z"}},
+        {"collection_id": {"$ref": "collection-ai"}, "category_id": {"$ref": "category-ai"}, "created_at": {"$instant": "2026-01-16T00:01:00Z"}},
+        {"collection_id": {"$ref": "collection-community"}, "category_id": {"$ref": "category-se"}, "created_at": {"$instant": "2026-01-16T00:02:00Z"}}
+      ]
+    },
+    {
+      "name": "document_category",
+      "keyColumns": ["document_id", "category_id"],
+      "rows": [
+        {"document_id": {"$ref": "document-cloud"}, "category_id": {"$ref": "category-cloud"}, "created_at": {"$instant": "2026-01-16T01:00:00Z"}},
+        {"document_id": {"$ref": "document-ai"}, "category_id": {"$ref": "category-ai"}, "created_at": {"$instant": "2026-01-16T01:01:00Z"}},
+        {"document_id": {"$ref": "document-se"}, "category_id": {"$ref": "category-se"}, "created_at": {"$instant": "2026-01-16T01:02:00Z"}}
+      ]
+    },
+    {
+      "name": "document_collection",
+      "keyColumns": ["document_id", "collection_id"],
+      "rows": [
+        {"document_id": {"$ref": "document-cloud"}, "collection_id": {"$ref": "collection-foundations"}, "created_at": {"$instant": "2026-01-16T02:00:00Z"}},
+        {"document_id": {"$ref": "document-ai"}, "collection_id": {"$ref": "collection-ai"}, "created_at": {"$instant": "2026-01-16T02:01:00Z"}},
+        {"document_id": {"$ref": "document-se"}, "collection_id": {"$ref": "collection-community"}, "created_at": {"$instant": "2026-01-16T02:02:00Z"}}
+      ]
+    },
+    {
+      "name": "agent_classification_category",
+      "keyColumns": ["agent_classification_id", "category_id"],
+      "rows": [
+        {"agent_classification_id": {"$ref": "classification-cloud"}, "category_id": {"$ref": "category-cloud"}, "confidence": 0.97, "created_at": {"$instant": "2026-01-16T03:00:00Z"}},
+        {"agent_classification_id": {"$ref": "classification-ai"}, "category_id": {"$ref": "category-ai"}, "confidence": 0.99, "created_at": {"$instant": "2026-01-16T03:01:00Z"}},
+        {"agent_classification_id": {"$ref": "classification-se"}, "category_id": {"$ref": "category-se"}, "confidence": 0.94, "created_at": {"$instant": "2026-01-16T03:02:00Z"}}
+      ]
+    },
+    {
+      "name": "agent_classification_collection",
+      "keyColumns": ["agent_classification_id", "collection_id"],
+      "rows": [
+        {"agent_classification_id": {"$ref": "classification-cloud"}, "collection_id": {"$ref": "collection-foundations"}, "confidence": 0.93, "created_at": {"$instant": "2026-01-16T04:00:00Z"}},
+        {"agent_classification_id": {"$ref": "classification-ai"}, "collection_id": {"$ref": "collection-ai"}, "confidence": 0.96, "created_at": {"$instant": "2026-01-16T04:01:00Z"}},
+        {"agent_classification_id": {"$ref": "classification-se"}, "collection_id": {"$ref": "collection-community"}, "confidence": 0.88, "created_at": {"$instant": "2026-01-16T04:02:00Z"}}
+      ]
+    },
+    {
+      "name": "message_reaction",
+      "keyColumns": ["message_id", "reacted_by_user_id", "icon_id"],
+      "rows": [
+        {"message_id": {"$ref": "message-cloud-1"}, "reacted_by_user_id": {"$ref": "admin"}, "icon_id": {"$ref": "icon-like"}, "created_at": {"$instant": "2026-01-16T05:00:00Z"}},
+        {"message_id": {"$ref": "message-cloud-2"}, "reacted_by_user_id": {"$ref": "user"}, "icon_id": {"$ref": "icon-love"}, "created_at": {"$instant": "2026-01-16T05:01:00Z"}},
+        {"message_id": {"$ref": "message-ai-1"}, "reacted_by_user_id": {"$ref": "user"}, "icon_id": {"$ref": "icon-insightful"}, "created_at": {"$instant": "2026-01-16T05:02:00Z"}}
+      ]
+    },
+    {
+      "name": "post_reaction",
+      "keyColumns": ["forum_post_id", "user_id"],
+      "rows": [
+        {"forum_post_id": {"$ref": "post-cloud"}, "user_id": {"$ref": "admin"}, "reaction": "LIKE", "created_at": {"$instant": "2026-01-16T06:00:00Z"}, "updated_at": {"$instant": "2026-01-16T06:00:00Z"}},
+        {"forum_post_id": {"$ref": "post-ai"}, "user_id": {"$ref": "user"}, "reaction": "LIKE", "created_at": {"$instant": "2026-01-16T06:01:00Z"}, "updated_at": {"$instant": "2026-01-16T06:01:00Z"}},
+        {"forum_post_id": {"$ref": "post-se"}, "user_id": {"$ref": "admin"}, "reaction": "DISLIKE", "created_at": {"$instant": "2026-01-16T06:02:00Z"}, "updated_at": {"$instant": "2026-01-16T06:02:00Z"}}
+      ]
+    },
+    {
+      "name": "comment_reaction",
+      "keyColumns": ["comment_id", "user_id"],
+      "rows": [
+        {"comment_id": {"$ref": "comment-cloud-1"}, "user_id": {"$ref": "user"}, "reaction": "LIKE", "created_at": {"$instant": "2026-01-16T07:00:00Z"}, "updated_at": {"$instant": "2026-01-16T07:00:00Z"}},
+        {"comment_id": {"$ref": "comment-ai-1"}, "user_id": {"$ref": "admin"}, "reaction": "LIKE", "created_at": {"$instant": "2026-01-16T07:01:00Z"}, "updated_at": {"$instant": "2026-01-16T07:01:00Z"}},
+        {"comment_id": {"$ref": "comment-se-1"}, "user_id": {"$ref": "user"}, "reaction": "DISLIKE", "created_at": {"$instant": "2026-01-16T07:02:00Z"}, "updated_at": {"$instant": "2026-01-16T07:02:00Z"}}
+      ]
+    }
+  ]
+}

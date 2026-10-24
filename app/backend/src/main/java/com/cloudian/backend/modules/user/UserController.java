@@ -1,7 +1,5 @@
 package com.cloudian.backend.modules.user;
 
-import java.util.UUID;
-
 import com.cloudian.backend.modules.user.dto.ChangePasswordRequest;
 import com.cloudian.backend.modules.user.dto.EmailChangeRequest;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +30,7 @@ public class UserController {
     @GetMapping
     public MeResponse getMe(@AuthenticationPrincipal CustomUserDetails principal) {
         System.out.println("Hello world");
-        return userService.getMe(currentUserId(principal));
+        return userService.getMe(principal.getUserId());
     }
 
     @PatchMapping
@@ -40,24 +38,20 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody UpdateMeRequest request
     ) {
-        return userService.updateMe(currentUserId(principal), request);
+        return userService.updateMe(principal.getUserId(), request);
     }
 
     @PostMapping ("/email-change")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void requestEmailChange(@AuthenticationPrincipal CustomUserDetails principal,
                                    @Valid @RequestBody EmailChangeRequest request) {
-        emailChangeService.request(UUID.fromString(principal.getUserId()), request);
+        emailChangeService.request(principal.getUserId(), request);
     }
 
     @PostMapping("/password-change")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(@AuthenticationPrincipal CustomUserDetails principal,
                                @Valid @RequestBody ChangePasswordRequest request) {
-        passwordChangeService.change(currentUserId(principal), request);
-    }
-
-    private static UUID currentUserId(CustomUserDetails principal) {
-        return UUID.fromString(principal.getUserId());
+        passwordChangeService.change(principal.getUserId(), request);
     }
 }

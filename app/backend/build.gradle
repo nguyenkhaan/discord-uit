@@ -43,3 +43,14 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.register('seedData', JavaExec) {
+	group = 'application'
+	description = 'Seeds missing development data without replacing existing rows.'
+	dependsOn classes
+	classpath = sourceSets.main.runtimeClasspath.filter {
+		!it.name.startsWith('spring-boot-devtools-')
+	}
+	mainClass = 'com.cloudian.backend.data.SeedScript'
+	workingDir = projectDir
+}
