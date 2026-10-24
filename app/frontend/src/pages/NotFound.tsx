@@ -4,7 +4,6 @@ import { Home, RotateCw } from "lucide-react";
 import NotFoundBackground from "../assets/images/NotFoundPage.webp";
 import Logo from "../assets/images/Logo.webp";
 
-// ⚠️ Đổi theo kích thước THẬT của ảnh NotFoundPage.webp (rộng / cao)
 const BG_RATIO = 1920 / 1080;
 
 // Style chung cho 2 nút: mobile dùng px, từ md trở lên scale theo ảnh (cqw)
@@ -49,7 +48,7 @@ const NotFound = () => {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className={`${baseBtn} border-blue-500 bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-md`}
+            className={`${baseBtn} border-blue-500 cursor-pointer bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-md`}
           >
             <Home strokeWidth={2.5} className={iconCls} />
             <span>Về trang chủ</span>
@@ -58,7 +57,7 @@ const NotFound = () => {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className={`${baseBtn} border-blue-600 bg-white/90 text-blue-700 shadow-md backdrop-blur-sm hover:bg-white`}
+            className={`${baseBtn} border-blue-600 bg-white/90 cursor-pointer text-blue-700 shadow-md backdrop-blur-sm hover:bg-white`}
           >
             <RotateCw strokeWidth={2.5} className={iconCls} />
             <span>Thử lại</span>
@@ -66,7 +65,6 @@ const NotFound = () => {
         </div>
       </div>
 
-      {/* Logo cố định theo góc màn hình */}
       <div className="pointer-events-none fixed left-6 top-6 z-20">
   <img
     src={Logo}

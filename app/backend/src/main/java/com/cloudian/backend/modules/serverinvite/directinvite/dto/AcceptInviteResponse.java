@@ -1,13 +1,15 @@
-package com.cloudian.backend.modules.serverinvite.dto;
+package com.cloudian.backend.modules.serverinvite.directinvite.dto;
 
 import java.time.Instant;
 import java.util.UUID;
 
 import com.cloudian.backend.commons.enums.ServerInviteStatus;
 
-public record DeclineInviteResponse(
+public record AcceptInviteResponse(
         UUID inviteId,
+        UUID serverId,
+        String serverName,
         ServerInviteStatus status,
-        Instant declinedAt,
+        Instant acceptedAt,
         String message) {
 }

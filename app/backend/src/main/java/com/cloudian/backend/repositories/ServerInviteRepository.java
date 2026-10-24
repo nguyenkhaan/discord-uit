@@ -19,10 +19,6 @@ public interface ServerInviteRepository
 
     Optional<ServerInvite> findByTokenHash(String tokenHash);
 
-    Optional<ServerInvite> findByIdAndServer_Id(
-            UUID inviteId,
-            UUID serverId);
-
     List<ServerInvite> findByServer_IdAndInviteType(
             UUID serverId,
             ServerInviteType inviteType);
@@ -46,4 +42,13 @@ public interface ServerInviteRepository
     @Query("SELECT i FROM ServerInvite i WHERE i.id = :inviteId")
     Optional<ServerInvite> findByIdForUpdate(
             @Param("inviteId") UUID inviteId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT i FROM ServerInvite i
+            WHERE i.id = :inviteId AND i.server.id = :serverId
+            """)
+    Optional<ServerInvite> findByIdAndServerIdForUpdate(
+            @Param("inviteId") UUID inviteId,
+            @Param("serverId") UUID serverId);
 }

@@ -1,4 +1,4 @@
-package com.cloudian.backend.modules.serverinvite.dto;
+package com.cloudian.backend.modules.serverinvite.directinvite.dto;
 
 import java.util.UUID;
 

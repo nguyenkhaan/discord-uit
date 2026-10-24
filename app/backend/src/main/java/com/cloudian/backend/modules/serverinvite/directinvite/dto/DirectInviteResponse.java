@@ -1,15 +1,14 @@
-package com.cloudian.backend.modules.serverinvite.dto;
+package com.cloudian.backend.modules.serverinvite.directinvite.dto;
 
 import java.time.Instant;
 import java.util.UUID;
 
 import com.cloudian.backend.commons.enums.ServerInviteStatus;
 
-public record MyDirectInviteResponse(
+public record DirectInviteResponse(
         UUID inviteId,
         UUID serverId,
-        String serverName,
-        String invitedBy,
+        UUID recipientId,
         ServerInviteStatus status,
         Instant createdAt) {
 }

@@ -3,9 +3,9 @@ package com.cloudian.backend.modules.notification;
 import java.time.Instant;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -105,8 +105,7 @@ public class NotificationService {
         notification.setKind(NotificationKind.ADMIN_MESSAGE);
         notification.setContent(request.content());
 
-        Notification savedNotification = notificationRepository.save(notification);
-        outboxEventRepository.save(toOutboxEvent(savedNotification));
+        Notification savedNotification = saveWithOutbox(notification);
         return NotificationResponse.from(savedNotification);
     }
 
@@ -149,9 +148,12 @@ public class NotificationService {
         notification.setRelatedEntityType("SERVER_INVITE");
         notification.setRelatedEntityId(inviteId);
 
-        Notification savedNotification = notificationRepository.save(notification);
-
-        outboxEventRepository.save(toOutboxEvent(savedNotification));
+        saveWithOutbox(notification);
     }
 
+    private Notification saveWithOutbox(Notification notification) {
+        Notification savedNotification = notificationRepository.save(notification);
+        outboxEventRepository.save(toOutboxEvent(savedNotification));
+        return savedNotification;
+    }
 }
