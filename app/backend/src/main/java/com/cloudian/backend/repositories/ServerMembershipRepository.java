@@ -63,4 +63,13 @@ public interface ServerMembershipRepository extends JpaRepository<ServerMembersh
 
     // Total Number of member in one server
     long countByServerIdAndLeftAtIsNull(UUID serverId);
+
+    Optional<ServerMembership> findByServer_IdAndUser_IdAndLeftAtIsNull(
+            UUID serverId,
+            UUID userId);
+
+    boolean existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
+            UUID serverId,
+            UUID userId,
+            ServerMemberRole role);
 }

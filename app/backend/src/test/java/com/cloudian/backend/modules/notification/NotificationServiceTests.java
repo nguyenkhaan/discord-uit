@@ -217,6 +217,42 @@ class NotificationServiceTests {
         assertThat(payload.get("kind").stringValue()).isEqualTo(NotificationKind.ADMIN_MESSAGE.name());
     }
 
+    @Test
+    void createsServerInvitationNotificationLinkedToInvite() throws Exception {
+        UUID actorId = UUID.randomUUID();
+        UUID recipientId = UUID.randomUUID();
+        UUID inviteId = UUID.randomUUID();
+        UUID notificationId = UUID.randomUUID();
+        UserAccount actor = user(actorId);
+        actor.setEmail("owner@example.com");
+        UserAccount recipient = user(recipientId);
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
+            Notification savedNotification = invocation.getArgument(0);
+            savedNotification.setId(notificationId);
+            savedNotification.setCreatedAt(Instant.parse("2026-10-25T00:00:00Z"));
+            return savedNotification;
+        });
+
+        notificationService.createServerInvitationNotification(
+                actor,
+                recipient,
+                inviteId,
+                "Software Engineering");
+
+        ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository).save(notificationCaptor.capture());
+        Notification notification = notificationCaptor.getValue();
+        assertThat(notification.getKind()).isEqualTo(NotificationKind.SERVER_INVITATION);
+        assertThat(notification.getRelatedEntityType()).isEqualTo("SERVER_INVITE");
+        assertThat(notification.getRelatedEntityId()).isEqualTo(inviteId);
+
+        ArgumentCaptor<OutboxEvent> outboxCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
+        verify(outboxEventRepository).save(outboxCaptor.capture());
+        JsonNode payload = jsonMapper.readTree(outboxCaptor.getValue().getPayload());
+        assertThat(payload.get("kind").stringValue()).isEqualTo(NotificationKind.SERVER_INVITATION.name());
+        assertThat(payload.get("relatedEntityId").stringValue()).isEqualTo(inviteId.toString());
+    }
+
     private static Notification notification() {
         Notification notification = new Notification();
         notification.setId(UUID.randomUUID());

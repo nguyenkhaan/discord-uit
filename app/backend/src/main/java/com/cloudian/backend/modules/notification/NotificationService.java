@@ -3,9 +3,9 @@ package com.cloudian.backend.modules.notification;
 import java.time.Instant;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,13 +45,11 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public NotificationListResponse listNotifications(
             UUID recipientUserId,
-            NotificationListRequest request
-    ) {
+            NotificationListRequest request) {
         Pageable pageable = PageRequest.of(
                 request.page(),
                 request.size(),
-                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
-        );
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
 
         Page<Notification> notificationPage = notificationRepository
                 .findByRecipient_IdAndDeletedAtIsNull(recipientUserId, pageable);
@@ -107,8 +105,7 @@ public class NotificationService {
         notification.setKind(NotificationKind.ADMIN_MESSAGE);
         notification.setContent(request.content());
 
-        Notification savedNotification = notificationRepository.save(notification);
-        outboxEventRepository.save(toOutboxEvent(savedNotification));
+        Notification savedNotification = saveWithOutbox(notification);
         return NotificationResponse.from(savedNotification);
     }
 
@@ -133,5 +130,30 @@ public class NotificationService {
         } catch (JacksonException exception) {
             throw new IllegalStateException("Could not serialize notification outbox event.", exception);
         }
+    }
+
+    @Transactional
+    public void createServerInvitationNotification(
+            UserAccount actor,
+            UserAccount recipient,
+            UUID inviteId,
+            String serverName) {
+
+        Notification notification = new Notification();
+        notification.setActor(actor);
+        notification.setRecipient(recipient);
+        notification.setKind(NotificationKind.SERVER_INVITATION);
+        notification.setContent(
+                actor.getEmail() + " invited you to join server \"" + serverName + "\".");
+        notification.setRelatedEntityType("SERVER_INVITE");
+        notification.setRelatedEntityId(inviteId);
+
+        saveWithOutbox(notification);
+    }
+
+    private Notification saveWithOutbox(Notification notification) {
+        Notification savedNotification = notificationRepository.save(notification);
+        outboxEventRepository.save(toOutboxEvent(savedNotification));
+        return savedNotification;
     }
 }
