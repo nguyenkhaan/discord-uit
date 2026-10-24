@@ -45,13 +45,11 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public NotificationListResponse listNotifications(
             UUID recipientUserId,
-            NotificationListRequest request
-    ) {
+            NotificationListRequest request) {
         Pageable pageable = PageRequest.of(
                 request.page(),
                 request.size(),
-                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
-        );
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
 
         Page<Notification> notificationPage = notificationRepository
                 .findByRecipient_IdAndDeletedAtIsNull(recipientUserId, pageable);
@@ -134,4 +132,26 @@ public class NotificationService {
             throw new IllegalStateException("Could not serialize notification outbox event.", exception);
         }
     }
+
+    @Transactional
+    public void createServerInvitationNotification(
+            UserAccount actor,
+            UserAccount recipient,
+            UUID inviteId,
+            String serverName) {
+
+        Notification notification = new Notification();
+        notification.setActor(actor);
+        notification.setRecipient(recipient);
+        notification.setKind(NotificationKind.SERVER_INVITATION);
+        notification.setContent(
+                actor.getEmail() + " invited you to join server \"" + serverName + "\".");
+        notification.setRelatedEntityType("SERVER_INVITE");
+        notification.setRelatedEntityId(inviteId);
+
+        Notification savedNotification = notificationRepository.save(notification);
+
+        outboxEventRepository.save(toOutboxEvent(savedNotification));
+    }
+
 }

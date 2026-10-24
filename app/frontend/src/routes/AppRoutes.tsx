@@ -7,6 +7,7 @@ import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 import ChangePasswordPage from '@/features/auth/pages/ChangePasswordPage';
 import ChangeEmailPage from '@/features/auth/pages/ChangeEmailPage';
+import NotFound from '@/pages/NotFound';
 
 import AuthGuard from '@/components/AuthGuard';
 
