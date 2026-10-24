@@ -7,6 +7,7 @@ import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 import ChangePasswordPage from '@/features/auth/pages/ChangePasswordPage';
 import ChangeEmailPage from '@/features/auth/pages/ChangeEmailPage';
+import NotFound from '@/pages/NotFound';
 
 export default function AppRoutes() {
     return (
@@ -22,9 +23,9 @@ export default function AppRoutes() {
                 
                 <Route path="/change-password" element={<ChangePasswordPage />} />
                 <Route path="/change-email" element={<ChangeEmailPage />} />
-
+                <Route path="/not-found" element={<NotFound />} />
                 
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/not-found" replace />} />
             </Routes>
         </BrowserRouter>
     );
