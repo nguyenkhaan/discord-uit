@@ -12,14 +12,14 @@ type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
 type EmailChangeRequest = components['schemas']['EmailChangeRequest'];
 
 const AUTH_ENDPOINTS = {
-    login: '/api/auth/login',
-    refresh: '/api/auth/refresh',
-    logout: '/api/auth/logout',
-    logoutAll: '/api/auth/logout-all',
-    forgotPassword: '/api/auth/forgot-password',
-    resetPassword: '/api/auth/reset-password',
-    changePassword: '/api/auth/change-password',
-    changeEmail: '/api/auth/change-email', // Đường dẫn API có thể giữ nguyên
+    login: '/auth/login',
+    refresh: '/auth/refresh',
+    logout: '/auth/logout',
+    logoutAll: '/auth/logout-all',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
+    changePassword: '/auth/change-password',
+    changeEmail: '/auth/change-email', 
 } as const;
 
 export async function login(request: LoginRequest): Promise<LoginResponse> {
