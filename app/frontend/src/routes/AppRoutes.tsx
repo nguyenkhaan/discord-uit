@@ -11,6 +11,10 @@ import NotFound from '@/pages/NotFound';
 
 import AuthGuard from '@/components/AuthGuard';
 
+// Import thêm Header và Admin Form
+import { Header } from '@/components/layout/Header/Header';
+import { AdminNotificationForm } from '@/features/admin/AdminNotificationForm';
+
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -40,6 +44,21 @@ export default function AppRoutes() {
                         </AuthGuard>
                     }
                 />
+
+                {/* === ROUTE TEST NOTIFICATION === */}
+                <Route path="/test-header" element={<Header />} />
+                <Route 
+                    path="/admin/notifications" 
+                    element={
+                        <div className="min-h-screen bg-gray-50 flex flex-col">
+                            <Header />
+                            <div className="flex-1">
+                                <AdminNotificationForm />
+                            </div>
+                        </div>
+                    } 
+                />
+
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
