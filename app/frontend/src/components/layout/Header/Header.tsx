@@ -1,22 +1,10 @@
-import { Link } from 'react-router-dom';
-
-import Logo from '@/assets/images/Logo.webp';
-import { NotificationBell } from '@/components/layout/Header/NotificationBell';
+import { Logo } from '@/components/Logo';
+import { NotificationBell } from '@/features/notification/components/NotificationBell';
 
 export const Header = () => {
     return (
         <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-line bg-surface/95 px-4 shadow-sm backdrop-blur sm:px-6">
-            <Link
-                aria-label="Về trang chủ UIT Connect"
-                className="rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
-                to="/"
-            >
-                <img
-                    alt="UIT Connect"
-                    className="h-8 object-contain"
-                    src={Logo}
-                />
-            </Link>
+            <Logo />
 
             <div className="flex items-center gap-3">
                 <NotificationBell />

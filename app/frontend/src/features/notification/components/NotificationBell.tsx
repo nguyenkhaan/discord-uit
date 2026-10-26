@@ -2,18 +2,19 @@ import { Bell, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/common/Button';
-import { NotificationCard } from '@/components/layout/Header/NotificationCard';
-import {
-    NotificationEmptyState,
-    NotificationErrorState,
-    NotificationLoadingState,
-} from '@/components/layout/Header/NotificationPanelStates';
 import {
     useDeleteNotificationMutation,
     useGetNotifications,
     useMarkAsReadMutation,
     useUnreadNotificationCount,
 } from '@/features/notification/notification.hooks';
+
+import { NotificationCard } from './NotificationCard';
+import {
+    NotificationEmptyState,
+    NotificationErrorState,
+    NotificationLoadingState,
+} from './NotificationPanelStates';
 
 const MAX_VISIBLE_BADGE_COUNT = 99;
 
