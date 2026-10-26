@@ -72,13 +72,13 @@ export function NotificationBell() {
                         ? `Thông báo, ${unreadCount} chưa đọc`
                         : 'Thông báo'
                 }
-                className="relative border-line bg-surface text-foreground-secondary shadow-none hover:border-line-brand hover:bg-brand-subtle"
+                className="relative size-10 min-h-10 text-foreground-secondary hover:bg-brand-subtle hover:text-brand"
                 onClick={() => setIsOpen((open) => !open)}
                 ref={triggerRef}
                 size="icon"
-                variant="secondary"
+                variant="ghost"
             >
-                <Bell className="h-6 w-6" strokeWidth={1.9} />
+                <Bell className="size-5 cursor-pointer" strokeWidth={1.8} />
                 {unreadCount > 0 && (
                     <span
                         aria-hidden="true"
@@ -108,7 +108,7 @@ export function NotificationBell() {
                         </div>
                         <Button
                             aria-label="Đóng danh sách thông báo"
-                            className="size-8 min-h-8"
+                            className="size-8 cursor-pointer min-h-8"
                             onClick={() => {
                                 setIsOpen(false);
                                 triggerRef.current?.focus();
@@ -120,7 +120,7 @@ export function NotificationBell() {
                         </Button>
                     </header>
 
-                    <div className="min-h-0 overflow-y-auto bg-surface-subtle/50">
+                    <div className="min-h-0 overflow-y-auto bg-surface">
                         {notificationsQuery.isLoading ? (
                             <NotificationLoadingState />
                         ) : notificationsQuery.isError ? (
@@ -132,9 +132,10 @@ export function NotificationBell() {
                         ) : notifications.length === 0 ? (
                             <NotificationEmptyState />
                         ) : (
-                            <ul className="space-y-2 p-2.5" role="list">
+                            <ul role="list">
                                 {notifications.map((notification, index) => (
                                     <li
+                                        className="border-b border-line-subtle last:border-b-0"
                                         key={
                                             notification.id ??
                                             `${notification.createdAt}-${index}`

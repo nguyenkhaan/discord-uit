@@ -4,18 +4,14 @@ import { Button } from '@/components/common/Button';
 
 export function NotificationLoadingState() {
     return (
-        <div
-            aria-label="Đang tải thông báo"
-            className="space-y-2 p-2.5"
-            role="status"
-        >
+        <div aria-label="Đang tải thông báo" role="status">
             {[0, 1, 2].map((item) => (
                 <div
-                    className="animate-pulse rounded-lg border border-line-subtle bg-surface px-3 py-2.5"
+                    className="animate-pulse border-b border-line-subtle bg-surface px-3 py-3 last:border-b-0"
                     key={item}
                 >
                     <div className="flex gap-2.5">
-                        <div className="size-8 rounded-md bg-surface-subtle" />
+                        <div className="size-5 rounded bg-surface-subtle" />
                         <div className="flex-1 space-y-2">
                             <div className="h-3 w-2/5 rounded bg-surface-subtle" />
                             <div className="h-3 w-full rounded bg-surface-subtle" />

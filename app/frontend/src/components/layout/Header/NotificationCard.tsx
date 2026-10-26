@@ -59,31 +59,19 @@ export function NotificationCard({
     return (
         <article
             className={cn(
-                'relative overflow-hidden rounded-lg border bg-surface px-3 py-2.5 transition-colors',
-                isUnread
-                    ? 'border-line-brand bg-brand-subtle/40'
-                    : 'border-line-subtle hover:border-line'
+                'bg-surface px-3 py-3 transition-colors hover:bg-surface-subtle',
+                isUnread ? 'bg-brand-subtle/40' : 'bg-surface'
             )}
         >
-            {isUnread && (
-                <span
-                    aria-hidden="true"
-                    className="absolute inset-y-0 left-0 w-1 bg-brand"
-                />
-            )}
-
             <div className="flex items-start gap-2.5">
-                <span
+                <Mail
                     aria-hidden="true"
                     className={cn(
-                        'mt-0.5 grid size-8 shrink-0 place-items-center rounded-md border',
-                        isUnread
-                            ? 'border-line-brand bg-surface text-brand'
-                            : 'border-line-subtle bg-surface-subtle text-muted'
+                        'mt-0.5 size-5 shrink-0',
+                        isUnread ? 'text-brand' : 'text-muted'
                     )}
-                >
-                    <Mail className="size-4" strokeWidth={1.8} />
-                </span>
+                    strokeWidth={1.8}
+                />
 
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-heading">
@@ -105,7 +93,7 @@ export function NotificationCard({
                         {isUnread && (
                             <Button
                                 aria-label="Đánh dấu thông báo đã đọc"
-                                className="size-8 min-h-8 text-brand"
+                                className="size-8 cursor-pointer min-h-8 text-brand"
                                 disabled={isMarkingAsRead}
                                 onClick={() => onMarkAsRead(notificationId)}
                                 size="icon"
@@ -117,7 +105,7 @@ export function NotificationCard({
                         )}
                         <Button
                             aria-label="Xóa thông báo"
-                            className="size-8 min-h-8 text-muted hover:bg-danger-subtle hover:text-feedback-danger"
+                            className="size-8 cursor-pointer min-h-8 text-muted hover:bg-danger-subtle hover:text-feedback-danger"
                             disabled={isDeleting}
                             onClick={() => onDelete(notificationId)}
                             size="icon"
