@@ -4,7 +4,23 @@
  */
 
 export interface paths {
-    '/me/password-change': {
+    "/servers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMine"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/invites": {
         parameters: {
             query?: never;
             header?: never;
@@ -13,14 +29,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['changePassword'];
+        post: operations["createDirectInvite"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/me/email-change': {
+    "/servers/{serverId}/invites/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInviteLinks"];
+        put?: never;
+        post: operations["createInviteLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/password-change": {
         parameters: {
             query?: never;
             header?: never;
@@ -29,14 +61,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['requestEmailChange'];
+        post: operations["changePassword"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/kafka/notification': {
+    "/me/email-change": {
         parameters: {
             query?: never;
             header?: never;
@@ -45,14 +77,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['publish'];
+        post: operations["requestEmailChange"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/verify-email': {
+    "/invites/{token}/join": {
         parameters: {
             query?: never;
             header?: never;
@@ -61,14 +93,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['verifyEmail'];
+        post: operations["joinServerByInviteLink"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/reset-password': {
+    "/invites/{inviteId}/decline": {
         parameters: {
             query?: never;
             header?: never;
@@ -77,14 +109,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['resetPassword'];
+        post: operations["declineDirectInvite"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/register': {
+    "/invites/{inviteId}/accept": {
         parameters: {
             query?: never;
             header?: never;
@@ -93,14 +125,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['register'];
+        post: operations["acceptDirectInvite"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/refresh': {
+    "/auth/verify-email": {
         parameters: {
             query?: never;
             header?: never;
@@ -109,14 +141,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['refresh'];
+        post: operations["verifyEmail"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/logout': {
+    "/auth/reset-password": {
         parameters: {
             query?: never;
             header?: never;
@@ -125,14 +157,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['logout'];
+        post: operations["resetPassword"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/logout-all': {
+    "/auth/register": {
         parameters: {
             query?: never;
             header?: never;
@@ -141,14 +173,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['logoutAll'];
+        post: operations["register"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/login': {
+    "/auth/refresh": {
         parameters: {
             query?: never;
             header?: never;
@@ -157,14 +189,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['login'];
+        post: operations["refresh"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/forgot-password': {
+    "/auth/logout": {
         parameters: {
             query?: never;
             header?: never;
@@ -173,14 +205,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['forgotPassword'];
+        post: operations["logout"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/auth/confirm-email-change': {
+    "/auth/logout-all": {
         parameters: {
             query?: never;
             header?: never;
@@ -189,37 +221,117 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations['confirmEmailChange'];
+        post: operations["logoutAll"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    '/me': {
+    "/auth/login": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations['getMe'];
+        get?: never;
+        put?: never;
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/confirm-email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmEmailChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/notifications/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations['updateMe'];
+        patch: operations["markAsRead"];
         trace?: never;
     };
-    '/health': {
+    "/me": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations['liveness'];
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateMe"];
+        trace?: never;
+    };
+    "/users/me/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyInvites"];
         put?: never;
         post?: never;
         delete?: never;
@@ -228,14 +340,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/health/message': {
+    "/servers/{serverId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations['readness'];
+        get: operations["get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -244,14 +356,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/health/error': {
+    "/servers/{serverId}/members": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations['HealthError'];
+        get: operations["listMembers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -260,14 +372,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/health/database': {
+    "/notifications": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations['TestingHealth'];
+        get: operations["listNotifications"];
         put?: never;
         post?: never;
         delete?: never;
@@ -276,17 +388,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/auth/test-authentication': {
+    "/notifications/{notificationId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations['testingAuthentication'];
+        get: operations["getNotification"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteNotification"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUnreadCount"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInviteLinkDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["liveness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/message": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["readness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/error": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HealthError"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/database": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TestingHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/test-authentication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["testingAuthentication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/invites/links/{inviteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokeInviteLink"];
         options?: never;
         head?: never;
         patch?: never;
@@ -296,6 +536,58 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CreateServerRequest: {
+            name: string;
+            /** Format: binary */
+            image?: string;
+        };
+        ServerResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            groupImageUrl?: string;
+            /** @enum {string} */
+            myRole?: "OWNER" | "MEMBER";
+            /** Format: int64 */
+            memberCount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        CreateDirectInviteRequest: {
+            /** Format: uuid */
+            recipientId: string;
+        };
+        DirectInviteResponse: {
+            /** Format: uuid */
+            inviteId?: string;
+            /** Format: uuid */
+            serverId?: string;
+            /** Format: uuid */
+            recipientId?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        CreateInviteLinkRequest: {
+            /** Format: int32 */
+            maxUses: number;
+            /** Format: int32 */
+            expiresInHours?: number;
+        };
+        CreateInviteLinkResponse: {
+            /** Format: uuid */
+            inviteId?: string;
+            inviteUrl?: string;
+            /** Format: int32 */
+            maxUses?: number;
+            /** Format: int32 */
+            useCount?: number;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
@@ -306,8 +598,31 @@ export interface components {
             newEmail: string;
             currentPassword: string;
         };
-        NotificationRequest: {
-            recipientId?: string;
+        JoinServerInviteResponse: {
+            /** Format: uuid */
+            serverId?: string;
+            serverName?: string;
+            message?: string;
+        };
+        DeclineInviteResponse: {
+            /** Format: uuid */
+            inviteId?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+            /** Format: date-time */
+            declinedAt?: string;
+            message?: string;
+        };
+        AcceptInviteResponse: {
+            /** Format: uuid */
+            inviteId?: string;
+            /** Format: uuid */
+            serverId?: string;
+            serverName?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+            /** Format: date-time */
+            acceptedAt?: string;
             message?: string;
         };
         VerifyEmailRequest: {
@@ -329,7 +644,7 @@ export interface components {
             email?: string;
             fullName?: string;
             /** @enum {string} */
-            accountStatus?: 'UNVERIFIED' | 'ACTIVE' | 'BANNED';
+            accountStatus?: "UNVERIFIED" | "ACTIVE" | "BANNED";
         };
         RefreshRequest: {
             refreshToken: string;
@@ -352,6 +667,27 @@ export interface components {
         ConfirmEmailChangeRequest: {
             token: string;
         };
+        SendAdminMessageRequest: {
+            /** Format: uuid */
+            recipientUserId: string;
+            content: string;
+        };
+        NotificationResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            actorUserId?: string;
+            /** @enum {string} */
+            kind?: "SERVER_INVITATION" | "ADMIN_MESSAGE" | "DOCUMENT_REJECTED" | "DOCUMENT_REPORTED" | "FORUM_POST_APPROVED";
+            content?: string;
+            relatedEntityType?: string;
+            /** Format: uuid */
+            relatedEntityId?: string;
+            /** Format: date-time */
+            readAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         UpdateMeRequest: {
             fullName?: string;
         };
@@ -361,17 +697,86 @@ export interface components {
             email?: string;
             fullName?: string;
             /** @enum {string} */
-            accountType?: 'PERSONAL' | 'UIT';
+            accountType?: "PERSONAL" | "UIT";
             /** @enum {string} */
-            accountStatus?: 'UNVERIFIED' | 'ACTIVE' | 'BANNED';
+            accountStatus?: "UNVERIFIED" | "ACTIVE" | "BANNED";
             /** @enum {string} */
-            systemRole?: 'USER' | 'ADMIN';
+            systemRole?: "USER" | "ADMIN";
             /** Format: date-time */
             emailVerifiedAt?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        MyDirectInviteResponse: {
+            /** Format: uuid */
+            inviteId?: string;
+            /** Format: uuid */
+            serverId?: string;
+            serverName?: string;
+            invitedBy?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ServerMemberResponse: {
+            /** Format: uuid */
+            userId?: string;
+            fullName?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER";
+            isOwner?: boolean;
+            /** Format: date-time */
+            joinedAt?: string;
+        };
+        InviteLinkResponse: {
+            /** Format: uuid */
+            inviteId?: string;
+            /** Format: int32 */
+            maxUses?: number;
+            /** Format: int32 */
+            useCount?: number;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+        };
+        NotificationListRequest: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+        };
+        NotificationListResponse: {
+            notifications?: components["schemas"]["NotificationResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        UnreadNotificationCountResponse: {
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        InviteLinkDetailsResponse: {
+            /** Format: uuid */
+            serverId?: string;
+            serverName?: string;
+            groupImageUrl?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int32 */
+            maxUses?: number;
+            /** Format: int32 */
+            useCount?: number;
         };
         HealthResponse: {
             message?: string;
@@ -385,6 +790,118 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServerResponse"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["CreateServerRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServerResponse"];
+                };
+            };
+        };
+    };
+    createDirectInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDirectInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DirectInviteResponse"];
+                };
+            };
+        };
+    };
+    getInviteLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InviteLinkResponse"][];
+                };
+            };
+        };
+    };
+    createInviteLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInviteLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreateInviteLinkResponse"];
+                };
+            };
+        };
+    };
     changePassword: {
         parameters: {
             query?: never;
@@ -394,7 +911,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['ChangePasswordRequest'];
+                "application/json": components["schemas"]["ChangePasswordRequest"];
             };
         };
         responses: {
@@ -416,7 +933,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['EmailChangeRequest'];
+                "application/json": components["schemas"]["EmailChangeRequest"];
             };
         };
         responses: {
@@ -429,18 +946,14 @@ export interface operations {
             };
         };
     };
-    publish: {
+    joinServerByInviteLink: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                'application/json': components['schemas']['NotificationRequest'];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -448,9 +961,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': {
-                        [key: string]: string;
-                    };
+                    "*/*": components["schemas"]["JoinServerInviteResponse"];
+                };
+            };
+        };
+    };
+    declineDirectInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DeclineInviteResponse"];
+                };
+            };
+        };
+    };
+    acceptDirectInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AcceptInviteResponse"];
                 };
             };
         };
@@ -464,7 +1015,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['VerifyEmailRequest'];
+                "application/json": components["schemas"]["VerifyEmailRequest"];
             };
         };
         responses: {
@@ -474,7 +1025,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': {
+                    "*/*": {
                         [key: string]: string;
                     };
                 };
@@ -490,7 +1041,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['ResetPasswordRequest'];
+                "application/json": components["schemas"]["ResetPasswordRequest"];
             };
         };
         responses: {
@@ -500,7 +1051,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': {
+                    "*/*": {
                         [key: string]: string;
                     };
                 };
@@ -516,7 +1067,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['RegisterRequest'];
+                "application/json": components["schemas"]["RegisterRequest"];
             };
         };
         responses: {
@@ -526,7 +1077,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': components['schemas']['RegisterResponse'];
+                    "*/*": components["schemas"]["RegisterResponse"];
                 };
             };
         };
@@ -538,9 +1089,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                'application/json': components['schemas']['RefreshRequest'];
+                "application/json": components["schemas"]["RefreshRequest"];
             };
         };
         responses: {
@@ -550,7 +1101,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': components['schemas']['LoginResponse'];
+                    "*/*": components["schemas"]["LoginResponse"];
                 };
             };
         };
@@ -562,9 +1113,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                'application/json': components['schemas']['LogoutRequest'];
+                "application/json": components["schemas"]["LogoutRequest"];
             };
         };
         responses: {
@@ -604,7 +1155,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['LoginRequest'];
+                "application/json": components["schemas"]["LoginRequest"];
             };
         };
         responses: {
@@ -614,7 +1165,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': components['schemas']['LoginResponse'];
+                    "*/*": components["schemas"]["LoginResponse"];
                 };
             };
         };
@@ -628,7 +1179,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['ForgotPasswordRequest'];
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
             };
         };
         responses: {
@@ -638,7 +1189,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': {
+                    "*/*": {
                         [key: string]: string;
                     };
                 };
@@ -654,7 +1205,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['ConfirmEmailChangeRequest'];
+                "application/json": components["schemas"]["ConfirmEmailChangeRequest"];
             };
         };
         responses: {
@@ -664,10 +1215,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': {
+                    "*/*": {
                         [key: string]: string;
                     };
                 };
+            };
+        };
+    };
+    sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendAdminMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotificationResponse"];
+                };
+            };
+        };
+    };
+    markAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -686,7 +1279,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': components['schemas']['MeResponse'];
+                    "*/*": components["schemas"]["MeResponse"];
                 };
             };
         };
@@ -700,7 +1293,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['UpdateMeRequest'];
+                "application/json": components["schemas"]["UpdateMeRequest"];
             };
         };
         responses: {
@@ -710,7 +1303,167 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': components['schemas']['MeResponse'];
+                    "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    getMyInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyDirectInviteResponse"][];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServerResponse"];
+                };
+            };
+        };
+    };
+    listMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServerMemberResponse"][];
+                };
+            };
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query: {
+                arg1: components["schemas"]["NotificationListRequest"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotificationListResponse"];
+                };
+            };
+        };
+    };
+    getNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotificationResponse"];
+                };
+            };
+        };
+    };
+    deleteNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getUnreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UnreadNotificationCountResponse"];
+                };
+            };
+        };
+    };
+    getInviteLinkDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InviteLinkDetailsResponse"];
                 };
             };
         };
@@ -730,7 +1483,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': string;
+                    "*/*": string;
                 };
             };
         };
@@ -750,7 +1503,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': components['schemas']['HealthResponse'];
+                    "*/*": components["schemas"]["HealthResponse"];
                 };
             };
         };
@@ -788,7 +1541,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': {
+                    "*/*": {
                         [key: string]: unknown;
                     };
                 };
@@ -810,8 +1563,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    '*/*': string;
+                    "*/*": string;
                 };
+            };
+        };
+    };
+    revokeInviteLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

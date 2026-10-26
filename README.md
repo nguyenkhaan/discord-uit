@@ -1,6 +1,4 @@
- m
-
-# UIT Server Discord
+# UIT DISCORD
 
 ## Technology Badges
 

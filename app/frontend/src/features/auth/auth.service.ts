@@ -18,8 +18,8 @@ const AUTH_ENDPOINTS = {
     logoutAll: '/auth/logout-all',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
-    changePassword: '/auth/change-password',
-    changeEmail: '/auth/change-email', 
+    changePassword: '/me/password-change',
+    changeEmail: '/me/email-change',
 } as const;
 
 export async function login(request: LoginRequest): Promise<LoginResponse> {

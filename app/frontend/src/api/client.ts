@@ -1,10 +1,13 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const backendUrl = import.meta.env.VITE_BASE_URL.replace(/\/+$/, '');
+const API_BASE_URL = backendUrl.endsWith('/api')
+    ? backendUrl
+    : `${backendUrl}/api`;
 
 const createClient = () =>
     axios.create({
-        baseURL: BASE_URL,
+        baseURL: API_BASE_URL,
         headers: {
             'Content-Type': 'application/json',
         },

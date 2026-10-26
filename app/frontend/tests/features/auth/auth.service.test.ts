@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { publicClient } from "@/api/client";
-import { login } from "@/features/auth/auth.service";
+import { privateClient, publicClient } from "@/api/client";
+import {
+  changeEmail,
+  changePassword,
+  login,
+} from "@/features/auth/auth.service";
 
 const credentials = {
   username: "student@uit.edu.vn",
@@ -26,8 +30,25 @@ function mockPublicPost(response: unknown) {
   };
 }
 
+function mockPrivatePost() {
+  const originalPost = privateClient.post;
+  const calls: unknown[][] = [];
+
+  privateClient.post = (async (...arguments_: unknown[]) => {
+    calls.push(arguments_);
+    return { data: undefined };
+  }) as unknown as typeof privateClient.post;
+
+  return {
+    calls,
+    restore: () => {
+      privateClient.post = originalPost;
+    },
+  };
+}
+
 describe("login", () => {
-  it("posts credentials to the login endpoint without retaining authentication tokens", async () => {
+  it("posts credentials to the route relative to the API base URL", async () => {
     const tokens = {
       accessToken: "access-token",
       refreshToken: "refresh-token",
@@ -35,18 +56,52 @@ describe("login", () => {
     const post = mockPublicPost(tokens);
 
     try {
-      assert.equal(await login(credentials), undefined);
-      assert.deepEqual(post.calls, [["/api/auth/login", credentials]]);
+      assert.deepEqual(await login(credentials), tokens);
+      assert.deepEqual(post.calls, [["/auth/login", credentials]]);
     } finally {
       post.restore();
     }
   });
 
-  it("does not depend on tokens in the response body", async () => {
-    const post = mockPublicPost({ accessToken: "access-token" });
+  it("returns the backend response without persisting tokens in frontend code", async () => {
+    const response = { accessToken: "access-token" };
+    const post = mockPublicPost(response);
 
     try {
-      assert.equal(await login(credentials), undefined);
+      assert.deepEqual(await login(credentials), response);
+    } finally {
+      post.restore();
+    }
+  });
+});
+
+describe("account security routes", () => {
+  it("posts password changes to the current-user endpoint", async () => {
+    const request = {
+      currentPassword: "current-password",
+      newPassword: "new-password",
+      logoutAllDevices: true,
+    };
+    const post = mockPrivatePost();
+
+    try {
+      await changePassword(request);
+      assert.deepEqual(post.calls, [["/me/password-change", request]]);
+    } finally {
+      post.restore();
+    }
+  });
+
+  it("posts email changes to the current-user endpoint", async () => {
+    const request = {
+      newEmail: "student@uit.edu.vn",
+      currentPassword: "current-password",
+    };
+    const post = mockPrivatePost();
+
+    try {
+      await changeEmail(request);
+      assert.deepEqual(post.calls, [["/me/email-change", request]]);
     } finally {
       post.restore();
     }
