@@ -5,7 +5,7 @@
 # Compiled class file
 *.class
 .vscode
-
+.codex
 # Log file
 *.log
 application.properties
