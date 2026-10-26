@@ -8,7 +8,7 @@ import {
     forgotPassword,
     resetPassword,
     changePassword,
-    changeEmail
+    changeEmail,
 } from '@/features/auth/auth.service';
 import type { components } from '@/contract/api-contract';
 

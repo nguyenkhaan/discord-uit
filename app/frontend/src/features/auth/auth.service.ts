@@ -42,15 +42,21 @@ export async function logoutAll(): Promise<void> {
     await privateClient.post(AUTH_ENDPOINTS.logoutAll);
 }
 
-export async function forgotPassword(request: ForgotPasswordRequest): Promise<void> {
+export async function forgotPassword(
+    request: ForgotPasswordRequest
+): Promise<void> {
     await publicClient.post(AUTH_ENDPOINTS.forgotPassword, request);
 }
 
-export async function resetPassword(request: ResetPasswordRequest): Promise<void> {
+export async function resetPassword(
+    request: ResetPasswordRequest
+): Promise<void> {
     await publicClient.post(AUTH_ENDPOINTS.resetPassword, request);
 }
 
-export async function changePassword(request: ChangePasswordRequest): Promise<void> {
+export async function changePassword(
+    request: ChangePasswordRequest
+): Promise<void> {
     await privateClient.post(AUTH_ENDPOINTS.changePassword, request);
 }
 

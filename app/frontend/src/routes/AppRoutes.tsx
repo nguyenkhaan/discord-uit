@@ -12,7 +12,7 @@ import NotFound from '@/pages/NotFound';
 import AuthGuard from '@/components/AuthGuard';
 
 // Import thêm Header và Admin Form
-import { Header } from '@/components/layout/Header/Header';
+import { Header } from '@/components/Header/Header';
 import { AdminNotificationForm } from '@/features/admin/AdminNotificationForm';
 
 export default function AppRoutes() {
@@ -23,7 +23,10 @@ export default function AppRoutes() {
 
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* Các Route cần bảo mật */}
@@ -47,8 +50,8 @@ export default function AppRoutes() {
 
                 {/* === ROUTE TEST NOTIFICATION === */}
                 <Route path="/test-header" element={<Header />} />
-                <Route 
-                    path="/admin/notifications" 
+                <Route
+                    path="/admin/notifications"
                     element={
                         <div className="min-h-screen bg-gray-50 flex flex-col">
                             <Header />
@@ -56,7 +59,7 @@ export default function AppRoutes() {
                                 <AdminNotificationForm />
                             </div>
                         </div>
-                    } 
+                    }
                 />
 
                 <Route path="*" element={<NotFound />} />
