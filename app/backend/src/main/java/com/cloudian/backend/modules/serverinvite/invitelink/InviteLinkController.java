@@ -31,7 +31,7 @@ public class InviteLinkController {
 
     @GetMapping("/servers/{serverId}/invites/links")
     public ResponseEntity<List<InviteLinkResponse>> getInviteLinks(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(
                 inviteLinkService.getInviteLinks(serverId, principal.getUserId()));
@@ -39,7 +39,7 @@ public class InviteLinkController {
 
     @PostMapping("/servers/{serverId}/invites/links")
     public ResponseEntity<CreateInviteLinkResponse> createInviteLink(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody CreateInviteLinkRequest request) {
         CreateInviteLinkResponse response = inviteLinkService.createInviteLink(
@@ -51,8 +51,8 @@ public class InviteLinkController {
 
     @DeleteMapping("/servers/{serverId}/invites/links/{inviteId}")
     public ResponseEntity<Void> revokeInviteLink(
-            @PathVariable UUID serverId,
-            @PathVariable UUID inviteId,
+            @PathVariable("serverId") UUID serverId,
+            @PathVariable("inviteId") UUID inviteId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         inviteLinkService.revokeInviteLink(serverId, inviteId, principal.getUserId());
         return ResponseEntity.noContent().build();
@@ -60,13 +60,13 @@ public class InviteLinkController {
 
     @GetMapping("/invites/{token}")
     public ResponseEntity<InviteLinkDetailsResponse> getInviteLinkDetails(
-            @PathVariable String token) {
+            @PathVariable("token") String token) {
         return ResponseEntity.ok(inviteLinkService.getInviteLinkDetails(token));
     }
 
     @PostMapping("/invites/{token}/join")
     public ResponseEntity<JoinServerInviteResponse> joinServerByInviteLink(
-            @PathVariable String token,
+            @PathVariable("token") String token,
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(
                 inviteLinkService.joinServerByInviteLink(token, principal.getUserId()));

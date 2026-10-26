@@ -47,13 +47,13 @@ public class ServerController {
     @GetMapping("/{serverId}")
     @PreAuthorize("@serverAccess.isMember(#serverId)")
     public ServerResponse get(@AuthenticationPrincipal CustomUserDetails principal,
-                              @PathVariable UUID serverId) {
+                              @PathVariable("serverId") UUID serverId) {
         return serverService.get(serverId, principal.getUserId());
     }
 
     @GetMapping("/{serverId}/members")
     @PreAuthorize("@serverAccess.isMember(#serverId)")
-    public List<ServerMemberResponse> listMembers(@PathVariable UUID serverId) {
+    public List<ServerMemberResponse> listMembers(@PathVariable("serverId") UUID serverId) {
         return serverService.listMembers(serverId);
     }
 }

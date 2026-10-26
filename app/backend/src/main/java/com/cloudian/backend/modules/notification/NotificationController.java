@@ -49,7 +49,7 @@ public class NotificationController {
     @GetMapping("/{notificationId}")
     public NotificationResponse getNotification(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @PathVariable UUID notificationId
+            @PathVariable("notificationId") UUID notificationId
     ) {
         return notificationService.getNotification(principal.getUserId(), notificationId);
     }
@@ -58,7 +58,7 @@ public class NotificationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markAsRead(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @PathVariable UUID notificationId
+            @PathVariable("notificationId") UUID notificationId
     ) {
         notificationService.markAsRead(principal.getUserId(), notificationId);
     }
@@ -67,7 +67,7 @@ public class NotificationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteNotification(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @PathVariable UUID notificationId
+            @PathVariable("notificationId") UUID notificationId
     ) {
         notificationService.deleteNotification(principal.getUserId(), notificationId);
     }

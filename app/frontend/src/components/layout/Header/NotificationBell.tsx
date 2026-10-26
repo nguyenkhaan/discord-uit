@@ -1,95 +1,171 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  useGetNotifications, 
-  useMarkAsReadMutation, 
-  useDeleteNotificationMutation 
+import { Bell, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+import { Button } from '@/components/common/Button';
+import { NotificationCard } from '@/components/layout/Header/NotificationCard';
+import {
+    NotificationEmptyState,
+    NotificationErrorState,
+    NotificationLoadingState,
+} from '@/components/layout/Header/NotificationPanelStates';
+import {
+    useDeleteNotificationMutation,
+    useGetNotifications,
+    useMarkAsReadMutation,
+    useUnreadNotificationCount,
 } from '@/features/notification/notification.hooks';
 
-export const NotificationBell = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+const MAX_VISIBLE_BADGE_COUNT = 99;
 
-  const { data: notifications = [], isLoading } = useGetNotifications();
-  const { mutate: markAsRead } = useMarkAsReadMutation();
-  const { mutate: deleteNotification } = useDeleteNotificationMutation();
+export function NotificationBell() {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const notificationsQuery = useGetNotifications({ enabled: isOpen });
+    const unreadCountQuery = useUnreadNotificationCount();
+    const markAsReadMutation = useMarkAsReadMutation();
+    const deleteNotificationMutation = useDeleteNotificationMutation();
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+    const notifications = notificationsQuery.data?.notifications ?? [];
+    const unreadCount =
+        unreadCountQuery.data?.unreadCount ??
+        notifications.filter((notification) => !notification.readAt).length;
+    const badgeLabel =
+        unreadCount > MAX_VISIBLE_BADGE_COUNT
+            ? `${MAX_VISIBLE_BADGE_COUNT}+`
+            : String(unreadCount);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
 
-  return (
-    <div className="relative inline-block text-left" ref={menuRef}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors focus:outline-none"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-        </svg>
-        
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
+        function closeOnOutsideClick(event: MouseEvent) {
+            if (!containerRef.current?.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
 
-      {isOpen && (
-        <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-          <div className="py-2 px-4 border-b">
-            <h3 className="text-sm font-semibold text-gray-800">Thông báo</h3>
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <p className="text-sm text-gray-500 text-center py-4">Đang tải...</p>
-            ) : notifications.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">Chưa có thông báo nào</p>
-            ) : (
-              notifications.map((item) => (
-                <div 
-                  key={item.id} 
-                  className={`p-4 border-b hover:bg-gray-50 transition-colors ${!item.isRead ? 'bg-blue-50/50' : ''}`}
+        function closeOnEscape(event: KeyboardEvent) {
+            if (event.key === 'Escape') {
+                setIsOpen(false);
+                triggerRef.current?.focus();
+            }
+        }
+
+        document.addEventListener('mousedown', closeOnOutsideClick);
+        document.addEventListener('keydown', closeOnEscape);
+
+        return () => {
+            document.removeEventListener('mousedown', closeOnOutsideClick);
+            document.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [isOpen]);
+
+    return (
+        <div className="relative" ref={containerRef}>
+            <Button
+                aria-controls="notification-panel"
+                aria-expanded={isOpen}
+                aria-label={
+                    unreadCount > 0
+                        ? `Thông báo, ${unreadCount} chưa đọc`
+                        : 'Thông báo'
+                }
+                className="relative border-line bg-surface text-foreground-secondary shadow-none hover:border-line-brand hover:bg-brand-subtle"
+                onClick={() => setIsOpen((open) => !open)}
+                ref={triggerRef}
+                size="icon"
+                variant="secondary"
+            >
+                <Bell className="h-6 w-6" strokeWidth={1.9} />
+                {unreadCount > 0 && (
+                    <span
+                        aria-hidden="true"
+                        className="absolute -top-1.5 -right-1.5 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-surface bg-feedback-danger px-1 text-[0.625rem] leading-none font-bold text-white"
+                    >
+                        {badgeLabel}
+                    </span>
+                )}
+            </Button>
+
+            {isOpen && (
+                <section
+                    aria-label="Danh sách thông báo"
+                    className="absolute top-full -right-14 z-50 mt-3 flex max-h-[min(36rem,calc(100vh-5rem))] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-auth-card sm:right-0"
+                    id="notification-panel"
                 >
-                  <div className="flex justify-between items-start">
-                    <div 
-                      className="cursor-pointer flex-1" 
-                      onClick={() => !item.isRead && markAsRead(item.id)}
-                    >
-                      <h4 className={`text-sm ${!item.isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
-                        {item.title}
-                      </h4>
-                      <p className="text-xs text-gray-600 mt-1">{item.message}</p>
-                      <span className="text-[10px] text-gray-400 mt-2 block">
-                        {new Date(item.createdAt).toLocaleString('vi-VN')}
-                      </span>
+                    <header className="flex items-center justify-between gap-3 border-b border-line-subtle px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-base font-bold text-heading">
+                                Thông báo
+                            </h2>
+                            {unreadCount > 0 && (
+                                <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-caption font-bold text-brand">
+                                    {badgeLabel} mới
+                                </span>
+                            )}
+                        </div>
+                        <Button
+                            aria-label="Đóng danh sách thông báo"
+                            className="size-8 min-h-8"
+                            onClick={() => {
+                                setIsOpen(false);
+                                triggerRef.current?.focus();
+                            }}
+                            size="icon"
+                            variant="ghost"
+                        >
+                            <X className="size-4.5" />
+                        </Button>
+                    </header>
+
+                    <div className="min-h-0 overflow-y-auto bg-surface-subtle/50">
+                        {notificationsQuery.isLoading ? (
+                            <NotificationLoadingState />
+                        ) : notificationsQuery.isError ? (
+                            <NotificationErrorState
+                                onRetry={() =>
+                                    void notificationsQuery.refetch()
+                                }
+                            />
+                        ) : notifications.length === 0 ? (
+                            <NotificationEmptyState />
+                        ) : (
+                            <ul className="space-y-2 p-2.5" role="list">
+                                {notifications.map((notification, index) => (
+                                    <li
+                                        key={
+                                            notification.id ??
+                                            `${notification.createdAt}-${index}`
+                                        }
+                                    >
+                                        <NotificationCard
+                                            isDeleting={
+                                                deleteNotificationMutation.isPending
+                                            }
+                                            isMarkingAsRead={
+                                                markAsReadMutation.isPending
+                                            }
+                                            notification={notification}
+                                            onDelete={(notificationId) =>
+                                                deleteNotificationMutation.mutate(
+                                                    notificationId
+                                                )
+                                            }
+                                            onMarkAsRead={(notificationId) =>
+                                                markAsReadMutation.mutate(
+                                                    notificationId
+                                                )
+                                            }
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
-                    
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNotification(item.id);
-                      }}
-                      className="ml-2 text-gray-400 hover:text-red-500"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))
+                </section>
             )}
-          </div>
         </div>
-      )}
-    </div>
-  );
-};
+    );
+}

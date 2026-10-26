@@ -30,7 +30,7 @@ public class DirectInviteController {
 
     @PostMapping("/servers/{serverId}/invites")
     public ResponseEntity<DirectInviteResponse> createDirectInvite(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody CreateDirectInviteRequest request) {
         DirectInviteResponse response = directInviteService.createDirectInvite(
@@ -48,7 +48,7 @@ public class DirectInviteController {
 
     @PostMapping("/invites/{inviteId}/accept")
     public ResponseEntity<AcceptInviteResponse> acceptDirectInvite(
-            @PathVariable UUID inviteId,
+            @PathVariable("inviteId") UUID inviteId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(
                 directInviteService.acceptDirectInvite(inviteId, principal.getUserId()));
@@ -56,7 +56,7 @@ public class DirectInviteController {
 
     @PostMapping("/invites/{inviteId}/decline")
     public ResponseEntity<DeclineInviteResponse> declineDirectInvite(
-            @PathVariable UUID inviteId,
+            @PathVariable("inviteId") UUID inviteId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(
                 directInviteService.declineDirectInvite(inviteId, principal.getUserId()));

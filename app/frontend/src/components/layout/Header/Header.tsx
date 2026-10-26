@@ -1,23 +1,33 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { NotificationBell } from './NotificationBell';
+
 import Logo from '@/assets/images/Logo.webp';
+import { NotificationBell } from '@/components/layout/Header/NotificationBell';
 
 export const Header = () => {
-  return (
-    <header className="bg-white border-b border-gray-200 h-16 w-full flex items-center justify-between px-6 shadow-sm sticky top-0 z-40">
-      <div className="flex items-center">
-        <Link to="/">
-          <img src={Logo} alt="UIT Connect Logo" className="h-8 object-contain" />
-        </Link>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <NotificationBell />
-        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold cursor-pointer hover:bg-blue-200 transition-colors">
-          U
-        </div>
-      </div>
-    </header>
-  );
+    return (
+        <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-line bg-surface/95 px-4 shadow-sm backdrop-blur sm:px-6">
+            <Link
+                aria-label="Về trang chủ UIT Connect"
+                className="rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                to="/"
+            >
+                <img
+                    alt="UIT Connect"
+                    className="h-8 object-contain"
+                    src={Logo}
+                />
+            </Link>
+
+            <div className="flex items-center gap-3">
+                <NotificationBell />
+                <span
+                    aria-label="Tài khoản người dùng"
+                    className="grid size-11 place-items-center rounded-full border border-line-brand bg-brand-subtle text-sm font-bold text-brand"
+                    role="img"
+                >
+                    U
+                </span>
+            </div>
+        </header>
+    );
 };
