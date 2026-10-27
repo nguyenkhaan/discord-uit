@@ -10,10 +10,10 @@ import ChangeEmailPage from '@/features/auth/pages/ChangeEmailPage';
 import NotFound from '@/pages/NotFound';
 
 import AuthGuard from '@/components/AuthGuard';
-
-// Import thêm Header và Admin Form
 import { Header } from '@/components/Header/Header';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { AdminNotificationForm } from '@/features/admin/AdminNotificationForm';
+import TestMainLayout from '@/pages/TestMainLayout';
 
 export default function AppRoutes() {
     return (
@@ -29,7 +29,6 @@ export default function AppRoutes() {
                 />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                {/* Các Route cần bảo mật */}
                 <Route
                     path="/change-password"
                     element={
@@ -48,17 +47,20 @@ export default function AppRoutes() {
                     }
                 />
 
-                {/* === ROUTE TEST NOTIFICATION === */}
                 <Route path="/test-header" element={<Header />} />
                 <Route
                     path="/admin/notifications"
                     element={
-                        <div className="min-h-screen bg-gray-50 flex flex-col">
-                            <Header />
-                            <div className="flex-1">
-                                <AdminNotificationForm />
-                            </div>
-                        </div>
+                        <MainLayout>
+                            <AdminNotificationForm />
+                        </MainLayout>
+                    }
+                />
+                {/* Seeing the main layout structure (testing only) */}
+                <Route 
+                    path="/test-main-layout"
+                    element={
+                        <TestMainLayout />
                     }
                 />
 
