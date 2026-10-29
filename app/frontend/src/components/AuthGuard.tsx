@@ -1,29 +1,25 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-interface AuthGuardProps {
-    children?: React.ReactNode;
-}
+import { useAuth } from '@/context/useAuth';
 
-const getCookie = (name: string): string | null => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        return parts.pop()?.split(';').shift() || null;
-    }
-    return null;
-};
-
-export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
+export function AuthGuard({ children }: { children?: ReactNode }) {
     const location = useLocation();
-    const accessToken = getCookie('access_token');
-    const refreshToken = getCookie('refresh_token');
+    const { user, isInitializing } = useAuth();
 
-    if (!accessToken || !refreshToken) {
+    if (isInitializing) {
+        return (
+            <div className="grid min-h-svh place-items-center bg-page text-muted">
+                Đang tải...
+            </div>
+        );
+    }
+
+    if (!user) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     return children ? <>{children}</> : <Outlet />;
-};
+}
 
 export default AuthGuard;
