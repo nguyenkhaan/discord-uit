@@ -1,6 +1,7 @@
 // src/features/auth/auth.service.ts
 import { privateClient, publicClient } from '@/api/client';
 import type { components } from '@/contract/api-contract';
+import type { CurrentUser } from './auth.type';
 
 type LoginRequest = components['schemas']['LoginRequest'];
 type LoginResponse = components['schemas']['LoginResponse'];
@@ -62,4 +63,9 @@ export async function changePassword(
 
 export async function changeEmail(request: EmailChangeRequest): Promise<void> {
     await privateClient.post(AUTH_ENDPOINTS.changeEmail, request);
+}
+
+export async function getMe(): Promise<CurrentUser> {
+    const res = await privateClient.get<CurrentUser>('/me');
+    return res.data;
 }

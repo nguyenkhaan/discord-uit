@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -18,6 +18,7 @@ import {
 
 export default function LoginPage() {
     const { login, isLoggingIn } = useAuth();
+    const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -34,6 +35,7 @@ export default function LoginPage() {
         try {
             await login({ username: email, password });
             setPassword('');
+            navigate('/home', { replace: true });
         } catch {
             setError(
                 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.'
