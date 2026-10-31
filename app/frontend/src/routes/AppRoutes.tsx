@@ -10,7 +10,7 @@ import HomePage from '@/features/dashboard/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import ComingSoonPage from '@/pages/ComingSoonPage';
 import TestMainLayout from '@/pages/TestMainLayout';
-
+import ServerListPage from '@/features/server/pages/ServerListPage';
 import AuthGuard from '@/components/AuthGuard';
 import { Header } from '@/components/Header/Header';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -40,7 +40,7 @@ export default function AppRoutes() {
                     }
                 >
                     <Route path="/home" element={<HomePage />} />
-                    <Route path="/servers" element={<ComingSoonPage title="Server" />} />
+                    <Route path="/servers" element={<ServerListPage />} />
                     <Route path="/documents" element={<ComingSoonPage title="Tài liệu" />} />
                     <Route path="/forum" element={<ComingSoonPage title="Diễn đàn" />} />
                     <Route path="/notifications" element={<ComingSoonPage title="Thông báo" />} />
