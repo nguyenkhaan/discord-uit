@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.cloudian.backend.commons.enums.ServerMemberRole;
+import com.cloudian.backend.commons.enums.ServerStatus;
 import com.cloudian.backend.models.Server;
 
 public record ServerResponse(
@@ -11,6 +12,7 @@ public record ServerResponse(
         String name,
         String groupImageUrl,        // short-lived presigned link, NOT the object key stored in the DB
         ServerMemberRole myRole,
+        ServerStatus status,
         long memberCount,
         Instant createdAt
 ) {
@@ -22,6 +24,7 @@ public record ServerResponse(
                 server.getName(),
                 groupImageUrl,
                 myRole,
+                server.getStatus(),
                 memberCount,
                 server.getCreatedAt());
     }

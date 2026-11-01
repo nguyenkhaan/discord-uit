@@ -1,6 +1,7 @@
 package com.cloudian.backend.modules.server;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -10,15 +11,21 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cloudian.backend.modules.server.dto.CreateServerRequest;
 import com.cloudian.backend.modules.server.dto.ServerMemberResponse;
 import com.cloudian.backend.modules.server.dto.ServerResponse;
+import com.cloudian.backend.modules.server.dto.ServerStatusCountResponse;
+import com.cloudian.backend.modules.server.dto.UpdateServerStatusRequest;
+import com.cloudian.backend.commons.enums.ServerStatus;
 import com.cloudian.backend.security.CustomUserDetails;
 
 import jakarta.validation.Valid;
@@ -41,8 +48,17 @@ public class ServerController {
     }
 
     @GetMapping
-    public List<ServerResponse> listMine(@AuthenticationPrincipal CustomUserDetails principal) {
-        return serverService.listMine(principal.getUserId());
+    public List<ServerResponse> listMine(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @RequestParam(name = "status", required = false) Set<ServerStatus> statuses) {
+        return serverService.listMine(principal.getUserId(), statuses);
+    }
+
+    @GetMapping("/status-counts")
+    public List<ServerStatusCountResponse> countMineByStatus(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @RequestParam(name = "status", required = false) Set<ServerStatus> statuses) {
+        return serverService.countMineByStatus(principal.getUserId(), statuses);
     }
 
     @GetMapping("/{serverId}")
@@ -56,6 +72,15 @@ public class ServerController {
     @PreAuthorize("@serverAccess.isMember(#serverId)")
     public List<ServerMemberResponse> listMembers(@PathVariable("serverId") UUID serverId) {
         return serverService.listMembers(serverId);
+    }
+
+    @PatchMapping("/{serverId}/status")
+    @PreAuthorize("@serverAccess.isOwner(#serverId)")
+    public ServerResponse updateStatus(
+            @PathVariable("serverId") UUID serverId,
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @Valid @RequestBody UpdateServerStatusRequest request) {
+        return serverService.updateStatus(serverId, principal.getUserId(), request.status());
     }
 
     @PostMapping("/{serverId}/members/{userId}/promote")

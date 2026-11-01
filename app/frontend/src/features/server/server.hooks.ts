@@ -1,39 +1,54 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { serverKeys } from '@/features/server/server.keys';
 import {
+    countMyServersByStatus,
     createServer,
     getServer,
-    getServerMembers,
-    getServers,
-} from './server.service';
+    listMyServers,
+    updateServerStatus,
+} from '@/features/server/server.service';
+import { isServerStatus } from '@/features/server/server.status';
+import type {
+    ServerResponse,
+    ServerStatusCountResponse,
+    ServerStatusCounts,
+    ServerStatusFilter,
+} from '@/features/server/server.type';
 
-export const serverKeys = {
-    all: ['servers'] as const,
-    listMine: () => [...serverKeys.all, 'listMine'] as const,
-    detail: (serverId: string) => [...serverKeys.all, serverId] as const,
-    members: (serverId: string) =>
-        [...serverKeys.detail(serverId), 'members'] as const,
-};
+/** Chuẩn hóa mảng `[{ status, serverCount }]` thành `{ ACTIVE, LOCKED, CLOSED }` */
+function toStatusCounts(rows: ServerStatusCountResponse[]): ServerStatusCounts {
+    const counts: ServerStatusCounts = { ACTIVE: 0, LOCKED: 0, CLOSED: 0 };
+    rows.forEach(({ status, serverCount }) => {
+        if (isServerStatus(status)) counts[status] = serverCount ?? 0;
+    });
+    return counts;
+}
 
-export function useGetServers() {
+/** Danh sách server của người dùng, có thể lọc theo trạng thái ở phía backend */
+export function useServerList(filter: ServerStatusFilter = {}) {
     return useQuery({
-        queryKey: serverKeys.listMine(),
-        queryFn: getServers,
+        queryKey: serverKeys.list(filter),
+        queryFn: () => listMyServers(filter),
+        // Giữ dữ liệu cũ khi đổi bộ lọc để bảng không bị nháy
+        placeholderData: keepPreviousData,
     });
 }
 
-export function useGetServer(serverId: string) {
+/** Số lượng server theo từng trạng thái (ACTIVE / LOCKED / CLOSED) */
+export function useServerStatusCounts(filter: ServerStatusFilter = {}) {
     return useQuery({
-        enabled: Boolean(serverId),
+        queryKey: serverKeys.statusCounts(filter),
+        queryFn: () => countMyServersByStatus(filter),
+        select: toStatusCounts,
+    });
+}
+
+export function useServer(serverId: string) {
+    return useQuery({
+        enabled: serverId !== '',
         queryKey: serverKeys.detail(serverId),
         queryFn: () => getServer(serverId),
-    });
-}
-
-export function useGetServerMembers(serverId: string) {
-    return useQuery({
-        enabled: Boolean(serverId),
-        queryKey: serverKeys.members(serverId),
-        queryFn: () => getServerMembers(serverId),
     });
 }
 
@@ -42,7 +57,23 @@ export function useCreateServerMutation() {
 
     return useMutation({
         mutationFn: createServer,
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: serverKeys.all }),
+        // Server mới ảnh hưởng tới cả danh sách lẫn số liệu thống kê
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: serverKeys.all }),
+    });
+}
+
+/** Đổi trạng thái server (chỉ OWNER) */
+export function useUpdateServerStatusMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: updateServerStatus,
+        onSuccess: (server: ServerResponse) => {
+            if (server.id) queryClient.setQueryData(serverKeys.detail(server.id), server);
+            return Promise.all([
+                queryClient.invalidateQueries({ queryKey: serverKeys.lists() }),
+                queryClient.invalidateQueries({ queryKey: serverKeys.statusCounts() }),
+            ]);
+        },
     });
 }

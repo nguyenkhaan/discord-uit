@@ -1,14 +1,14 @@
-import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Archive, Lock, Server, ServerCog } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import type { ServerResponse } from '../server.service';
-import { getServerStatus, SERVER_STATUS_META, SERVER_STATUSES, type ServerStatus } from '../server.status';
+import { SERVER_STATUS_META, SERVER_STATUSES } from '@/features/server/server.status';
+import type { ServerStatus, ServerStatusCounts } from '@/features/server/server.type';
 
 export interface ServerSummaryProps {
-    servers: ServerResponse[];
+    counts: ServerStatusCounts | undefined;
     isLoading: boolean;
+    isError: boolean;
 }
 
 type SummaryKey = 'TOTAL' | ServerStatus;
@@ -44,21 +44,20 @@ const SUMMARY_CARDS: Record<SummaryKey, SummaryCardConfig> = {
 
 const SUMMARY_ORDER: readonly SummaryKey[] = ['TOTAL', ...SERVER_STATUSES];
 
-export const ServerSummary = ({ servers, isLoading }: ServerSummaryProps) => {
-    const counts = useMemo<Record<SummaryKey, number>>(() => {
-        const result: Record<SummaryKey, number> = { TOTAL: servers.length, ACTIVE: 0, LOCKED: 0, CLOSED: 0 };
-        servers.forEach((server) => {
-            result[getServerStatus(server)] += 1;
-        });
-        return result;
-    }, [servers]);
+function getCount(counts: ServerStatusCounts, key: SummaryKey): number {
+    if (key !== 'TOTAL') return counts[key];
+    return SERVER_STATUSES.reduce((total, status) => total + counts[status], 0);
+}
+
+export const ServerSummary = ({ counts, isLoading, isError }: ServerSummaryProps) => {
+    const total = counts ? getCount(counts, 'TOTAL') : 0;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {SUMMARY_ORDER.map((key) => {
                 const { title, icon: Icon, iconWrapClass, iconClass } = SUMMARY_CARDS[key];
-                const count = counts[key];
-                const percent = counts.TOTAL > 0 ? Math.round((count / counts.TOTAL) * 100) : 0;
+                const count = counts ? getCount(counts, key) : 0;
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
 
                 return (
                     <div
@@ -75,11 +74,16 @@ export const ServerSummary = ({ servers, isLoading }: ServerSummaryProps) => {
                                     <div className="h-7 w-16 rounded bg-gray-200 animate-pulse mb-2" />
                                     <div className="h-3 w-24 rounded bg-gray-100 animate-pulse" />
                                 </>
+                            ) : isError || !counts ? (
+                                <>
+                                    <p className="text-2xl font-bold text-gray-300 mb-2">--</p>
+                                    <p className="text-xs text-red-500">Không tải được số liệu</p>
+                                </>
                             ) : (
                                 <>
                                     <p className="text-2xl font-bold text-gray-900 mb-2">{count.toLocaleString('vi-VN')}</p>
                                     <p className="text-xs text-gray-500">
-                                        {key === 'TOTAL' ? 'Tất cả server trong hệ thống' : `${percent}% tổng số server`}
+                                        {key === 'TOTAL' ? 'Tất cả server của bạn' : `${percent}% tổng số server`}
                                     </p>
                                 </>
                             )}

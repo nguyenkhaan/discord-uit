@@ -16,10 +16,10 @@ import {
     Users,
 } from 'lucide-react';
 
+import { getServerStatus, SERVER_STATUS_META } from '@/features/server/server.status';
+import type { ServerMemberRole, ServerResponse, ServerStatus } from '@/features/server/server.type';
 import { showToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-import type { ServerResponse } from '../server.service';
-import { getServerStatus, SERVER_STATUS_META, type ServerStatus } from '../server.status';
 
 export interface ServerTableListProps {
     servers: ServerResponse[];
@@ -109,6 +109,21 @@ function getPageItems(current: number, total: number): (number | 'ellipsis')[] {
         items.push(page);
     });
     return items;
+}
+
+const SERVER_ROLE_META: Record<ServerMemberRole, { label: string; className: string }> = {
+    OWNER: { label: 'Chủ server', className: 'text-violet-700 bg-violet-50' },
+    MEMBER: { label: 'Thành viên', className: 'text-gray-600 bg-gray-100' },
+};
+
+function ServerRoleBadge({ role }: { role: ServerMemberRole | undefined }) {
+    if (!role) return <span className="text-gray-400">—</span>;
+    const meta = SERVER_ROLE_META[role];
+    return (
+        <span className={cn('px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap', meta.className)}>
+            {meta.label}
+        </span>
+    );
 }
 
 function ServerAvatar({ name, imageUrl }: { name?: string; imageUrl?: string }) {
@@ -320,7 +335,7 @@ export const ServerTableList = ({
                             </th>
                             <th className="px-4 py-3 w-12 text-center">#</th>
                             <th className="px-4 py-3 min-w-55">Thông tin server</th>
-                            <th className="px-4 py-3 whitespace-nowrap">Chủ server</th>
+                            <th className="px-4 py-3 whitespace-nowrap">Vai trò của bạn</th>
                             <th className="px-4 py-3 text-center whitespace-nowrap">Lĩnh vực</th>
                             <th className="px-4 py-3 text-center whitespace-nowrap">Thành viên</th>
                             <th className="px-4 py-3 whitespace-nowrap">Ngày tạo</th>
@@ -367,10 +382,7 @@ export const ServerTableList = ({
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2 whitespace-nowrap">
-                                                <div className="w-6 h-6 rounded-full bg-gray-200" />
-                                                <span className="text-gray-700">Nguyễn Văn A</span>
-                                            </div>
+                                            <ServerRoleBadge role={server.myRole} />
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs whitespace-nowrap">Học tập</span>

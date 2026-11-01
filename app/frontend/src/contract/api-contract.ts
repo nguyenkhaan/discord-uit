@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/members/{userId}/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["promoteMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["leaveServer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}/invites": {
         parameters: {
             query?: never;
@@ -292,6 +324,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateStatus"];
+        trace?: never;
+    };
     "/notifications/{notificationId}/read": {
         parameters: {
             query?: never;
@@ -364,6 +412,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/status-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["countMineByStatus"];
         put?: never;
         post?: never;
         delete?: never;
@@ -516,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["kickMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}/invites/links/{inviteId}": {
         parameters: {
             query?: never;
@@ -527,6 +607,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["revokeInviteLink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/servers/{serverId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteServer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/servers/{serverId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["kickMember_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -548,6 +660,8 @@ export interface components {
             groupImageUrl?: string;
             /** @enum {string} */
             myRole?: "OWNER" | "MEMBER";
+            /** @enum {string} */
+            status?: "ACTIVE" | "LOCKED" | "CLOSED";
             /** Format: int64 */
             memberCount?: number;
             /** Format: date-time */
@@ -688,6 +802,10 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        UpdateServerStatusRequest: {
+            /** @enum {string} */
+            status: "ACTIVE" | "LOCKED" | "CLOSED";
+        };
         UpdateMeRequest: {
             fullName?: string;
         };
@@ -743,6 +861,12 @@ export interface components {
             /** @enum {string} */
             status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
         };
+        ServerStatusCountResponse: {
+            /** @enum {string} */
+            status?: "ACTIVE" | "LOCKED" | "CLOSED";
+            /** Format: int64 */
+            serverCount?: number;
+        };
         NotificationListRequest: {
             /** Format: int32 */
             page?: number;
@@ -781,6 +905,9 @@ export interface components {
         HealthResponse: {
             message?: string;
         };
+        DeleteServerRequest: {
+            reason: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -792,7 +919,9 @@ export type $defs = Record<string, never>;
 export interface operations {
     listMine: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: ("ACTIVE" | "LOCKED" | "CLOSED")[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -831,6 +960,47 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ServerResponse"];
                 };
+            };
+        };
+    };
+    promoteMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    leaveServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1258,6 +1428,32 @@ export interface operations {
             };
         };
     };
+    updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateServerStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServerResponse"];
+                };
+            };
+        };
+    };
     markAsRead: {
         parameters: {
             query?: never;
@@ -1382,6 +1578,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ServerMemberResponse"][];
+                };
+            };
+        };
+    };
+    countMineByStatus: {
+        parameters: {
+            query?: {
+                status?: ("ACTIVE" | "LOCKED" | "CLOSED")[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServerStatusCountResponse"][];
                 };
             };
         };
@@ -1592,6 +1810,27 @@ export interface operations {
             };
         };
     };
+    kickMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     revokeInviteLink: {
         parameters: {
             query?: never;
@@ -1606,6 +1845,51 @@ export interface operations {
         responses: {
             /** @description OK */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteServerRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    kickMember_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };

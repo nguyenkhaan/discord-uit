@@ -1,8 +1,10 @@
 package com.cloudian.backend.modules.server;
 
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -15,6 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.cloudian.backend.commons.enums.ServerMemberRole;
+import com.cloudian.backend.commons.enums.ServerStatus;
 import com.cloudian.backend.commons.enums.SystemRole;
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.exceptions.StorageException;
@@ -25,6 +28,7 @@ import com.cloudian.backend.modules.server.dto.CreateServerRequest;
 import com.cloudian.backend.modules.server.dto.DeleteServerRequest;
 import com.cloudian.backend.modules.server.dto.ServerMemberResponse;
 import com.cloudian.backend.modules.server.dto.ServerResponse;
+import com.cloudian.backend.modules.server.dto.ServerStatusCountResponse;
 import com.cloudian.backend.repositories.ServerMembershipRepository;
 import com.cloudian.backend.repositories.ServerRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
@@ -97,18 +101,27 @@ public class ServerService {
 
     @Transactional(readOnly = true)
     public List<ServerResponse> listMine(UUID userId) {
+        return listMine(userId, Set.of());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ServerResponse> listMine(UUID userId, Set<ServerStatus> requestedStatuses) {
+        Set<ServerStatus> statuses = selectedStatuses(requestedStatuses);
         List<ServerMembership> memberships = serverMembershipRepository.findActiveByUserId(userId);
-        if (memberships.isEmpty()) {
+        List<ServerMembership> filteredMemberships = memberships.stream()
+                .filter(membership -> statuses.contains(membership.getServer().getStatus()))
+                .toList();
+        if (filteredMemberships.isEmpty()) {
             return List.of();
         }
 
-        List<UUID> serverIds = memberships.stream()
+        List<UUID> serverIds = filteredMemberships.stream()
                 .map(membership -> membership.getServer().getId())
                 .toList();
         Map<UUID, Long> memberCounts = serverMembershipRepository.countActiveByServerIds(serverIds).stream()
                 .collect(Collectors.toMap(ServerMemberCount::serverId, ServerMemberCount::totalMember));
 
-        return memberships.stream()
+        return filteredMemberships.stream()
                 .map(membership -> {
                     Server server = membership.getServer();
                     return ServerResponse.of(
@@ -117,6 +130,23 @@ public class ServerService {
                             membership.getRole(),
                             memberCounts.getOrDefault(server.getId(), 0L));
                 })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ServerStatusCountResponse> countMineByStatus(
+            UUID userId,
+            Set<ServerStatus> requestedStatuses) {
+        Set<ServerStatus> statuses = selectedStatuses(requestedStatuses);
+        Map<ServerStatus, Long> counts = serverMembershipRepository.findActiveByUserId(userId).stream()
+                .collect(Collectors.groupingBy(
+                        membership -> membership.getServer().getStatus(),
+                        Collectors.counting()));
+
+        return statuses.stream()
+                .map(status -> new ServerStatusCountResponse(
+                        status,
+                        counts.getOrDefault(status, 0L)))
                 .toList();
     }
 
@@ -138,6 +168,31 @@ public class ServerService {
                 .toList();
     }
 
+    @Transactional
+    public ServerResponse updateStatus(
+            UUID serverId,
+            UUID currentUserId,
+            ServerStatus status) {
+        Server server = serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId)
+                .orElseThrow(ServerService::notFound);
+        boolean isOwner = serverMembershipRepository
+                .existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
+                        serverId,
+                        currentUserId,
+                        ServerMemberRole.OWNER);
+        if (!isOwner) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only server owners can change server status.");
+        }
+
+        server.setStatus(status);
+        long memberCount = serverMembershipRepository.countByServerIdAndLeftAtIsNull(serverId);
+        return ServerResponse.of(
+                server,
+                imageUrl(server.getGroupImageUrl()),
+                ServerMemberRole.OWNER,
+                memberCount);
+    }
+
     private String imageUrl(String objectKey) {
         if (objectKey == null || objectKey.isBlank()) {
             return null;
@@ -148,6 +203,13 @@ public class ServerService {
             LOGGER.warn("Could not create the image link for {}", objectKey, exception);
             return null;
         }
+    }
+
+    private static Set<ServerStatus> selectedStatuses(Set<ServerStatus> requestedStatuses) {
+        if (requestedStatuses == null || requestedStatuses.isEmpty()) {
+            return EnumSet.allOf(ServerStatus.class);
+        }
+        return EnumSet.copyOf(requestedStatuses);
     }
 
     // use this when Image is upload but the transaction is not committed

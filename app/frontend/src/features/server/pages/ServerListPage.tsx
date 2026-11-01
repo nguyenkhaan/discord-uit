@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 
-import { useGetServers } from '../server.hooks';
-import type { ServerResponse } from '../server.service';
-import { getServerStatus, SERVER_STATUS_META, SERVER_STATUSES, type ServerStatus } from '../server.status';
-import { ServerSummary } from '../components/ServerSummary';
-import { ServerTableList } from '../components/ServerTableList';
-import { CreateServerModal } from '../components/CreateServerModal';
+import { CreateServerModal } from '@/features/server/components/CreateServerModal';
+import { ServerSummary } from '@/features/server/components/ServerSummary';
+import { ServerTableList } from '@/features/server/components/ServerTableList';
+import { useServerList, useServerStatusCounts } from '@/features/server/server.hooks';
+import { SERVER_STATUS_META, SERVER_STATUSES } from '@/features/server/server.status';
+import type { ServerResponse, ServerStatus, ServerStatusFilter } from '@/features/server/server.type';
 
 type SelectOption<T extends string> = { readonly value: T; readonly label: string };
 
@@ -67,16 +67,27 @@ function FilterSelect<T extends string>({ label, value, options, onChange }: Fil
     );
 }
 
-export default function ServerListPage() {
-    const { data: servers, isLoading, isError, refetch, isFetching } = useGetServers();
+function toServerStatusFilter(statusFilter: StatusFilter): ServerStatusFilter {
+    return statusFilter === 'ALL' ? {} : { statuses: [statusFilter] };
+}
 
-    // States cho bộ lọc, phân trang & Modal
+export default function ServerListPage() {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
     const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
     const [sortBy, setSortBy] = useState<SortOption>('NEWEST');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+
+    // Lọc trạng thái ở backend; tìm kiếm và sắp xếp xử lý ở client
+    const serverListQuery = useServerList(toServerStatusFilter(statusFilter));
+    const statusCountsQuery = useServerStatusCounts();
+    const servers: ServerResponse[] | undefined = serverListQuery.data;
+
+    const retryLoadServers = (): void => {
+        void serverListQuery.refetch();
+        void statusCountsQuery.refetch();
+    };
 
     // Mỗi khi thay đổi bộ lọc thì quay về trang 1
     function withPageReset<T>(setter: (value: T) => void): (value: T) => void {
@@ -89,20 +100,17 @@ export default function ServerListPage() {
     const isFiltering: boolean =
         searchTerm.trim() !== '' || statusFilter !== 'ALL' || categoryFilter !== 'ALL';
 
-    // Xử lý logic Filter & Sort
     const filteredServers = useMemo<ServerResponse[]>(() => {
         if (!servers) return [];
 
         const query = searchTerm.trim().toLowerCase();
-        const result = servers.filter((server) => {
-            const matchesQuery = !query || (server.name?.toLowerCase().includes(query) ?? false);
-            const matchesStatus = statusFilter === 'ALL' || getServerStatus(server) === statusFilter;
-            return matchesQuery && matchesStatus;
-        });
+        const result = query
+            ? servers.filter((server) => server.name?.toLowerCase().includes(query) ?? false)
+            : [...servers];
 
         const direction = sortBy === 'NEWEST' ? -1 : 1;
         return result.sort((a, b) => direction * (toTimestamp(a.createdAt) - toTimestamp(b.createdAt)));
-    }, [servers, searchTerm, statusFilter, sortBy]);
+    }, [servers, searchTerm, sortBy]);
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50/50 min-h-screen">
@@ -111,7 +119,11 @@ export default function ServerListPage() {
                 <p className="text-sm text-gray-500 mt-1">Quản lý thông tin các server cộng đồng trên UIT Connect.</p>
             </div>
 
-            <ServerSummary servers={servers ?? []} isLoading={isLoading} />
+            <ServerSummary
+                counts={statusCountsQuery.data}
+                isLoading={statusCountsQuery.isPending}
+                isError={statusCountsQuery.isError}
+            />
 
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -168,22 +180,22 @@ export default function ServerListPage() {
                 </div>
             </div>
 
-            {isError ? (
+            {serverListQuery.isError ? (
                 <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-red-100">
                     <p className="text-red-500">Đã xảy ra lỗi khi tải danh sách server.</p>
                     <button
                         type="button"
-                        onClick={() => refetch()}
-                        disabled={isFetching}
+                        onClick={retryLoadServers}
+                        disabled={serverListQuery.isFetching}
                         className="mt-3 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isFetching ? 'Đang thử lại...' : 'Thử lại'}
+                        {serverListQuery.isFetching ? 'Đang thử lại...' : 'Thử lại'}
                     </button>
                 </div>
             ) : (
                 <ServerTableList
                     servers={filteredServers}
-                    isLoading={isLoading}
+                    isLoading={serverListQuery.isPending}
                     isFiltering={isFiltering}
                     currentPage={currentPage}
                     onPageChange={setCurrentPage}

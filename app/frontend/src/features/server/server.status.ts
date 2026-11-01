@@ -1,17 +1,13 @@
-import type { ServerResponse } from './server.service';
+import type { ServerResponse, ServerStatus } from '@/features/server/server.type';
 
-/** Các trạng thái của server (khớp với enum ServerStatus phía backend) */
-export const SERVER_STATUSES = ['ACTIVE', 'LOCKED', 'CLOSED'] as const;
-
-export type ServerStatus = (typeof SERVER_STATUSES)[number];
+/** Thứ tự hiển thị; `satisfies` bắt lỗi nếu backend đổi enum ServerStatus */
+export const SERVER_STATUSES = ['ACTIVE', 'LOCKED', 'CLOSED'] as const satisfies readonly ServerStatus[];
 
 export const DEFAULT_SERVER_STATUS: ServerStatus = 'ACTIVE';
 
 interface ServerStatusMeta {
     label: string;
-    /** Màu chữ + nền của badge trong bảng */
     badgeClass: string;
-    /** Màu chấm tròn trong badge */
     dotClass: string;
 }
 
@@ -37,12 +33,6 @@ export function isServerStatus(value: unknown): value is ServerStatus {
     return typeof value === 'string' && (SERVER_STATUSES as readonly string[]).includes(value);
 }
 
-/**
- * Lấy trạng thái của server.
- * `ServerResponse` hiện chưa có trường `status` (backend chưa trả về),
- * nên đọc an toàn và mặc định là ACTIVE.
- */
 export function getServerStatus(server: ServerResponse): ServerStatus {
-    const status: unknown = 'status' in server ? server.status : undefined;
-    return isServerStatus(status) ? status : DEFAULT_SERVER_STATUS;
+    return isServerStatus(server.status) ? server.status : DEFAULT_SERVER_STATUS;
 }

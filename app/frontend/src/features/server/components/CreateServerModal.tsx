@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ImagePlus, X } from 'lucide-react';
 
+import { useCreateServerMutation } from '@/features/server/server.hooks';
 import { showToast } from '@/lib/toast';
-import { useCreateServerMutation } from '../server.hooks';
 
 interface CreateServerModalProps {
     isOpen: boolean;
@@ -84,11 +84,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
             return;
         }
 
-        const formData = new FormData();
-        formData.append('name', trimmedName);
-        if (imageFile) formData.append('image', imageFile);
-
-        createServer(formData, {
+        createServer({ name: trimmedName, image: imageFile }, {
             onSuccess: () => {
                 showToast(`Đã tạo server "${trimmedName}" thành công.`);
                 resetForm();
