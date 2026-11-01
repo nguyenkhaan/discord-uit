@@ -1,26 +1,40 @@
 import { privateClient } from '@/api/client';
 import type { components } from '@/contract/api-contract';
 
-// Trích xuất Type từ api-contract tự động sinh
 export type ServerResponse = components['schemas']['ServerResponse'];
+export type ServerMemberResponse =
+    components['schemas']['ServerMemberResponse'];
 
-export const getServers = async (): Promise<ServerResponse[]> => {
-    const response = await privateClient.get('/servers');
-    
-    // Đề phòng Backend bọc dữ liệu trong biến content (nếu có phân trang)
-    if (Array.isArray(response.data)) return response.data;
-    if (response.data?.content && Array.isArray(response.data.content)) return response.data.content;
-    
-    return [];
-};
+const SERVERS_ENDPOINT = '/servers';
 
-export const createServer = async (formData: FormData): Promise<ServerResponse> => {
-    const response = await privateClient.post('/servers', formData, {
-        headers: {
-            // CỰC KỲ QUAN TRỌNG: Ghi đè lại 'application/json' mặc định ở file client.ts
-            // để Backend Spring Boot hiểu đây là file/form data
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+export async function getServers(): Promise<ServerResponse[]> {
+    const response =
+        await privateClient.get<ServerResponse[]>(SERVERS_ENDPOINT);
     return response.data;
-};
+}
+
+export async function getServer(serverId: string): Promise<ServerResponse> {
+    const response = await privateClient.get<ServerResponse>(
+        `${SERVERS_ENDPOINT}/${serverId}`
+    );
+    return response.data;
+}
+
+export async function getServerMembers(
+    serverId: string
+): Promise<ServerMemberResponse[]> {
+    const response = await privateClient.get<ServerMemberResponse[]>(
+        `${SERVERS_ENDPOINT}/${serverId}/members`
+    );
+    return response.data;
+}
+
+export async function createServer(
+    formData: FormData
+): Promise<ServerResponse> {
+    const response = await privateClient.post<ServerResponse>(
+        SERVERS_ENDPOINT,
+        formData
+    );
+    return response.data;
+}

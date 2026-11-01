@@ -1,154 +1,501 @@
-import React, { useState } from 'react';
-import type { ServerResponse } from '../server.service';
+import { useEffect, useRef, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import {
+    Archive,
+    ArchiveRestore,
+    ChevronLeft,
+    ChevronRight,
+    EllipsisVertical,
+    Eye,
+    Lock,
+    LockOpen,
+    Pencil,
+    SearchX,
+    ServerOff,
+    Trash2,
+    Users,
+} from 'lucide-react';
 
-interface ServerTableListProps {
+import { showToast } from '@/lib/toast';
+import { cn } from '@/lib/utils';
+import type { ServerResponse } from '../server.service';
+import { getServerStatus, SERVER_STATUS_META, type ServerStatus } from '../server.status';
+
+export interface ServerTableListProps {
     servers: ServerResponse[];
     isLoading: boolean;
+    /** true khi người dùng đang tìm kiếm / lọc, để hiển thị đúng trạng thái rỗng */
+    isFiltering?: boolean;
+    currentPage: number;
+    onPageChange: (page: number) => void;
 }
 
-// Bắt buộc phải là "export const ServerTableList" để file khác có thể import được
-export const ServerTableList: React.FC<ServerTableListProps> = ({ servers, isLoading }) => {
-    // State cho phân trang
-    const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 8;
-    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-    if (isLoading) return <div className="p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-100">Đang tải dữ liệu...</div>;
-    
-    // Nếu API trả về mảng rỗng, dùng dữ liệu giả lập (Mock) theo đúng UI phác thảo
-    const dataSource = servers && servers.length > 0 ? servers : [
-        { id: '1', name: 'Software Engineering Lab', createdAt: '2026-10-30T00:00:00Z', memberCount: 42 },
-        { id: '2', name: 'Cloud Study Group', createdAt: '2026-10-28T00:00:00Z', memberCount: 15 },
-    ];
+const ITEMS_PER_PAGE = 8;
+const MENU_WIDTH = 176;
+const MENU_HEIGHT = 230;
+const COLUMN_COUNT = 9;
 
-    // Tính toán phân trang
-    const totalPages = Math.ceil(dataSource.length / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const currentDisplayServers = dataSource.slice(startIndex, endIndex);
+type ServerActionKey = 'view' | 'edit' | 'lock' | 'unlock' | 'close' | 'reopen' | 'delete';
+type ServerActionTone = 'default' | 'success' | 'warning' | 'danger';
+
+type ServerAction = {
+    key: ServerActionKey;
+    label: string;
+    icon: LucideIcon;
+    tone: ServerActionTone;
+    dividerBefore?: boolean;
+};
+
+const VIEW_ACTION: ServerAction = { key: 'view', label: 'Xem chi tiết', icon: Eye, tone: 'default' };
+const EDIT_ACTION: ServerAction = { key: 'edit', label: 'Chỉnh sửa', icon: Pencil, tone: 'default' };
+const LOCK_ACTION: ServerAction = { key: 'lock', label: 'Khóa server', icon: Lock, tone: 'danger' };
+const UNLOCK_ACTION: ServerAction = { key: 'unlock', label: 'Mở khóa server', icon: LockOpen, tone: 'success' };
+const CLOSE_ACTION: ServerAction = { key: 'close', label: 'Đóng server', icon: Archive, tone: 'warning' };
+const REOPEN_ACTION: ServerAction = { key: 'reopen', label: 'Mở lại server', icon: ArchiveRestore, tone: 'success' };
+const DELETE_ACTION: ServerAction = { key: 'delete', label: 'Xóa server', icon: Trash2, tone: 'danger', dividerBefore: true };
+
+/** Các thao tác chuyển trạng thái hợp lệ theo trạng thái hiện tại của server */
+const STATUS_ACTIONS: Record<ServerStatus, ServerAction[]> = {
+    ACTIVE: [LOCK_ACTION, CLOSE_ACTION],
+    LOCKED: [UNLOCK_ACTION, CLOSE_ACTION],
+    CLOSED: [REOPEN_ACTION],
+};
+
+function getServerActions(status: ServerStatus): ServerAction[] {
+    const [firstStatusAction, ...restStatusActions] = STATUS_ACTIONS[status];
+    return [
+        VIEW_ACTION,
+        EDIT_ACTION,
+        { ...firstStatusAction, dividerBefore: true },
+        ...restStatusActions,
+        DELETE_ACTION,
+    ];
+}
+
+const ACTION_TONE_CLASSES: Record<ServerActionTone, string> = {
+    default: 'text-gray-700 hover:bg-gray-100 focus-visible:bg-gray-100',
+    success: 'text-emerald-600 hover:bg-emerald-100/70 focus-visible:bg-emerald-100/70',
+    warning: 'text-amber-600 hover:bg-amber-100/70 focus-visible:bg-amber-100/70',
+    danger: 'text-red-600 hover:bg-red-100/70 focus-visible:bg-red-100/70',
+};
+
+function ServerStatusBadge({ status }: { status: ServerStatus }) {
+    const meta = SERVER_STATUS_META[status];
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap ring-1 ring-inset',
+                meta.badgeClass
+            )}
+        >
+            <span className={cn('w-1.5 h-1.5 rounded-full', meta.dotClass)} />
+            {meta.label}
+        </span>
+    );
+}
+
+type MenuState = { serverId: string; left: number; top?: number; bottom?: number };
+
+/** Tạo danh sách số trang rút gọn, ví dụ: 1 … 4 5 6 … 20 */
+function getPageItems(current: number, total: number): (number | 'ellipsis')[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+    const pages = new Set([1, total, current - 1, current, current + 1]);
+    const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+
+    const items: (number | 'ellipsis')[] = [];
+    sorted.forEach((page, i) => {
+        if (i > 0 && page - sorted[i - 1] > 1) items.push('ellipsis');
+        items.push(page);
+    });
+    return items;
+}
+
+function ServerAvatar({ name, imageUrl }: { name?: string; imageUrl?: string }) {
+    const [hasError, setHasError] = useState(false);
+    const initial = name?.trim().charAt(0).toUpperCase() || 'S';
+
+    if (imageUrl && !hasError) {
+        return (
+            <img
+                src={imageUrl}
+                alt={name ?? 'Ảnh server'}
+                loading="lazy"
+                onError={() => setHasError(true)}
+                className="w-10 h-10 rounded-lg object-cover shrink-0 bg-gray-100 border border-gray-100"
+            />
+        );
+    }
+
+    return (
+        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shrink-0">
+            {initial}
+        </div>
+    );
+}
+
+function SkeletonRows() {
+    return (
+        <>
+            {Array.from({ length: 5 }, (_, i) => (
+                <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-3"><div className="w-4 h-4 mx-auto rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3"><div className="w-4 h-3 mx-auto rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-gray-200" />
+                            <div className="space-y-2">
+                                <div className="w-36 h-3 rounded bg-gray-200" />
+                                <div className="w-24 h-2.5 rounded bg-gray-100" />
+                            </div>
+                        </div>
+                    </td>
+                    <td className="px-4 py-3"><div className="w-24 h-3 rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3"><div className="w-14 h-5 mx-auto rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3"><div className="w-8 h-3 mx-auto rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3"><div className="w-20 h-3 rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3"><div className="w-16 h-3 rounded bg-gray-200" /></td>
+                    <td className="px-4 py-3"><div className="w-6 h-6 ml-auto rounded bg-gray-200" /></td>
+                </tr>
+            ))}
+        </>
+    );
+}
+
+export const ServerTableList = ({
+    servers,
+    isLoading,
+    isFiltering = false,
+    currentPage,
+    onPageChange,
+}: ServerTableListProps) => {
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [menu, setMenu] = useState<MenuState | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+    const totalItems = servers.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+    // Không để trang hiện tại vượt quá tổng số trang (ví dụ sau khi tìm kiếm)
+    const page = Math.min(currentPage, totalPages);
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+    const currentServers = servers.slice(startIndex, endIndex);
+
+    const pageIds = currentServers.map((s) => s.id).filter((id): id is string => Boolean(id));
+    const isAllPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+    const isSomePageSelected = pageIds.some((id) => selectedIds.has(id));
+
+    // Đóng dropdown khi click ra ngoài, nhấn Esc, cuộn hoặc đổi kích thước cửa sổ
+    useEffect(() => {
+        if (!menu) return;
+
+        const handlePointerDown = (e: MouseEvent) => {
+            const target = e.target as Node;
+            if (menuRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+            setMenu(null);
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setMenu(null);
+                triggerRef.current?.focus();
+            }
+        };
+        const close = () => setMenu(null);
+
+        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('scroll', close, true);
+        window.addEventListener('resize', close);
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('scroll', close, true);
+            window.removeEventListener('resize', close);
+        };
+    }, [menu]);
+
+    const toggleMenu = (serverId: string, button: HTMLButtonElement) => {
+        if (menu?.serverId === serverId) {
+            setMenu(null);
+            return;
+        }
+        // Dùng position: fixed để menu không bị cắt bởi overflow của bảng,
+        // tự lật lên trên nếu không đủ chỗ phía dưới.
+        const rect = button.getBoundingClientRect();
+        const openUpward = window.innerHeight - rect.bottom < MENU_HEIGHT && rect.top > MENU_HEIGHT;
+        triggerRef.current = button;
+        setMenu({
+            serverId,
+            ...(openUpward
+                ? { bottom: window.innerHeight - rect.top + 4 }
+                : { top: rect.bottom + 4 }),
+            left: Math.max(8, rect.right - MENU_WIDTH),
+        });
+    };
+
+    const handleAction = (action: ServerAction, server: ServerResponse) => {
+        setMenu(null);
+        showToast(`Chức năng "${action.label}" cho server "${server.name ?? ''}" đang được phát triển.`);
+    };
+
+    const toggleSelectAllOnPage = () => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (isAllPageSelected) pageIds.forEach((id) => next.delete(id));
+            else pageIds.forEach((id) => next.add(id));
+            return next;
+        });
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const goToPage = (target: number) => {
+        setMenu(null);
+        onPageChange(Math.min(Math.max(target, 1), totalPages));
+    };
+
+    const activeServer = menu ? servers.find((s) => s.id === menu.serverId) : undefined;
+
+    const renderEmptyState = () => (
+        <tr>
+            <td colSpan={COLUMN_COUNT} className="px-4 py-14">
+                <div className="flex flex-col items-center text-center text-gray-500">
+                    {isFiltering ? (
+                        <>
+                            <SearchX className="w-10 h-10 text-gray-300 mb-3" />
+                            <p className="font-medium text-gray-700">Không tìm thấy server phù hợp</p>
+                            <p className="text-sm mt-1">Hãy thử từ khóa hoặc bộ lọc khác.</p>
+                        </>
+                    ) : (
+                        <>
+                            <ServerOff className="w-10 h-10 text-gray-300 mb-3" />
+                            <p className="font-medium text-gray-700">Chưa có server nào</p>
+                            <p className="text-sm mt-1">Nhấn "Thêm server" để tạo server đầu tiên.</p>
+                        </>
+                    )}
+                </div>
+            </td>
+        </tr>
+    );
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            {selectedIds.size > 0 && (
+                <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 text-sm text-blue-700 flex items-center justify-between">
+                    <span>Đã chọn {selectedIds.size} server</span>
+                    <button
+                        type="button"
+                        onClick={() => setSelectedIds(new Set())}
+                        className="font-medium hover:underline cursor-pointer"
+                    >
+                        Bỏ chọn
+                    </button>
+                </div>
+            )}
+
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
                         <tr>
-                            <th className="px-4 py-3 w-12 text-center"><input type="checkbox" className="rounded text-blue-600" /></th>
+                            <th className="px-4 py-3 w-12 text-center">
+                                <input
+                                    type="checkbox"
+                                    aria-label="Chọn tất cả server trên trang"
+                                    checked={isAllPageSelected}
+                                    ref={(el) => {
+                                        if (el) el.indeterminate = !isAllPageSelected && isSomePageSelected;
+                                    }}
+                                    onChange={toggleSelectAllOnPage}
+                                    disabled={isLoading || pageIds.length === 0}
+                                    className="rounded text-blue-600 cursor-pointer disabled:cursor-not-allowed"
+                                />
+                            </th>
                             <th className="px-4 py-3 w-12 text-center">#</th>
-                            <th className="px-4 py-3 min-w-[200px]">Thông tin server</th>
-                            <th className="px-4 py-3">Chủ server</th>
-                            <th className="px-4 py-3 text-center">Lĩnh vực</th>
-                            <th className="px-4 py-3 text-center">Thành viên</th>
-                            <th className="px-4 py-3">Ngày tạo ↓</th>
-                            <th className="px-4 py-3">Trạng thái</th>
-                            <th className="px-4 py-3 text-right">Thao tác</th>
+                            <th className="px-4 py-3 min-w-55">Thông tin server</th>
+                            <th className="px-4 py-3 whitespace-nowrap">Chủ server</th>
+                            <th className="px-4 py-3 text-center whitespace-nowrap">Lĩnh vực</th>
+                            <th className="px-4 py-3 text-center whitespace-nowrap">Thành viên</th>
+                            <th className="px-4 py-3 whitespace-nowrap">Ngày tạo</th>
+                            <th className="px-4 py-3 whitespace-nowrap">Trạng thái</th>
+                            <th className="px-4 py-3 text-right whitespace-nowrap">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {currentDisplayServers.map((server, idx) => (
-                            <tr key={server.id || idx} className="hover:bg-gray-50/50 transition-colors group">
-                                <td className="px-4 py-3 text-center"><input type="checkbox" className="rounded text-blue-600" /></td>
-                                <td className="px-4 py-3 text-center text-gray-400">{startIndex + idx + 1}</td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shrink-0">
-                                            {server.name ? server.name.charAt(0) : 'S'}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900 line-clamp-1">{server.name || 'Tên Server'}</p>
-                                            <p className="text-xs text-gray-500 line-clamp-1">Mô tả server đang cập nhật...</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-gray-200"></div>
-                                        <span className="text-gray-700">Nguyễn Văn A</span>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 text-center"><span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs">Học tập</span></td>
-                                <td className="px-4 py-3 text-center text-gray-600 font-medium">👥 {server.memberCount || 0}</td>
-                                <td className="px-4 py-3 text-gray-500">
-                                    {server.createdAt ? new Date(server.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
-                                </td>
-                                <td className="px-4 py-3">
-                                    <span className="inline-flex items-center gap-1.5 text-emerald-600 text-xs font-medium">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                        Hoạt động
-                                    </span>
-                                </td>
-                                {/* CỘT THAO TÁC MỚI */}
-<td className="px-4 py-3 text-right relative">
-    <button 
-        onClick={() => setOpenDropdownId(openDropdownId === server.id ? null : server.id || null)}
-        className="text-gray-400 hover:text-gray-700 px-2 py-1"
-    >
-        ⋮
-    </button>
-
-    {/* DROPDOWN MENU */}
-    {openDropdownId === server.id && (
-        <div className="absolute right-8 top-10 w-40 bg-white rounded-lg shadow-lg border border-gray-100 z-50 overflow-hidden text-left animate-in fade-in zoom-in duration-100">
-            <button className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                Xem chi tiết
-            </button>
-            <button className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                Chỉnh sửa
-            </button>
-            <hr className="border-gray-100 my-1" />
-            <button className="w-full px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Tạm ngừng
-            </button>
-            <button className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                Khóa server
-            </button>
-            <button className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                Xóa server
-            </button>
-        </div>
-    )}
-</td>
-                            </tr>
-                        ))}
+                        {isLoading ? (
+                            <SkeletonRows />
+                        ) : currentServers.length === 0 ? (
+                            renderEmptyState()
+                        ) : (
+                            currentServers.map((server, idx) => {
+                                const isSelected = !!server.id && selectedIds.has(server.id);
+                                const isMenuOpen = !!server.id && menu?.serverId === server.id;
+                                return (
+                                    <tr
+                                        key={server.id ?? idx}
+                                        className={cn(
+                                            'transition-colors',
+                                            isSelected ? 'bg-blue-50/60' : 'hover:bg-gray-50'
+                                        )}
+                                    >
+                                        <td className="px-4 py-3 text-center">
+                                            <input
+                                                type="checkbox"
+                                                aria-label={`Chọn server ${server.name ?? ''}`}
+                                                checked={isSelected}
+                                                onChange={() => server.id && toggleSelect(server.id)}
+                                                className="rounded text-blue-600 cursor-pointer"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-gray-400">{startIndex + idx + 1}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <ServerAvatar name={server.name} imageUrl={server.groupImageUrl} />
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold text-gray-900 line-clamp-1" title={server.name}>
+                                                        {server.name || 'Chưa đặt tên'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 line-clamp-1">Mô tả server đang cập nhật...</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                <div className="w-6 h-6 rounded-full bg-gray-200" />
+                                                <span className="text-gray-700">Nguyễn Văn A</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs whitespace-nowrap">Học tập</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-gray-600 font-medium">
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <Users className="w-4 h-4 text-gray-400" />
+                                                {(server.memberCount ?? 0).toLocaleString('vi-VN')}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                                            {server.createdAt ? new Date(server.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <ServerStatusBadge status={getServerStatus(server)} />
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <button
+                                                type="button"
+                                                aria-label={`Thao tác với server ${server.name ?? ''}`}
+                                                aria-haspopup="menu"
+                                                aria-expanded={isMenuOpen}
+                                                disabled={!server.id}
+                                                onClick={(e) => server.id && toggleMenu(server.id, e.currentTarget)}
+                                                className={cn(
+                                                    'inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-colors',
+                                                    'text-gray-400 hover:text-gray-700 hover:bg-gray-100',
+                                                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+                                                    'disabled:cursor-not-allowed disabled:opacity-50',
+                                                    isMenuOpen && 'bg-gray-100 text-gray-700'
+                                                )}
+                                            >
+                                                <EllipsisVertical className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
                     </tbody>
                 </table>
             </div>
-            
-            {/* Phân trang (Pagination) có thể click */}
-            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500 bg-white">
-                <span>Hiển thị {dataSource.length === 0 ? 0 : startIndex + 1} - {Math.min(endIndex, dataSource.length)} của {dataSource.length} server</span>
-                <div className="flex items-center gap-1">
-                    <button 
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
-                    >
-                        &lt;
-                    </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button 
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-1 rounded font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}
+            {/* Phân trang */}
+            {!isLoading && totalItems > 0 && (
+                <div className="px-4 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500 bg-white">
+                    <span>
+                        Hiển thị <span className="font-medium text-gray-700">{startIndex + 1}</span> -{' '}
+                        <span className="font-medium text-gray-700">{endIndex}</span> của{' '}
+                        <span className="font-medium text-gray-700">{totalItems}</span> server
+                    </span>
+                    <nav aria-label="Phân trang" className="flex items-center gap-1">
+                        <button
+                            type="button"
+                            aria-label="Trang trước"
+                            onClick={() => goToPage(page - 1)}
+                            disabled={page === 1}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                         >
-                            {page}
+                            <ChevronLeft className="w-4 h-4" />
                         </button>
-                    ))}
 
-                    <button 
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages || totalPages === 0}
-                        className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
-                    >
-                        &gt;
-                    </button>
+                        {getPageItems(page, totalPages).map((item, i) =>
+                            item === 'ellipsis' ? (
+                                <span key={`ellipsis-${i}`} className="w-8 text-center select-none">…</span>
+                            ) : (
+                                <button
+                                    type="button"
+                                    key={item}
+                                    onClick={() => goToPage(item)}
+                                    aria-current={page === item ? 'page' : undefined}
+                                    className={cn(
+                                        'min-w-8 h-8 px-2 rounded-lg font-medium cursor-pointer transition-colors',
+                                        page === item ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'
+                                    )}
+                                >
+                                    {item}
+                                </button>
+                            )
+                        )}
+
+                        <button
+                            type="button"
+                            aria-label="Trang sau"
+                            onClick={() => goToPage(page + 1)}
+                            disabled={page === totalPages}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </nav>
                 </div>
-            </div>
+            )}
+
+            {/* Dropdown thao tác (fixed để không bị cắt bởi overflow của bảng) */}
+            {menu && activeServer && (
+                <div
+                    ref={menuRef}
+                    role="menu"
+                    style={{ top: menu.top, bottom: menu.bottom, left: menu.left, width: MENU_WIDTH }}
+                    className="fixed z-50 py-1 bg-white rounded-lg shadow-lg border border-gray-100 text-left animate-in fade-in zoom-in duration-100"
+                >
+                    {getServerActions(getServerStatus(activeServer)).map((action) => {
+                        const Icon = action.icon;
+                        return (
+                            <div key={action.key}>
+                                {action.dividerBefore && <hr className="border-gray-100 my-1" />}
+                                <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() => handleAction(action, activeServer)}
+                                    className={cn(
+                                        'w-full px-4 py-2.5 text-sm flex items-center gap-2 cursor-pointer transition-colors focus-visible:outline-none',
+                                        ACTION_TONE_CLASSES[action.tone],
+                                        action.key === 'delete' && 'font-medium'
+                                    )}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    {action.label}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 };

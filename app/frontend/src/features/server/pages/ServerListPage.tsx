@@ -1,91 +1,167 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Plus, Search, X } from 'lucide-react';
+
 import { useGetServers } from '../server.hooks';
+import type { ServerResponse } from '../server.service';
+import { getServerStatus, SERVER_STATUS_META, SERVER_STATUSES, type ServerStatus } from '../server.status';
 import { ServerSummary } from '../components/ServerSummary';
 import { ServerTableList } from '../components/ServerTableList';
-import { CreateServerModal } from '../components/CreateServerModal'; 
+import { CreateServerModal } from '../components/CreateServerModal';
+
+type SelectOption<T extends string> = { readonly value: T; readonly label: string };
+
+type StatusFilter = 'ALL' | ServerStatus;
+
+const STATUS_OPTIONS: readonly SelectOption<StatusFilter>[] = [
+    { value: 'ALL', label: 'Trạng thái: Tất cả' },
+    ...SERVER_STATUSES.map((status) => ({ value: status, label: SERVER_STATUS_META[status].label })),
+];
+
+const CATEGORY_OPTIONS = [
+    { value: 'ALL', label: 'Lĩnh vực: Tất cả' },
+    { value: 'EDU', label: 'Học tập' },
+] as const satisfies readonly SelectOption<string>[];
+
+const SORT_OPTIONS = [
+    { value: 'NEWEST', label: 'Sắp xếp: Mới nhất' },
+    { value: 'OLDEST', label: 'Sắp xếp: Cũ nhất' },
+] as const satisfies readonly SelectOption<string>[];
+
+type CategoryFilter = (typeof CATEGORY_OPTIONS)[number]['value'];
+type SortOption = (typeof SORT_OPTIONS)[number]['value'];
+
+/** Type guard: kiểm tra giá trị từ <select> có thuộc danh sách option hợp lệ không */
+function isOptionValue<T extends string>(options: readonly SelectOption<T>[], value: string): value is T {
+    return options.some((option) => option.value === value);
+}
+
+const toTimestamp = (date?: string): number => (date ? new Date(date).getTime() : 0);
+
+const SELECT_CLASS =
+    'border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 bg-white cursor-pointer transition-colors hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+interface FilterSelectProps<T extends string> {
+    label: string;
+    value: T;
+    options: readonly SelectOption<T>[];
+    onChange: (value: T) => void;
+}
+
+function FilterSelect<T extends string>({ label, value, options, onChange }: FilterSelectProps<T>) {
+    return (
+        <select
+            value={value}
+            aria-label={label}
+            onChange={(e) => {
+                const next = e.target.value;
+                if (isOptionValue(options, next)) onChange(next);
+            }}
+            className={SELECT_CLASS}
+        >
+            {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                    {option.label}
+                </option>
+            ))}
+        </select>
+    );
+}
 
 export default function ServerListPage() {
-    const { data: servers, isLoading, isError } = useGetServers();
-    
-    // States cho bộ lọc & Modal
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('ALL');
-    const [categoryFilter, setCategoryFilter] = useState('ALL');
-    const [sortBy, setSortBy] = useState('NEWEST');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Đã kích hoạt state Modal
+    const { data: servers, isLoading, isError, refetch, isFetching } = useGetServers();
+
+    // States cho bộ lọc, phân trang & Modal
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+    const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
+    const [sortBy, setSortBy] = useState<SortOption>('NEWEST');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+
+    // Mỗi khi thay đổi bộ lọc thì quay về trang 1
+    function withPageReset<T>(setter: (value: T) => void): (value: T) => void {
+        return (value) => {
+            setter(value);
+            setCurrentPage(1);
+        };
+    }
+
+    const isFiltering: boolean =
+        searchTerm.trim() !== '' || statusFilter !== 'ALL' || categoryFilter !== 'ALL';
 
     // Xử lý logic Filter & Sort
-    const filteredServers = useMemo(() => {
+    const filteredServers = useMemo<ServerResponse[]>(() => {
         if (!servers) return [];
-        let result = [...servers];
 
-        if (searchTerm) {
-            const lowerQuery = searchTerm.toLowerCase();
-            result = result.filter(s => s.name?.toLowerCase().includes(lowerQuery));
-        }
+        const query = searchTerm.trim().toLowerCase();
+        const result = servers.filter((server) => {
+            const matchesQuery = !query || (server.name?.toLowerCase().includes(query) ?? false);
+            const matchesStatus = statusFilter === 'ALL' || getServerStatus(server) === statusFilter;
+            return matchesQuery && matchesStatus;
+        });
 
-        if (sortBy === 'NEWEST') {
-            result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        } else if (sortBy === 'OLDEST') {
-            result.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
-        }
-
-        return result;
-    }, [servers, searchTerm, statusFilter, categoryFilter, sortBy]);
+        const direction = sortBy === 'NEWEST' ? -1 : 1;
+        return result.sort((a, b) => direction * (toTimestamp(a.createdAt) - toTimestamp(b.createdAt)));
+    }, [servers, searchTerm, statusFilter, sortBy]);
 
     return (
-        <div className="p-6 bg-gray-50/50 min-h-screen">
+        <div className="p-4 sm:p-6 bg-gray-50/50 min-h-screen">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Quản lý server</h1>
                 <p className="text-sm text-gray-500 mt-1">Quản lý thông tin các server cộng đồng trên UIT Connect.</p>
             </div>
 
-            <ServerSummary />
+            <ServerSummary servers={servers ?? []} isLoading={isLoading} />
 
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="relative flex-1 min-w-[250px]">
-                        <svg className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        <input 
-                            type="text" 
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="relative flex-1 min-w-55">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <input
+                            type="text"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Tìm kiếm server, chủ server, mô tả..." 
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            onChange={(e) => withPageReset(setSearchTerm)(e.target.value)}
+                            placeholder="Tìm kiếm theo tên server..."
+                            aria-label="Tìm kiếm server"
+                            className="w-full pl-10 pr-9 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                aria-label="Xóa từ khóa"
+                                onClick={() => withPageReset(setSearchTerm)('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
-                    <div className="flex items-center gap-3">
-                        <select 
+                    <div className="flex flex-wrap items-center gap-3">
+                        <FilterSelect
+                            label="Lọc theo trạng thái"
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="ALL">Trạng thái: Tất cả</option>
-                            <option value="ACTIVE">Đang hoạt động</option>
-                        </select>
-                        <select 
+                            options={STATUS_OPTIONS}
+                            onChange={withPageReset(setStatusFilter)}
+                        />
+                        <FilterSelect
+                            label="Lọc theo lĩnh vực"
                             value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value)}
-                            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="ALL">Lĩnh vực: Tất cả</option>
-                            <option value="EDU">Học tập</option>
-                        </select>
-                        <select 
+                            options={CATEGORY_OPTIONS}
+                            onChange={withPageReset(setCategoryFilter)}
+                        />
+                        <FilterSelect
+                            label="Sắp xếp"
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="NEWEST">Sắp xếp: Mới nhất</option>
-                            <option value="OLDEST">Sắp xếp: Cũ nhất</option>
-                        </select>
-                        
-                        {/* Đã kích hoạt sự kiện onClick để mở Modal */}
-                        <button 
+                            options={SORT_OPTIONS}
+                            onChange={withPageReset(setSortBy)}
+                        />
+
+                        <button
+                            type="button"
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            <Plus className="w-4 h-4" />
                             Thêm server
                         </button>
                     </div>
@@ -93,14 +169,27 @@ export default function ServerListPage() {
             </div>
 
             {isError ? (
-                <div className="p-8 text-center text-red-500 bg-white rounded-xl shadow-sm border border-red-100">
-                    Đã xảy ra lỗi khi tải danh sách server. Vui lòng thử lại.
+                <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-red-100">
+                    <p className="text-red-500">Đã xảy ra lỗi khi tải danh sách server.</p>
+                    <button
+                        type="button"
+                        onClick={() => refetch()}
+                        disabled={isFetching}
+                        className="mt-3 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isFetching ? 'Đang thử lại...' : 'Thử lại'}
+                    </button>
                 </div>
             ) : (
-                <ServerTableList servers={filteredServers} isLoading={isLoading} />
+                <ServerTableList
+                    servers={filteredServers}
+                    isLoading={isLoading}
+                    isFiltering={isFiltering}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                />
             )}
 
-            {/* Đã kích hoạt component Modal */}
             <CreateServerModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
         </div>
     );
