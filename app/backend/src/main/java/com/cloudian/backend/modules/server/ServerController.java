@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +36,7 @@ public class ServerController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ServerResponse create(@AuthenticationPrincipal CustomUserDetails principal,
-                                 @Valid @ModelAttribute CreateServerRequest request) {
+            @Valid @ModelAttribute CreateServerRequest request) {
         return serverService.create(principal.getUserId(), request);
     }
 
@@ -47,7 +48,7 @@ public class ServerController {
     @GetMapping("/{serverId}")
     @PreAuthorize("@serverAccess.isMember(#serverId)")
     public ServerResponse get(@AuthenticationPrincipal CustomUserDetails principal,
-                              @PathVariable("serverId") UUID serverId) {
+            @PathVariable("serverId") UUID serverId) {
         return serverService.get(serverId, principal.getUserId());
     }
 
@@ -55,5 +56,42 @@ public class ServerController {
     @PreAuthorize("@serverAccess.isMember(#serverId)")
     public List<ServerMemberResponse> listMembers(@PathVariable("serverId") UUID serverId) {
         return serverService.listMembers(serverId);
+    }
+
+    @PostMapping("/{serverId}/members/{userId}/promote")
+    @PreAuthorize("@serverAccess.isOwner(#serverId)")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void promoteMember(
+            @PathVariable("serverId") UUID serverId,
+            @PathVariable("userId") UUID userId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        serverService.promoteMember(
+                serverId,
+                principal.getUserId(),
+                userId);
+    }
+
+    @DeleteMapping("/{serverId}/members/{userId}")
+    @PreAuthorize("@serverAccess.isOwner(#serverId)")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void kickMember(
+            @PathVariable("serverId") UUID serverId,
+            @PathVariable("userId") UUID userId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        serverService.kickMember(
+                serverId,
+                principal.getUserId(),
+                userId);
+    }
+
+    @PostMapping("/{serverId}/leave")
+    @PreAuthorize("@serverAccess.isMember(#serverId)")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveServer(
+            @PathVariable("serverId") UUID serverId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        serverService.leaveServer(
+                serverId,
+                principal.getUserId());
     }
 }
