@@ -83,4 +83,15 @@ public class ServerController {
                 principal.getUserId(),
                 userId);
     }
+
+    @PostMapping("/{serverId}/leave")
+    @PreAuthorize("@serverAccess.isMember(#serverId)")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveServer(
+            @PathVariable("serverId") UUID serverId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        serverService.leaveServer(
+                serverId,
+                principal.getUserId());
+    }
 }

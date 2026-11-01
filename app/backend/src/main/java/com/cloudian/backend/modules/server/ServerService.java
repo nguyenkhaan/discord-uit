@@ -15,6 +15,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.cloudian.backend.commons.enums.ServerMemberRole;
+import com.cloudian.backend.commons.enums.SystemRole;
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.exceptions.StorageException;
 import com.cloudian.backend.models.Server;
@@ -245,9 +246,123 @@ public class ServerService {
                     "Owner cannot be kicked before owner continuity is handled.");
         }
         // 5. End membership
-        targetMembership.setLeftAt(Instant.now());
-        targetMembership.setEndedReason(MembershipEndReason.KICKED);
-        targetMembership.setEndedBy(
-                userAccountRepository.getReferenceById(currentUserId));
+        endMembership(
+                targetMembership,
+                MembershipEndReason.KICKED,
+                currentUserId);
     }
+
+    @Transactional
+    public void adminKickMember(
+            UUID serverId,
+            UUID adminUserId,
+            UUID targetUserId) {
+        // 1. Lock server
+        serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId)
+                .orElseThrow(ServerService::notFound);
+
+        // 2. Verify system admin
+        UserAccount admin = userAccountRepository.getReferenceById(adminUserId);
+
+        if (admin.getSystemRole() != SystemRole.ADMIN) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Only system admins can kick members through this endpoint.");
+        }
+
+        // 3. Prevent kicking yourself
+        if (adminUserId.equals(targetUserId)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "You cannot kick yourself.");
+        }
+
+        // 4. Find target active membership
+        ServerMembership targetMembership = serverMembershipRepository
+                .findByServer_IdAndUser_IdAndLeftAtIsNull(
+                        serverId,
+                        targetUserId)
+                .orElseThrow(ServerService::notFound);
+
+        // 5. Handle owner continuity if target is an OWNER
+        ensureOwnerContinuity(serverId, targetMembership);
+
+        // 6. End membership
+        endMembership(
+                targetMembership,
+                MembershipEndReason.KICKED,
+                adminUserId);
+    }
+
+    private void endMembership(
+            ServerMembership membership,
+            MembershipEndReason reason,
+            UUID endedByUserId) {
+        membership.setLeftAt(Instant.now());
+        membership.setEndedReason(reason);
+
+        if (endedByUserId != null) {
+            membership.setEndedBy(
+                    userAccountRepository.getReferenceById(endedByUserId));
+        } else {
+            membership.setEndedBy(null);
+        }
+    }
+
+    private void ensureOwnerContinuity(
+            UUID serverId,
+            ServerMembership departingMembership) {
+        // 1. Only handle OWNER membership
+        if (departingMembership.getRole() != ServerMemberRole.OWNER) {
+            return;
+        }
+
+        // 2. Check active owner count
+        long activeOwnerCount = serverMembershipRepository
+                .countByServer_IdAndRoleAndLeftAtIsNull(
+                        serverId,
+                        ServerMemberRole.OWNER);
+
+        // 3. Another owner still exists
+        if (activeOwnerCount > 1) {
+            return;
+        }
+
+        // 4. Find the oldest active MEMBER
+        ServerMembership successor = serverMembershipRepository
+                .findFirstByServer_IdAndRoleAndLeftAtIsNullOrderByJoinedAtAscIdAsc(
+                        serverId,
+                        ServerMemberRole.MEMBER)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.CONFLICT,
+                        "Cannot remove the last owner because the server has no other active members."));
+
+        // 5. Promote successor
+        successor.setRole(ServerMemberRole.OWNER);
+    }
+
+    @Transactional
+    public void leaveServer(UUID serverId, UUID currentUserId) {
+
+        // 1. Lock server
+        serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId)
+                .orElseThrow(ServerService::notFound);
+
+        // 2. Find current user's active membership
+        ServerMembership membership = serverMembershipRepository
+                .findByServer_IdAndUser_IdAndLeftAtIsNull(
+                        serverId,
+                        currentUserId)
+                .orElseThrow(ServerService::notFound);
+
+        // 3. Handle owner continuity if current user is OWNER
+        ensureOwnerContinuity(serverId, membership);
+
+        // 4. End membership as LEFT
+        endMembership(
+                membership,
+                MembershipEndReason.LEFT,
+                null);
+    }
+
 }
