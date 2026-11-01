@@ -30,10 +30,12 @@ import com.cloudian.backend.services.ImageUploadService;
 import com.cloudian.backend.services.StorageService;
 
 /**
- * Server module. Permission checks (member / owner) are done BEFORE these methods
+ * Server module. Permission checks (member / owner) are done BEFORE these
+ * methods
  * by @PreAuthorize + ServerAccessGuard in the controller.
  *
- * server.group_image_url stores the MinIO OBJECT KEY (e.g. "server-images/<uuid>.png"),
+ * server.group_image_url stores the MinIO OBJECT KEY (e.g.
+ * "server-images/<uuid>.png"),
  * never a public link: responses turn it into a short-lived presigned URL.
  */
 @Service
@@ -55,8 +57,7 @@ public class ServerService {
             ServerMembershipRepository serverMembershipRepository,
             UserAccountRepository userAccountRepository,
             ImageUploadService imageUploadService,
-            StorageService storageService
-    ) {
+            StorageService storageService) {
         this.serverRepository = serverRepository;
         this.serverMembershipRepository = serverMembershipRepository;
         this.userAccountRepository = userAccountRepository;
@@ -160,5 +161,45 @@ public class ServerService {
 
     private static ApiException notFound() {
         return new ApiException(HttpStatus.NOT_FOUND, SERVER_NOT_FOUND_MESSAGE);
+    }
+
+    @Transactional
+    public void promoteMember(UUID serverId, UUID currentUserId, UUID targetUserId) {
+
+        // 1. Lock server to serialize membership changes
+        serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId)
+                .orElseThrow(ServerService::notFound);
+
+        // 2. Verify current user is an owner
+        boolean isOwner = serverMembershipRepository
+                .existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
+                        serverId,
+                        currentUserId,
+                        ServerMemberRole.OWNER);
+
+        if (!isOwner) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Only server owners can promote members.");
+        }
+
+        // 3. Find target active membership
+        ServerMembership targetMembership = serverMembershipRepository
+                .findByServer_IdAndUser_IdAndLeftAtIsNull(
+                        serverId,
+                        targetUserId)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.NOT_FOUND,
+                        "Active membership not found."));
+
+        // 4. Target must be a MEMBER
+        if (targetMembership.getRole() != ServerMemberRole.MEMBER) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "Only active members can be promoted to owner.");
+        }
+
+        // 5. Promote
+        targetMembership.setRole(ServerMemberRole.OWNER);
     }
 }
