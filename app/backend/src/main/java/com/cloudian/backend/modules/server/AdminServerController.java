@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 
+import com.cloudian.backend.modules.server.dto.DeleteServerRequest;
 import com.cloudian.backend.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
@@ -33,5 +36,18 @@ public class AdminServerController {
                 serverId,
                 principal.getUserId(),
                 userId);
+    }
+
+    @DeleteMapping("/{serverId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteServer(
+            @PathVariable UUID serverId,
+            @Valid @RequestBody DeleteServerRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        serverService.adminDeleteServer(
+                serverId,
+                principal.getUserId(),
+                request);
     }
 }

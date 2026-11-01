@@ -22,6 +22,7 @@ import com.cloudian.backend.models.Server;
 import com.cloudian.backend.models.ServerMembership;
 import com.cloudian.backend.models.UserAccount;
 import com.cloudian.backend.modules.server.dto.CreateServerRequest;
+import com.cloudian.backend.modules.server.dto.DeleteServerRequest;
 import com.cloudian.backend.modules.server.dto.ServerMemberResponse;
 import com.cloudian.backend.modules.server.dto.ServerResponse;
 import com.cloudian.backend.repositories.ServerMembershipRepository;
@@ -363,6 +364,46 @@ public class ServerService {
                 membership,
                 MembershipEndReason.LEFT,
                 null);
+    }
+
+    @Transactional
+    public void adminDeleteServer(
+            UUID serverId,
+            UUID adminUserId,
+            DeleteServerRequest request) {
+        // 1. Lock server and check it has not been deleted
+        Server server = serverRepository
+                .findByIdAndDeletedAtIsNullForUpdate(serverId)
+                .orElseThrow(ServerService::notFound);
+
+        // 2. Verify system admin
+        UserAccount admin = userAccountRepository
+                .findById(adminUserId)
+                .orElseThrow(ServerService::notFound);
+
+        if (admin.getSystemRole() != SystemRole.ADMIN) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Only system admins can delete servers.");
+        }
+
+        // 3. Capture deletion timestamp
+        Instant deletedAt = Instant.now();
+
+        // 4. Soft delete server
+        server.setDeletedAt(deletedAt);
+        server.setDeletedBy(admin);
+        server.setDeletionReason(request.reason().trim());
+
+        // 5. End all active memberships
+        List<ServerMembership> activeMemberships = serverMembershipRepository.findActiveByServerId(serverId);
+
+        for (ServerMembership membership : activeMemberships) {
+            endMembership(
+                    membership,
+                    MembershipEndReason.SERVER_DELETED,
+                    adminUserId);
+        }
     }
 
 }
