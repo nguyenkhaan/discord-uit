@@ -28,6 +28,7 @@ import com.cloudian.backend.repositories.ServerRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
 import com.cloudian.backend.services.ImageUploadService;
 import com.cloudian.backend.services.StorageService;
+import com.cloudian.backend.commons.enums.MembershipEndReason;
 
 /**
  * Server module. Permission checks (member / owner) are done BEFORE these
@@ -201,5 +202,52 @@ public class ServerService {
 
         // 5. Promote
         targetMembership.setRole(ServerMemberRole.OWNER);
+    }
+
+    @Transactional
+    public void kickMember(
+            UUID serverId,
+            UUID currentUserId,
+            UUID targetUserId) {
+        // 1. Lock server
+        serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId)
+                .orElseThrow(ServerService::notFound);
+
+        // 2. Verify current user is an owner
+        boolean isOwner = serverMembershipRepository
+                .existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
+                        serverId,
+                        currentUserId,
+                        ServerMemberRole.OWNER);
+
+        if (!isOwner) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Only server owners can kick members.");
+        }
+
+        // 3. Prevent kicking yourself
+        if (currentUserId.equals(targetUserId)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "You cannot kick yourself. Use leave instead.");
+        }
+
+        // 4. Find target active membership
+        ServerMembership targetMembership = serverMembershipRepository
+                .findByServer_IdAndUser_IdAndLeftAtIsNull(
+                        serverId,
+                        targetUserId)
+                .orElseThrow(ServerService::notFound);
+        if (targetMembership.getRole() != ServerMemberRole.MEMBER) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "Owner cannot be kicked before owner continuity is handled.");
+        }
+        // 5. End membership
+        targetMembership.setLeftAt(Instant.now());
+        targetMembership.setEndedReason(MembershipEndReason.KICKED);
+        targetMembership.setEndedBy(
+                userAccountRepository.getReferenceById(currentUserId));
     }
 }

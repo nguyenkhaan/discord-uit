@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,6 +66,19 @@ public class ServerController {
             @PathVariable("userId") UUID userId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         serverService.promoteMember(
+                serverId,
+                principal.getUserId(),
+                userId);
+    }
+
+    @DeleteMapping("/{serverId}/members/{userId}")
+    @PreAuthorize("@serverAccess.isOwner(#serverId)")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void kickMember(
+            @PathVariable("serverId") UUID serverId,
+            @PathVariable("userId") UUID userId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        serverService.kickMember(
                 serverId,
                 principal.getUserId(),
                 userId);
