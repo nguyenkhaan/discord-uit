@@ -3,7 +3,8 @@
   "module": "main.ts",
   "type": "module",
   "scripts": {
-    "typecheck": "bun check"
+    "typecheck": "bun check",
+    "dev": "bun --watch main.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
