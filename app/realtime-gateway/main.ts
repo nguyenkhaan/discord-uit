@@ -4,6 +4,7 @@ import { createSocketAuthMiddleware } from "./src/auth/socket-auth";
 import { BackendClient } from "./src/backend/backend-client";
 import { loadEnv } from "./src/config/env";
 import { createSocketServer } from "./src/socket/create-socket-server";
+import { registerServerRoomHandlers } from "./src/socket/server-room-handlers";
 
 async function main() {
     const envConfigs = loadEnv();
@@ -38,7 +39,10 @@ async function main() {
     const { httpServer, io, readiness } = createSocketServer(envConfigs);
 
     io.use(createSocketAuthMiddleware(authenticateAccessToken));
-
+    //Sau khi chay middleware xong thi tien hanh ket noi nguoi dung vao ben trong
+    io.on("connection", (socket) => {
+        registerServerRoomHandlers(socket, backendClient);
+    });
     await new Promise<void>((resolve, reject) => {
         const handleError = (error: Error) => {
             reject(error);

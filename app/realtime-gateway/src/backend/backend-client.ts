@@ -27,6 +27,17 @@ export class BackendError extends Error {
     }
 }
 
+const ServerAuthorizationResponseSchema = z
+    .object({
+        serverId: z.guid(),
+        role: z.enum(["OWNER", "MEMBER"]),
+    })
+    .strict();
+
+export type ServerAuthorizationResponse = z.infer<
+    typeof ServerAuthorizationResponseSchema
+>;
+
 export type BackendClientResponse =
     | {
           healthy: true;
@@ -139,5 +150,48 @@ export class BackendClient {
                 reason: "unreachable",
             };
         }
+    }
+    async authorizeServer(
+        accessToken: string,
+        serverId: string,
+    ): Promise<ServerAuthorizationResponse> {
+        let response: Response;
+
+        try {
+            response = await fetch(
+                `${this.baseUrl}/internal/realtime/servers/${serverId}/authorize`,
+                {
+                    method: "POST",
+                    headers: {
+                        accept: "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                        "X-Gateway-Token": this.gatewayServiceToken,
+                    },
+                    signal: AbortSignal.timeout(this.timeoutMs),
+                },
+            );
+        } catch {
+            throw new BackendError("unreachable");
+        }
+
+        if (!response.ok) {
+            throw new BackendError("http-error", response.status);
+        }
+
+        let body: unknown;
+
+        try {
+            body = await response.json();
+        } catch {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        const parsed = ServerAuthorizationResponseSchema.safeParse(body);
+
+        if (!parsed.success) {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        return parsed.data;
     }
 }
