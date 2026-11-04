@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.cloudian.backend.repositories.RefreshSessionRepository;
+import com.cloudian.backend.security.AccessTokenKeyProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -53,7 +54,13 @@ class AuthServiceTests {
         redisService = mock(RedisService.class);
         passwordEncoder = mock(PasswordEncoder.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
-        jwtUtil = new JwtUtil(TOKEN_SECRET, TOKEN_TTL);
+        jwtUtil = new JwtUtil(
+                mock(AccessTokenKeyProvider.class),
+                TOKEN_SECRET,
+                TOKEN_SECRET,
+                TOKEN_TTL,
+                "test-issuer",
+                "test-audience");
         refreshSessionRepository = mock(RefreshSessionRepository.class);
         authenticationManager = mock(AuthenticationManager.class);
         authService = new AuthService(

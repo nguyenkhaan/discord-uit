@@ -1,0 +1,52 @@
+export type GatewayConfig = {
+    port: number; 
+    springBaseUrl: string
+    gatewayServiceToken: string;
+}
+
+function readSpringBaseUrl(): string {
+    const value = Bun.env.SPRING_BASE_URL
+    
+    if (!value?.trim()) {
+        throw new Error("SPRING_BASE_URL is required");
+    }
+    const url = new URL(value)
+    if (url.protocol != "http:" && url.protocol !== "https:") {
+        throw new Error("Spring base url must use the HTTP or HTTPS")
+    }
+    return url.toString().replace(/\/+$/, "");
+}
+function readPort(): number {
+    const port = Number(Bun.env.PORT)
+    if (!port) throw new Error("Please provide the port number in the invenroment")
+    if (!Number.isInteger(port) || port <= 1 || port >= 65535) {
+        throw new Error("Port must be between 2 and 65534")
+    }
+    return port
+}
+//Reading gateway service token in .env
+function readGatewayServiceToken(): string {
+  const token = Bun.env.GATEWAY_SERVICE_TOKEN;
+
+  if (!token?.trim()) {
+    throw new Error(
+      "GATEWAY_SERVICE_TOKEN is required",
+    );
+  }
+
+  if (token.length < 32) {
+    throw new Error(
+      "GATEWAY_SERVICE_TOKEN must contain at least 32 characters",
+    );
+  }
+
+  return token;
+}
+
+export function loadEnv() : GatewayConfig {
+    return {
+        port: readPort(), 
+        springBaseUrl: readSpringBaseUrl(),
+        gatewayServiceToken: readGatewayServiceToken()
+    }
+}

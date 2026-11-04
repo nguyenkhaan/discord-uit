@@ -5,7 +5,9 @@ node_modules
 out
 dist
 *.tgz
-
+access-private.pem
+access-public.pem
+.secrets/
 # code coverage
 coverage
 *.lcov
