@@ -20,9 +20,9 @@ import { loadEnv } from "./src/config/env";
 async function main() 
 {
     const envConfigs = loadEnv()
-    const backendClient = new BackendClient(envConfigs.springBaseUrl)
+    const backendClient = new BackendClient(envConfigs.springBaseUrl , envConfigs.gatewayServiceToken)
     //Checking health
-    const health = await backendClient.checkHealth()
+    const health = await backendClient.checkInternalHealth()
     if (!health.healthy) {
          console.error(
             [
@@ -35,6 +35,7 @@ async function main()
         return 
     }
     console.log("Springboot is health: " , health)
+    //The next one is implement the gateway secret token
 }
 
 await main()

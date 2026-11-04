@@ -1,6 +1,7 @@
 export type GatewayConfig = {
     port: number; 
     springBaseUrl: string
+    gatewayServiceToken: string;
 }
 
 function readSpringBaseUrl(): string {
@@ -23,10 +24,29 @@ function readPort(): number {
     }
     return port
 }
+//Reading gateway service token in .env
+function readGatewayServiceToken(): string {
+  const token = Bun.env.GATEWAY_SERVICE_TOKEN;
+
+  if (!token?.trim()) {
+    throw new Error(
+      "GATEWAY_SERVICE_TOKEN is required",
+    );
+  }
+
+  if (token.length < 32) {
+    throw new Error(
+      "GATEWAY_SERVICE_TOKEN must contain at least 32 characters",
+    );
+  }
+
+  return token;
+}
 
 export function loadEnv() : GatewayConfig {
     return {
         port: readPort(), 
-        springBaseUrl: readSpringBaseUrl()
+        springBaseUrl: readSpringBaseUrl(),
+        gatewayServiceToken: readGatewayServiceToken()
     }
 }

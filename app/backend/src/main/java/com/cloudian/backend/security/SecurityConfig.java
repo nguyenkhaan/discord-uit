@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.cloudian.backend.exceptions.ErrorResponse;
 import com.cloudian.backend.exceptions.ErrorResponseWriter;
+import com.cloudian.backend.filters.GatewayServiceAuthenticationFilter;
 import com.cloudian.backend.filters.JwtRequestFilter;
 import com.cloudian.backend.services.CustomUserDetailsService;
 
@@ -25,6 +26,7 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
+    private final GatewayServiceAuthenticationFilter gatewayServiceAuthenticationFilter;
     private final ErrorResponseWriter errorResponseWriter;
     private final RateLimitFilter rateLimitFilter;
 
@@ -32,11 +34,13 @@ public class SecurityConfig {
             CustomUserDetailsService customUserDetailsService,
             JwtRequestFilter jwtRequestFilter,
             ErrorResponseWriter errorResponseWriter,
+            GatewayServiceAuthenticationFilter gatewayServiceAuthenticationFilter,
             RateLimitFilter rateLimitFilter) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
         this.errorResponseWriter = errorResponseWriter;
         this.rateLimitFilter = rateLimitFilter;
+        this.gatewayServiceAuthenticationFilter = gatewayServiceAuthenticationFilter;
     }
 
     @Bean
@@ -73,6 +77,7 @@ public class SecurityConfig {
                                 "/auth/reset-password")
                         .permitAll()
                         .requestMatchers("/health/**").permitAll()
+                        .requestMatchers("/internal/realtime/health").permitAll()
                         .requestMatchers("/docs/**", "/openapi.json/**" , "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated())
 
@@ -90,8 +95,12 @@ public class SecurityConfig {
                                 ErrorResponse.defaultMessage(HttpStatus.FORBIDDEN))))
 
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-
+                .addFilterBefore(
+                        gatewayServiceAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(
+                        rateLimitFilter,
+                        UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
                         jwtRequestFilter,
                         UsernamePasswordAuthenticationFilter.class);
