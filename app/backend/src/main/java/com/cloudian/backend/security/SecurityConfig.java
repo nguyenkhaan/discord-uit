@@ -77,6 +77,7 @@ public class SecurityConfig {
                                 "/auth/reset-password")
                         .permitAll()
                         .requestMatchers("/health/**").permitAll()
+                        .requestMatchers("/.well-known/jwks.json").permitAll()
                         .requestMatchers("/internal/realtime/health").permitAll()
                         .requestMatchers("/docs/**", "/openapi.json/**" , "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated())

@@ -64,3 +64,17 @@ public class BackendApplication {
 				+ "💙 CLOUDIAN BACKEND IS READY 💙" + ANSI_CYAN) + ANSI_RESET;
 	}
 }
+
+
+// Generate the public key and secret key for parallel authentication 
+// mkdir -p .secrets
+
+// openssl genpkey \
+//   -algorithm RSA \
+//   -pkeyopt rsa_keygen_bits:2048 \
+//   -out .secrets/access-private.pem
+
+// openssl rsa \
+//   -pubout \
+//   -in .secrets/access-private.pem \
+//   -out .secrets/access-public.pem
