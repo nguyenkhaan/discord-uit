@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sơ đồ kiến trúc giao tiếp giữa Spring Boot và TypeScript realtime gateway.">
+  <title>Kiến trúc Realtime Gateway — Spring Boot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f8fafc;
+      --surface: #ffffff;
+      --surface-soft: #eef3f7;
+      --ink: #172033;
+      --muted: #526176;
+      --line: #cbd5e1;
+      --line-strong: #7890ab;
+      --browser: #0f766e;
+      --gateway: #1d4ed8;
+      --spring: #15803d;
+      --data: #9a3412;
+      --event: #b45309;
+      --danger: #b91c1c;
+      --radius: 18px;
+      --shadow: 0 18px 50px rgb(15 23 42 / 9%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        linear-gradient(90deg, rgb(29 78 216 / 3%) 1px, transparent 1px),
+        linear-gradient(rgb(29 78 216 / 3%) 1px, transparent 1px),
+        var(--page);
+      background-size: 28px 28px;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: inherit;
+      text-underline-offset: .2em;
+    }
+
+    a:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--gateway);
+      outline-offset: 4px;
+    }
+
+    .page {
+      width: min(100%, 1640px);
+      margin-inline: auto;
+      padding: clamp(22px, 3vw, 48px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(290px, .55fr);
+      gap: clamp(28px, 6vw, 90px);
+      align-items: end;
+      padding: clamp(28px, 5vw, 72px) 0 clamp(36px, 6vw, 86px);
+    }
+
+    .eyebrow,
+    .kicker {
+      margin: 0 0 12px;
+      color: var(--gateway);
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p { margin-top: 0; }
+
+    h1 {
+      max-width: 14ch;
+      margin-bottom: 24px;
+      font-size: clamp(2.75rem, 7vw, 7.2rem);
+      font-weight: 650;
+      letter-spacing: -.055em;
+      line-height: .92;
+      text-wrap: balance;
+    }
+
+    .lead {
+      max-width: 64ch;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+    }
+
+    .hero-note {
+      padding: 24px;
+      background: var(--ink);
+      border-radius: var(--radius);
+      color: #f8fafc;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-note strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .hero-note p {
+      margin-bottom: 0;
+      color: #cbd5e1;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 22px;
+      margin-bottom: 22px;
+      padding: 14px 18px;
+      background: rgb(255 255 255 / 82%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 700;
+    }
+
+    .legend-mark {
+      width: 24px;
+      height: 0;
+      border-top: 3px solid var(--gateway);
+    }
+
+    .legend-mark.event { border-top: 3px dashed var(--event); }
+    .legend-mark.trust { border-top: 3px dotted var(--danger); }
+
+    .architecture {
+      overflow: hidden;
+      background: rgb(255 255 255 / 88%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .diagram {
+      display: grid;
+      grid-template-columns: minmax(170px, .72fr) 58px minmax(260px, 1.18fr) 74px minmax(290px, 1.3fr) 58px minmax(180px, .8fr);
+      gap: 12px;
+      align-items: stretch;
+      padding: clamp(18px, 2.7vw, 38px);
+    }
+
+    .system {
+      position: relative;
+      min-width: 0;
+      padding: 20px;
+      background: var(--surface);
+      border: 2px solid var(--line-strong);
+      border-radius: var(--radius);
+    }
+
+    .system::before {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 7px;
+      background: var(--system-color);
+      border-radius: 15px 15px 0 0;
+      content: "";
+    }
+
+    .system-browser { --system-color: var(--browser); }
+    .system-gateway { --system-color: var(--gateway); }
+    .system-spring { --system-color: var(--spring); }
+    .system-data { --system-color: var(--data); }
+
+    .system-head {
+      min-height: 88px;
+      margin-bottom: 16px;
+    }
+
+    .system-index {
+      display: inline-grid;
+      width: 32px;
+      height: 32px;
+      margin-bottom: 10px;
+      place-items: center;
+      background: var(--system-color);
+      border-radius: 50%;
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .system h2 {
+      margin-bottom: 3px;
+      font-size: clamp(1.2rem, 1.7vw, 1.65rem);
+      letter-spacing: -.025em;
+      line-height: 1.1;
+    }
+
+    .tech {
+      margin: 0;
+      color: var(--muted);
+      font-size: .875rem;
+      font-weight: 700;
+    }
+
+    .module-list {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .module {
+      padding: 13px 14px;
+      background: var(--surface-soft);
+      border-radius: 12px;
+    }
+
+    .module strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: .9rem;
+    }
+
+    .module span {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.4;
+    }
+
+    .connector {
+      display: grid;
+      min-width: 0;
+      place-items: center;
+      align-content: center;
+      gap: 18px;
+      color: var(--muted);
+    }
+
+    .flow {
+      width: 100%;
+      text-align: center;
+    }
+
+    .flow-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .82rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .arrow {
+      position: relative;
+      display: block;
+      width: calc(100% - 6px);
+      margin-inline: auto;
+      border-top: 3px solid var(--gateway);
+    }
+
+    .arrow::after {
+      position: absolute;
+      top: -7px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
+      border-top: 3px solid currentColor;
+      border-right: 3px solid currentColor;
+      color: var(--gateway);
+      content: "";
+      transform: rotate(45deg);
+    }
+
+    .arrow.reverse::after {
+      right: auto;
+      left: -2px;
+      transform: rotate(-135deg);
+    }
+
+    .arrow.event {
+      border-top-color: var(--event);
+      border-top-style: dashed;
+    }
+
+    .arrow.event::after { color: var(--event); }
+
+    .connector-browser .flow-label { color: var(--browser); }
+
+    .boundary {
+      grid-column: 3 / 6;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 4px 0 -2px;
+      color: var(--danger);
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .boundary::before,
+    .boundary::after {
+      flex: 1;
+      border-top: 2px dotted var(--danger);
+      content: "";
+    }
+
+    .flow-section {
+      display: grid;
+      grid-template-columns: .72fr 1.28fr;
+      gap: clamp(24px, 4vw, 68px);
+      padding: clamp(40px, 6vw, 88px) clamp(18px, 3vw, 48px);
+      background: var(--ink);
+      color: #f8fafc;
+    }
+
+    .flow-section h2 {
+      max-width: 12ch;
+      margin-bottom: 14px;
+      font-size: clamp(2rem, 4vw, 4.5rem);
+      font-weight: 600;
+      letter-spacing: -.045em;
+      line-height: .98;
+    }
+
+    .flow-section .section-intro {
+      max-width: 44ch;
+      margin-bottom: 0;
+      color: #b8c5d6;
+    }
+
+    .flow-section .kicker { color: #93c5fd; }
+
+    .steps {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      margin: 0;
+      counter-reset: architecture-step;
+      list-style: none;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 14px;
+      padding: 18px;
+      background: #243047;
+      border-radius: 14px;
+      counter-increment: architecture-step;
+    }
+
+    .step::before {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      background: #f8fafc;
+      border-radius: 50%;
+      color: var(--ink);
+      content: counter(architecture-step);
+      font-weight: 850;
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+
+    .step p {
+      margin-bottom: 0;
+      color: #cbd5e1;
+      font-size: .9rem;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .rule {
+      min-height: 190px;
+      padding: clamp(24px, 3vw, 42px);
+      background: var(--surface);
+    }
+
+    .rule-number {
+      display: block;
+      margin-bottom: 36px;
+      color: var(--gateway);
+      font-size: .82rem;
+      font-weight: 850;
+    }
+
+    .rule h3 {
+      margin-bottom: 10px;
+      font-size: 1.25rem;
+      letter-spacing: -.02em;
+    }
+
+    .rule p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .footnote {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px clamp(18px, 3vw, 48px);
+      background: #e8eef5;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .footnote p { margin: 0; }
+
+    @media (max-width: 1180px) {
+      .diagram {
+        grid-template-columns: minmax(190px, .8fr) 52px minmax(280px, 1.2fr);
+      }
+
+      .system-spring { grid-column: 1; grid-row: 2; }
+      .connector-event { grid-column: 2; grid-row: 2; }
+      .system-data { grid-column: 3; grid-row: 2; }
+      .boundary { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 16px; }
+
+      .hero,
+      .flow-section {
+        grid-template-columns: 1fr;
+      }
+
+      .hero { padding-top: 30px; }
+
+      h1 {
+        max-width: 11ch;
+        font-size: clamp(2.8rem, 14vw, 5rem);
+      }
+
+      .diagram { grid-template-columns: 1fr; }
+
+      .system,
+      .system-spring,
+      .system-data,
+      .connector,
+      .connector-event {
+        grid-column: 1;
+        grid-row: auto;
+      }
+
+      .connector {
+        min-height: 104px;
+        gap: 13px;
+      }
+
+      .flow { width: min(80%, 260px); }
+
+      .arrow {
+        width: 3px;
+        height: 44px;
+        border-top: 0;
+        border-left: 3px solid var(--gateway);
+      }
+
+      .arrow::after {
+        top: auto;
+        right: -5px;
+        bottom: 0;
+        transform: rotate(135deg);
+      }
+
+      .arrow.reverse::after {
+        top: 0;
+        right: -5px;
+        left: auto;
+        bottom: auto;
+        transform: rotate(-45deg);
+      }
+
+      .arrow.event {
+        border-left-color: var(--event);
+        border-left-style: dashed;
+      }
+
+      .flow-label { margin: 0 0 7px; }
+
+      .rules { grid-template-columns: 1fr; }
+
+      .footnote { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .architecture { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Phase 03 · Realtime core</p>
+        <h1>Spring Boot meets Socket.IO</h1>
+        <p class="lead">
+          Mô hình tổng thể giữa business backend Java và realtime gateway TypeScript:
+          REST cho command đồng bộ, Kafka cho event đã persist, Socket.IO cho kết nối tới trình duyệt.
+        </p>
+      </div>
+      <aside class="hero-note" aria-label="Nguyên tắc kiến trúc chính">
+        <strong>Một nguồn sự thật duy nhất</strong>
+        <p>Spring Boot sở hữu nghiệp vụ và dữ liệu. Gateway sở hữu kết nối realtime, room và fan-out — không ghi trực tiếp PostgreSQL.</p>
+      </aside>
+    </header>
+
+    <section aria-labelledby="architecture-title">
+      <div class="legend" aria-label="Chú giải đường kết nối">
+        <span class="legend-item"><i class="legend-mark" aria-hidden="true"></i> Đồng bộ · HTTP/Socket.IO</span>
+        <span class="legend-item"><i class="legend-mark event" aria-hidden="true"></i> Bất đồng bộ · Kafka event</span>
+        <span class="legend-item"><i class="legend-mark trust" aria-hidden="true"></i> Ranh giới tin cậy</span>
+      </div>
+
+      <div class="architecture">
+        <div class="diagram" role="img" aria-labelledby="architecture-title architecture-description">
+          <article class="system system-browser">
+            <div class="system-head">
+              <span class="system-index">01</span>
+              <h2 id="architecture-title">React Client</h2>
+              <p class="tech">Browser · socket.io-client</p>
+            </div>
+            <ul class="module-list">
+              <li class="module"><strong>Socket handshake</strong><span>Gửi access token khi mở connection.</span></li>
+              <li class="module"><strong>Chat command</strong><span>Gửi clientRequestId và payload.</span></li>
+              <li class="module"><strong>Event reconciliation</strong><span>Nhận ACK, event và tải bù qua REST khi reconnect.</span></li>
+            </ul>
+          </article>
+
+          <div class="connector connector-browser" aria-hidden="true">
+            <div class="flow">
+              <span class="flow-label">Socket.IO</span>
+              <i class="arrow"></i>
+            </div>
+            <div class="flow">
+              <span class="flow-label">ACK + EVENTS</span>
+              <i class="arrow reverse"></i>
+            </div>
+          </div>
+
+          <article class="system system-gateway">
+            <div class="system-head">
+              <span class="system-index">02</span>
+              <h2>Realtime Gateway</h2>
+              <p class="tech">Node.js · TypeScript · Express · Socket.IO</p>
+            </div>
+            <ul class="module-list">
+              <li class="module"><strong>JWT verifier</strong><span>Xác minh chữ ký access token bằng public key của Spring.</span></li>
+              <li class="module"><strong>Session &amp; membership client</strong><span>Hỏi Spring về session/account và active membership.</span></li>
+              <li class="module"><strong>Socket rooms</strong><span>Gateway tự sinh tên room <code>server:{id}</code>; client không truyền room tùy ý.</span></li>
+              <li class="module"><strong>Command forwarder</strong><span>Validate shape/rate limit rồi gọi internal REST.</span></li>
+              <li class="module"><strong>Kafka consumer</strong><span>Nhận persisted event và broadcast tới đúng room.</span></li>
+            </ul>
+          </article>
+
+          <div class="connector" aria-hidden="true">
+            <div class="flow">
+              <span class="flow-label">INTERNAL REST<br>JSON + service auth</span>
+              <i class="arrow"></i>
+            </div>
+            <div class="flow">
+              <span class="flow-label">ACK / ERROR</span>
+              <i class="arrow reverse"></i>
+            </div>
+          </div>
+
+          <article class="system system-spring">
+            <div class="system-head">
+              <span class="system-index">03</span>
+              <h2>Spring Boot Backend</h2>
+              <p class="tech">Java · Spring Security · JPA · spring-kafka</p>
+            </div>
+            <ul class="module-list">
+              <li class="module"><strong>Auth &amp; session</strong><span>Ký JWT bằng private key; kiểm tra revocation, sid và account status.</span></li>
+              <li class="module"><strong>Membership authorization</strong><span>Kiểm tra <code>left_at IS NULL</code> và role tại thời điểm thực thi.</span></li>
+              <li class="module"><strong>Chat application service</strong><span>Áp dụng business rule, idempotency và permission.</span></li>
+              <li class="module"><strong>Transactional outbox</strong><span>Ghi domain state và outbox_event trong cùng transaction.</span></li>
+              <li class="module"><strong>Outbox publisher</strong><span>Publish Kafka sau commit; retry event còn PENDING.</span></li>
+            </ul>
+          </article>
+
+          <div class="connector connector-event" aria-hidden="true">
+            <div class="flow">
+              <span class="flow-label">JPA / JDBC</span>
+              <i class="arrow"></i>
+            </div>
+            <div class="flow">
+              <span class="flow-label">KAFKA EVENT</span>
+              <i class="arrow event reverse"></i>
+            </div>
+          </div>
+
+          <article class="system system-data">
+            <div class="system-head">
+              <span class="system-index">04</span>
+              <h2>Data &amp; Broker</h2>
+              <p class="tech">PostgreSQL · Kafka · Redis (later)</p>
+            </div>
+            <ul class="module-list">
+              <li class="module"><strong>PostgreSQL</strong><span>chat_message, membership, session và outbox_event.</span></li>
+              <li class="module"><strong>Kafka</strong><span><code>chat.events.v1</code>, key theo serverId, at-least-once delivery.</span></li>
+              <li class="module"><strong>Redis — tùy chọn</strong><span>Chỉ cần khi scale nhiều gateway hoặc dùng distributed rate limit.</span></li>
+            </ul>
+          </article>
+
+          <p class="boundary">Gateway không sở hữu business state</p>
+          <p id="architecture-description" hidden>
+            React kết nối Socket.IO tới TypeScript gateway. Gateway xác minh JWT bằng public key,
+            gọi internal REST tới Spring Boot để kiểm tra session, membership và chuyển command.
+            Spring Boot ghi dữ liệu cùng outbox trong PostgreSQL, publish event qua Kafka; gateway
+            consume event và broadcast lại cho React.
+          </p>
+        </div>
+
+        <section class="flow-section" aria-labelledby="message-flow-title">
+          <div>
+            <p class="kicker">Luồng chat-send</p>
+            <h2 id="message-flow-title">Một command, hai đường phản hồi</h2>
+            <p class="section-intro">ACK trả nhanh cho người gửi; Kafka event phát bản ghi đã persist cho toàn bộ thành viên.</p>
+          </div>
+          <ol class="steps">
+            <li class="step">
+              <div><strong>Connect và xác thực</strong><p>Client gửi JWT; gateway verify public key rồi hỏi Spring xác nhận session/account còn hiệu lực.</p></div>
+            </li>
+            <li class="step">
+              <div><strong>Authorize room</strong><p>Gateway chỉ join <code>server:{serverId}</code> sau khi Spring xác nhận active membership.</p></div>
+            </li>
+            <li class="step">
+              <div><strong>Forward command</strong><p><code>chat-send</code> được chuyển qua internal REST; Spring kiểm tra quyền lần cuối.</p></div>
+            </li>
+            <li class="step">
+              <div><strong>Commit atomically</strong><p>Spring ghi <code>chat_message</code> và <code>outbox_event</code> trong cùng transaction rồi trả ACK.</p></div>
+            </li>
+            <li class="step">
+              <div><strong>Publish và fan-out</strong><p>Outbox publisher đẩy <code>chat-created</code> lên Kafka; gateway consume và emit tới room.</p></div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="rules" aria-label="Ba nguyên tắc vận hành">
+          <article class="rule">
+            <span class="rule-number">01 / Security</span>
+            <h3>Public key chỉ để verify</h3>
+            <p>Private key chỉ tồn tại ở Spring Boot. Gateway không thể tự phát hành access token hợp lệ.</p>
+          </article>
+          <article class="rule">
+            <span class="rule-number">02 / Consistency</span>
+            <h3>Event chỉ xuất hiện sau commit</h3>
+            <p>Transactional outbox loại bỏ việc broadcast dữ liệu chưa lưu hoặc làm mất event khi gateway tạm dừng.</p>
+          </article>
+          <article class="rule">
+            <span class="rule-number">03 / Recovery</span>
+            <h3>REST sửa khoảng trống realtime</h3>
+            <p>Socket.IO giúp cập nhật nhanh; REST history/cursor vẫn là cơ chế tải lại sau reconnect và phục hồi event bỏ lỡ.</p>
+          </article>
+        </section>
+
+        <footer class="footnote">
+          <p><strong>Phạm vi hiện tại:</strong> transport, authentication, Socket.IO và Kafka integration.</p>
+          <p>Không gồm UI chat hoàn chỉnh, edit/delete, reactions hoặc multi-instance Redis adapter.</p>
+        </footer>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

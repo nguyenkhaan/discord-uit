@@ -1,0 +1,14 @@
+{
+  "name": "realtime-gateway",
+  "module": "main.ts",
+  "type": "module",
+  "scripts": {
+    "typecheck": "bun check"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}
