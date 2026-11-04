@@ -1,4 +1,32 @@
+import { z } from "zod";
+
 const DEFAULT_TIMEOUT = 2500;
+
+const SessionValidationResponseSchema = z
+    .object({
+        userId: z.guid(),
+        sessionId: z.guid(),
+        accountStatus: z.literal("ACTIVE"),
+    })
+    .strict();
+
+export type SessionValidationResponse = z.infer<
+    typeof SessionValidationResponseSchema
+>;
+
+export type BackendErrorReason =
+    "http-error" | "unreachable" | "invalid-response";
+
+export class BackendError extends Error {
+    constructor(
+        public readonly reason: BackendErrorReason,
+        public readonly status?: number,
+    ) {
+        super(`Backend request failed: ${reason}`);
+        this.name = "BackendError";
+    }
+}
+
 export type BackendClientResponse =
     | {
           healthy: true;
@@ -33,6 +61,53 @@ export class BackendClient {
     checkHealth(): Promise<BackendClientResponse> {
         return this.get("/health");
     }
+
+    async validateSession(
+        accessToken: string,
+    ): Promise<SessionValidationResponse> {
+        let response: Response;
+
+        try {
+            response = await fetch(
+                `${this.baseUrl}/internal/realtime/session/validate`,
+                {
+                    method: "POST",
+                    headers: {
+                        accept: "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                        //Backend se uu tien authorization header.
+                        //Khong nen chuyen doi qua cookie, vi luc nay, tinh chat httpOnly cua cookie da khong con loi ich gi. Dong thoi, dung Bearer de test va de quan sat hon
+
+                        "X-Gateway-Token": this.gatewayServiceToken,
+                    },
+                    signal: AbortSignal.timeout(this.timeoutMs),
+                },
+            );
+        } catch {
+            throw new BackendError("unreachable");
+        }
+
+        if (!response.ok) {
+            throw new BackendError("http-error", response.status);
+        }
+
+        let body: unknown;
+
+        try {
+            body = await response.json();
+        } catch {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        const parsed = SessionValidationResponseSchema.safeParse(body);
+
+        if (!parsed.success) {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        return parsed.data;
+    }
+
     //Update the backend client with a function to calling API
     private async get(
         path: string,

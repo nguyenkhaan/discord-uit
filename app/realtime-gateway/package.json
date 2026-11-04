@@ -18,7 +18,7 @@
         "typescript": "^7"
     },
     "dependencies": {
-        "cookie": "2.0.1",
+        "cookie": "^2.0.1",
         "express": "5.3.0",
         "jose": "6.2.15",
         "socket.io": "4.8.4",

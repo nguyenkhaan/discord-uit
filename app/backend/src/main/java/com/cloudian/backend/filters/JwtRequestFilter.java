@@ -32,7 +32,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private static final String INVALID_ACCESS_TOKEN_MESSAGE = "The access token is invalid or expired.";
     private static final String BEARER_PREFIX = "Bearer ";
-
+    public static final String AUTHENTICATED_SESSION_ID_ATTRIBUTE =
+        "realtime.authenticatedSessionId";
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final ErrorResponseWriter errorResponseWriter = new ErrorResponseWriter();
@@ -137,7 +138,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (!validSession) {
             return false;
         }
-
+        request.setAttribute(
+            AUTHENTICATED_SESSION_ID_ATTRIBUTE,
+            sessionId
+        );
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
