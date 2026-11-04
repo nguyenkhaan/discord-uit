@@ -49,11 +49,11 @@ public class ChatMessage {
     @JoinColumn(name = "sender_user_id", nullable = false, updatable = false)
     private UserAccount sender;
 
-    @Column(name = "content_text")
+    @Column(name = "content_text", nullable = false, length = 2_000)
     private String contentText;
 
     @Column(name = "client_request_id", nullable = false, updatable = false)
-    private String clientRequestId;
+    private UUID clientRequestId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "linked_content_type", updatable = false)

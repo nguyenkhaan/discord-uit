@@ -7,10 +7,6 @@ export type GatewayConfig = {
     jwtIssuer: string;
     jwtAudience: string;
     jwtJwksUrl: string;
-    kafkaBrokers: string[];
-    kafkaClientId: string;
-    kafkaGroupId: string;
-    chatEventsTopic: string;
     chatRateLimitMaxMessages: number;
     chatRateLimitWindowMs: number;
 };
@@ -67,18 +63,6 @@ function readGatewayServiceToken(): string {
     return token;
 }
 
-function readKafkaBrokers(): string[] {
-    const brokers = readRequired("KAFKA_BROKERS")
-        .split(",")
-        .map((broker) => broker.trim());
-
-    if (brokers.some((broker) => broker.length === 0)) {
-        throw new Error("KAFKA_BROKERS must contain valid broker addresses");
-    }
-
-    return brokers;
-}
-
 export function loadEnv(): GatewayConfig {
     return {
         port: readPort(),
@@ -89,10 +73,6 @@ export function loadEnv(): GatewayConfig {
         jwtIssuer: readRequired("JWT_ISSUER"),
         jwtAudience: readRequired("JWT_AUDIENCE"),
         jwtJwksUrl: readHttpUrl("JWT_JWKS_URL"),
-        kafkaBrokers: readKafkaBrokers(),
-        kafkaClientId: readRequired("KAFKA_CLIENT_ID"),
-        kafkaGroupId: readRequired("KAFKA_GROUP_ID"),
-        chatEventsTopic: readRequired("CHAT_EVENTS_TOPIC"),
         chatRateLimitMaxMessages: 5,
         chatRateLimitWindowMs: 10_000,
     };

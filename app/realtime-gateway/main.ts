@@ -5,6 +5,8 @@ import { BackendClient } from "./src/backend/backend-client";
 import { loadEnv } from "./src/config/env";
 import { createSocketServer } from "./src/socket/create-socket-server";
 import { registerServerRoomHandlers } from "./src/socket/server-room-handlers";
+import { ChatRateLimiter } from "./src/socket/chat-rate-limiter";
+import { registerChatHandlers } from "./src/socket/chat-handlers";
 
 async function main() {
     const envConfigs = loadEnv();
@@ -39,9 +41,17 @@ async function main() {
     const { httpServer, io, readiness } = createSocketServer(envConfigs);
 
     io.use(createSocketAuthMiddleware(authenticateAccessToken));
+
+    const chatRateLimiter = new ChatRateLimiter(
+        envConfigs.chatRateLimitMaxMessages,
+        envConfigs.chatRateLimitWindowMs,
+    );
+
     //Sau khi chay middleware xong thi tien hanh ket noi nguoi dung vao ben trong
     io.on("connection", (socket) => {
         registerServerRoomHandlers(socket, backendClient);
+
+        registerChatHandlers(socket, io, backendClient, chatRateLimiter);
     });
     await new Promise<void>((resolve, reject) => {
         const handleError = (error: Error) => {

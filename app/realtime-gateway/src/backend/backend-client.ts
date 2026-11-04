@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+    ChatMessageDtoSchema,
+    type ChatMessageDto,
+    type ChatSendCommand,
+} from "../contracts/realtime";
 
 const DEFAULT_TIMEOUT = 2500;
 
@@ -187,6 +192,54 @@ export class BackendClient {
         }
 
         const parsed = ServerAuthorizationResponseSchema.safeParse(body);
+
+        if (!parsed.success) {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        return parsed.data;
+    }
+
+    async createChatMessage(
+        accessToken: string,
+        serverId: string,
+        command: Pick<ChatSendCommand, "clientRequestId" | "contentText">,
+    ): Promise<ChatMessageDto> {
+        let response: Response;
+
+        try {
+            response = await fetch(
+                `${this.baseUrl}/internal/realtime/servers/${serverId}/messages`,
+                {
+                    method: "POST",
+                    headers: {
+                        accept: "application/json",
+                        "content-type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                        "X-Gateway-Token": this.gatewayServiceToken,
+                    },
+                    body: JSON.stringify(command),
+                    signal: AbortSignal.timeout(this.timeoutMs),
+                },
+            );
+        } catch {
+            throw new BackendError("unreachable");
+        }
+
+        if (!response.ok) {
+            throw new BackendError("http-error", response.status);
+        }
+
+        let body: unknown;
+
+        try {
+            body = await response.json();
+        } catch {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        //Gateway chi tin DTO sau khi da validate response cua Spring
+        const parsed = ChatMessageDtoSchema.safeParse(body);
 
         if (!parsed.success) {
             throw new BackendError("invalid-response", response.status);
