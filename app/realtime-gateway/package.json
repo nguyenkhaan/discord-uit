@@ -1,15 +1,27 @@
 {
-  "name": "realtime-gateway",
-  "module": "main.ts",
-  "type": "module",
-  "scripts": {
-    "typecheck": "bun check",
-    "dev": "bun --watch main.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^7"
-  }
+    "name": "realtime-gateway",
+    "module": "main.ts",
+    "type": "module",
+    "scripts": {
+        "typecheck": "bun check",
+        "dev": "bun --watch main.ts",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@types/express": "5.0.6",
+        "prettier": "3.9.10",
+        "socket.io-client": "4.8.4"
+    },
+    "peerDependencies": {
+        "typescript": "^7"
+    },
+    "dependencies": {
+        "cookie": "2.0.1",
+        "express": "5.3.0",
+        "jose": "6.2.15",
+        "socket.io": "4.8.4",
+        "zod": "4.6.7"
+    }
 }
