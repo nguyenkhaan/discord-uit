@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.cloudian.backend.modules.realtime.RealtimeAuthorizationService;
+
 @SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 @AutoConfigureMockMvc
 class SecurityExceptionIntegrationTests {
@@ -21,6 +23,9 @@ class SecurityExceptionIntegrationTests {
 
 	@MockitoBean
 	private JdbcTemplate jdbcTemplate;
+
+	@MockitoBean
+	private RealtimeAuthorizationService realtimeAuthorizationService;
 
 	@Test
 	void returnsTheSharedSchemaWhenAnAuthenticatedEndpointHasNoJwt() throws Exception {

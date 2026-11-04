@@ -5,6 +5,7 @@ const GATEWAY_TOKEN = "g".repeat(32);
 const ACCESS_TOKEN = "signed-access-token";
 const USER_ID = "00000000-0000-0000-0000-000000000001";
 const SESSION_ID = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
+const SERVER_ID = "00000000-0000-0000-0000-000000000002";
 
 let server: ReturnType<typeof Bun.serve> | undefined;
 
@@ -77,5 +78,57 @@ test("rejects a malformed successful response", async () => {
     await expect(client.validateSession(ACCESS_TOKEN)).rejects.toMatchObject({
         reason: "invalid-response",
         status: 200,
+    });
+});
+
+test("authorizes a server using both gateway and bearer credentials", async () => {
+    const received = {
+        path: "",
+        authorization: null as string | null,
+        gatewayToken: null as string | null,
+    };
+
+    server = Bun.serve({
+        port: 0,
+        fetch(request) {
+            received.path = new URL(request.url).pathname;
+            received.authorization = request.headers.get("authorization");
+            received.gatewayToken = request.headers.get("x-gateway-token");
+
+            return Response.json({
+                serverId: SERVER_ID,
+                role: "MEMBER",
+            });
+        },
+    });
+
+    const client = new BackendClient(server.url.toString(), GATEWAY_TOKEN);
+
+    await expect(
+        client.authorizeServer(ACCESS_TOKEN, SERVER_ID),
+    ).resolves.toEqual({
+        serverId: SERVER_ID,
+        role: "MEMBER",
+    });
+    expect(received.path).toBe(
+        `/internal/realtime/servers/${SERVER_ID}/authorize`,
+    );
+    expect(received.authorization).toBe(`Bearer ${ACCESS_TOKEN}`);
+    expect(received.gatewayToken).toBe(GATEWAY_TOKEN);
+});
+
+test("preserves a not-member response as a typed 404 error", async () => {
+    server = Bun.serve({
+        port: 0,
+        fetch: () => new Response(null, { status: 404 }),
+    });
+
+    const client = new BackendClient(server.url.toString(), GATEWAY_TOKEN);
+
+    await expect(
+        client.authorizeServer(ACCESS_TOKEN, SERVER_ID),
+    ).rejects.toMatchObject({
+        reason: "http-error",
+        status: 404,
     });
 });
