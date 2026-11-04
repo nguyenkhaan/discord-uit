@@ -1,62 +1,139 @@
-const DEFAULT_TIMEOUT = 2500
-export type BackendClientResponse = {
-    healthy: true, 
-    status: number,
-    content: string 
-} | {   
-    healthy: false, 
-    reason: string, 
-    status?: number
+import { z } from "zod";
+
+const DEFAULT_TIMEOUT = 2500;
+
+const SessionValidationResponseSchema = z
+    .object({
+        userId: z.guid(),
+        sessionId: z.guid(),
+        accountStatus: z.literal("ACTIVE"),
+    })
+    .strict();
+
+export type SessionValidationResponse = z.infer<
+    typeof SessionValidationResponseSchema
+>;
+
+export type BackendErrorReason =
+    "http-error" | "unreachable" | "invalid-response";
+
+export class BackendError extends Error {
+    constructor(
+        public readonly reason: BackendErrorReason,
+        public readonly status?: number,
+    ) {
+        super(`Backend request failed: ${reason}`);
+        this.name = "BackendError";
+    }
 }
-//We will initialize this instance in the main entry point 
+
+export type BackendClientResponse =
+    | {
+          healthy: true;
+          status: number;
+          content: string;
+      }
+    | {
+          healthy: false;
+          reason: string;
+          status?: number;
+      };
+//We will initialize this instance in the main entry point
 export class BackendClient {
-    private readonly baseUrl : string
-    private readonly timeoutMs : number
-    private readonly gatewayServiceToken : string 
-    constructor(baseUrl : string , gatewayServiceToken : string, timeoutMs: number = DEFAULT_TIMEOUT) {
+    private readonly baseUrl: string;
+    private readonly timeoutMs: number;
+    private readonly gatewayServiceToken: string;
+    constructor(
+        baseUrl: string,
+        gatewayServiceToken: string,
+        timeoutMs: number = DEFAULT_TIMEOUT,
+    ) {
         this.baseUrl = baseUrl.replace(/\/+$/, "");
-        this.timeoutMs = timeoutMs
-        this.gatewayServiceToken = gatewayServiceToken
+        this.timeoutMs = timeoutMs;
+        this.gatewayServiceToken = gatewayServiceToken;
     }
     checkInternalHealth(): Promise<BackendClientResponse> {
-        return this.get(
-            "/internal/realtime/health",
-                {
-                    //Gui them mot truong X-Gateway-Token de nhan biet xem day co dung that su la request tu gateway cua he thong hay khong
-                    "X-Gateway-Token": this.gatewayServiceToken,
-                },
-            );
+        return this.get("/internal/realtime/health", {
+            //Gui them mot truong X-Gateway-Token de nhan biet xem day co dung that su la request tu gateway cua he thong hay khong
+            "X-Gateway-Token": this.gatewayServiceToken,
+        });
     }
-    checkHealth():Promise<BackendClientResponse> {
+    checkHealth(): Promise<BackendClientResponse> {
         return this.get("/health");
     }
-    //Update the backend client with a function to calling API 
-    private async get(path: string, headers: Record<string, string> = {}) :  Promise<BackendClientResponse> {
+
+    async validateSession(
+        accessToken: string,
+    ): Promise<SessionValidationResponse> {
+        let response: Response;
+
         try {
-            const response = await fetch(
-                `${this.baseUrl}${path}`,
+            response = await fetch(
+                `${this.baseUrl}/internal/realtime/session/validate`,
                 {
+                    method: "POST",
                     headers: {
-                        accept: "application/json, text/plain",
-                        ...headers,
+                        accept: "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                        //Backend se uu tien authorization header.
+                        //Khong nen chuyen doi qua cookie, vi luc nay, tinh chat httpOnly cua cookie da khong con loi ich gi. Dong thoi, dung Bearer de test va de quan sat hon
+
+                        "X-Gateway-Token": this.gatewayServiceToken,
                     },
                     signal: AbortSignal.timeout(this.timeoutMs),
                 },
             );
-            const content = await response.text() //Convert to the text 
-            if (!response.ok)         
+        } catch {
+            throw new BackendError("unreachable");
+        }
+
+        if (!response.ok) {
+            throw new BackendError("http-error", response.status);
+        }
+
+        let body: unknown;
+
+        try {
+            body = await response.json();
+        } catch {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        const parsed = SessionValidationResponseSchema.safeParse(body);
+
+        if (!parsed.success) {
+            throw new BackendError("invalid-response", response.status);
+        }
+
+        return parsed.data;
+    }
+
+    //Update the backend client with a function to calling API
+    private async get(
+        path: string,
+        headers: Record<string, string> = {},
+    ): Promise<BackendClientResponse> {
+        try {
+            const response = await fetch(`${this.baseUrl}${path}`, {
+                headers: {
+                    accept: "application/json, text/plain",
+                    ...headers,
+                },
+                signal: AbortSignal.timeout(this.timeoutMs),
+            });
+            const content = await response.text(); //Convert to the text
+            if (!response.ok)
                 return {
                     healthy: false,
                     reason: "http-error",
                     status: response.status,
                 };
             return {
-                healthy: true, 
+                healthy: true,
                 status: response.status,
-                content
-            }
-        }
-        catch (err) {
+                content,
+            };
+        } catch (err) {
             return {
                 healthy: false,
                 reason: "unreachable",

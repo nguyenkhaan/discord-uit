@@ -1,5 +1,9 @@
 # Realtime Chat Core (Phase 03) Implementation Plan
 
+> **Superseded:** Kế hoạch này có Kafka/outbox và đã được thay bằng
+> [`2026-11-04-direct-realtime-chat.md`](./2026-11-04-direct-realtime-chat.md).
+> Giữ file này làm lịch sử cho giai đoạn Kafka triển khai sau.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Hoàn thành lát cắt chạy được `chat-send` đã xác thực từ Socket.IO gateway, lưu `chat_message` và `outbox_event` atomically trong Spring Boot, publish qua Kafka và broadcast `chat-created` có ID đã persist cho các thành viên đang kết nối.

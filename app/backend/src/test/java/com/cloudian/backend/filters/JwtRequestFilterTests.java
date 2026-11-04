@@ -90,6 +90,8 @@ class JwtRequestFilterTests {
         verify(chain).doFilter(request, response);
         assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
                 .isEqualTo(userDetails);
+        assertThat(request.getAttribute(JwtRequestFilter.AUTHENTICATED_SESSION_ID_ATTRIBUTE))
+                .isEqualTo(sessionId);
     }
 
     @Test
