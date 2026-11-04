@@ -7,6 +7,7 @@
 // 6. Start listening for connections 
 // 7. Handle shutdown when the app is forced 
 
+import { BackendClient } from "./src/backend/backend-client";
 import { loadEnv } from "./src/config/env";
 
 
@@ -16,7 +17,24 @@ import { loadEnv } from "./src/config/env";
 - SocketIO
 - Các hàm giao tiếp Kafka
  */
+async function main() 
+{
+    const envConfigs = loadEnv()
+    const backendClient = new BackendClient(envConfigs.springBaseUrl)
+    //Checking health
+    const health = await backendClient.checkHealth()
+    if (!health.healthy) {
+         console.error(
+            [
+                "Spring Boot connection failed",
+                `reason=${health.reason}`,
+                `status=${health.status ?? "none"}`,
+            ].join("; "),
+        );
+        process.exitCode = 1 //exit the process 
+        return 
+    }
+    console.log("Springboot is health: " , health)
+}
 
-const envConfigs = loadEnv()
-
-console.log(envConfigs)
+await main()
