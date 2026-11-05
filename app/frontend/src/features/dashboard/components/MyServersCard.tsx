@@ -25,7 +25,7 @@ export function MyServersCard({ servers }: { servers: ServerSummary[] }) {
                             )}
 
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-heading">{name}</p>
+                                <p className="truncate text-sm font-semibold text-heading" title={name}>{name}</p>
                                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
                                     <Users aria-hidden="true" className="size-3.5" />
                                     {memberCount} thành viên

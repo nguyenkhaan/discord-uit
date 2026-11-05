@@ -16,8 +16,8 @@ export function QuickLinkCard({ title, description, to, icon: Icon, tone }: Quic
                 <Icon aria-hidden="true" className="size-7" />
             </span>
             <div className="min-w-0 flex-1">
-                <p className="font-semibold text-heading">{title}</p>
-                <p className="mt-1 text-sm text-foreground-secondary">{description}</p>
+                <p className="truncate font-semibold text-heading" title={title}>{title}</p>
+                <p className="mt-1 line-clamp-2 break-words text-sm text-foreground-secondary">{description}</p>
             </div>
             <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
         </Link>

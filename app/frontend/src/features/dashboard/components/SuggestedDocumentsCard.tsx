@@ -23,11 +23,15 @@ export function SuggestedDocumentsCard({ documents }: { documents: SuggestedDocu
                             )}
 
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-heading">{title}</p>
-                                <p className="mt-0.5 text-xs text-foreground-secondary">{author}</p>
+                                <p className="truncate text-sm font-semibold text-heading" title={title}>{title}</p>
+                                <p className="mt-0.5 truncate text-xs text-foreground-secondary" title={author}>{author}</p>
                                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                                     {tags.map((tag) => (
-                                        <span key={tag} className="rounded-full bg-surface-subtle px-2 py-0.5 text-xs text-foreground-secondary">
+                                        <span
+                                            key={tag}
+                                            title={tag}
+                                            className="max-w-40 truncate rounded-full bg-surface-subtle px-2 py-0.5 text-xs text-foreground-secondary"
+                                        >
                                             {tag}
                                         </span>
                                     ))}

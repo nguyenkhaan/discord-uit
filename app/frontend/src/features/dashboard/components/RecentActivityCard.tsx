@@ -18,7 +18,10 @@ export function RecentActivityCard({ activities }: { activities: ActivityItem[] 
                         )}
 
                         <div className="min-w-0 flex-1">
-                            <p className="text-sm text-foreground">
+                            <p
+                                className="line-clamp-2 break-words text-sm text-foreground"
+                                title={message.map((part) => part.text).join('')}
+                            >
                                 <RichTextView parts={message} />
                             </p>
                             <p className="mt-1 text-xs text-muted">{time}</p>
