@@ -43,6 +43,23 @@ export const myServers: ServerSummary[] = [
         icon: Database,
         iconClassName: 'bg-slate-800 text-white',
     },
+    // TEST chuỗi dài — xoá khi xong
+    {
+        id: 'test-long-name',
+        name: 'Nhóm đồ án môn Lập trình ứng dụng Web NT208.Q11 học kỳ 1 năm học 2026–2027 — lớp thầy Nguyễn Văn A',
+        memberCount: 1234,
+        status: 'active',
+        icon: Users,
+        iconClassName: 'bg-violet-600 text-white',
+    },
+    {
+        id: 'test-no-space',
+        name: 'NHOM_DO_AN_NT208_Q11_HK1_2026_2027_LOP_THAY_NGUYEN_VAN_A_KHONG_CO_KHOANG_TRANG',
+        memberCount: 7,
+        status: 'calling',
+        icon: Code,
+        iconClassName: 'bg-amber-600 text-white',
+    },
 ];
 
 export const quickLinks: QuickLink[] = [
@@ -77,6 +94,15 @@ export const quickLinks: QuickLink[] = [
         to: '/documents',
         icon: CloudUpload,
         tone: 'purple',
+    },
+    // TEST chuỗi dài — xoá khi xong
+    {
+        id: 'test-long',
+        title: 'Tiêu đề liên kết nhanh rất rất dài để kiểm tra xem có bị cắt bằng dấu ba chấm hay không',
+        description: 'Mô tả rất dài: Tổng hợp kinh nghiệm phỏng vấn thực tập tại các công ty công nghệ lớn ở TP.HCM, bao gồm câu hỏi kỹ thuật, câu hỏi hành vi và mẹo chuẩn bị CV. Link: https://drive.google.com/file/d/1aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcdefghijklmnop/view?usp=sharing',
+        to: '/forum',
+        icon: FileText,
+        tone: 'teal',
     },
 ];
 
@@ -115,6 +141,19 @@ export const notifications: NotificationItem[] = [
             { text: 'Bài viết ' },
             { text: '“Kinh nghiệm thực tập”', bold: true },
             { text: ' đã được duyệt' },
+        ],
+    },
+    // TEST chuỗi dài — xoá khi xong
+    {
+        id: 'test-long',
+        icon: FileX,
+        tone: 'red',
+        to: '/notifications',
+        time: '1 phút trước',
+        message: [
+            { text: 'Tài liệu ' },
+            { text: '“Tổng hợp đề thi cuối kỳ môn Cơ sở dữ liệu các năm 2018 đến 2026 kèm lời giải chi tiết và đáp án tham khảo”', bold: true },
+            { text: ' bị từ chối. Lý do: nội dung trùng lặp với tài liệu đã có trên hệ thống, vui lòng kiểm tra lại trước khi tải lên. Tham khảo: https://drive.google.com/file/d/1aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcdefghijklmnop/view?usp=sharing' },
         ],
     },
 ];
@@ -156,6 +195,26 @@ export const recentActivities: ActivityItem[] = [
             { text: 'Tài liệu của bạn đang được duyệt', bold: true },
         ],
     },
+    // TEST chuỗi dài — xoá khi xong
+    {
+        id: 'test-long',
+        actor: { name: 'Nguyễn Thị Phương Thảo Ngọc Anh' },
+        time: '1 phút trước',
+        unread: true,
+        message: [
+            { text: 'Nguyễn Thị Phương Thảo Ngọc Anh', bold: true },
+            { text: ' đã bình luận bài viết “Kinh nghiệm ôn thi cuối kỳ môn Cơ sở dữ liệu, Mạng máy tính và Hệ điều hành trong cùng một tuần mà vẫn đạt điểm A”' },
+        ],
+    },
+    {
+        id: 'test-no-space',
+        actor: { name: 'Test User' },
+        time: '2 phút trước',
+        message: [
+            { text: 'Test User', bold: true },
+            { text: ' đã gửi link https://drive.google.com/file/d/1aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcdefghijklmnop/view?usp=sharing' },
+        ],
+    },
 ];
 
 export const suggestedDocuments: SuggestedDocument[] = [
@@ -182,5 +241,22 @@ export const suggestedDocuments: SuggestedDocument[] = [
         tags: ['Kinh nghiệm', 'Hướng nghiệp'],
         downloads: 2100,
         likes: 65,
+    },
+    // TEST chuỗi dài — xoá khi xong
+    {
+        id: 'test-long',
+        title: 'Tổng hợp đề thi cuối kỳ môn Cơ sở dữ liệu các năm 2018 đến 2026 kèm lời giải chi tiết',
+        author: 'Nguyễn Thị Phương Thảo Ngọc Anh — Khoa Khoa học và Kỹ thuật Thông tin',
+        tags: ['CSDL', 'Đề thi cuối kỳ có lời giải chi tiết các năm', 'Tài liệu học tập', 'Ôn thi', 'HK1-2026'],
+        downloads: 123456,
+        likes: 9999,
+    },
+    {
+        id: 'test-no-space',
+        title: 'De_cuong_on_tap_CSDL_HK1_2026_2027_ban_cuoi_cung_final_v2_sua_lan_3.pdf',
+        author: 'nguyenthiphuongthaongocanh_24521898@gm.uit.edu.vn',
+        tags: ['TAG_RAT_DAI_KHONG_CO_KHOANG_TRANG_DE_TEST_TRAN_KHUNG'],
+        downloads: 0,
+        likes: 0,
     },
 ];

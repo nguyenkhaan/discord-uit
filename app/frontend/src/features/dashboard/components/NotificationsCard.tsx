@@ -20,7 +20,10 @@ export function NotificationsCard({ notifications }: { notifications: Notificati
                                 <Icon aria-hidden="true" className="size-4.5" />
                             </span>
                             <div className="min-w-0 flex-1">
-                                <p className="text-sm text-foreground">
+                                <p
+                                    className="line-clamp-2 break-words text-sm text-foreground"
+                                    title={message.map((part) => part.text).join('')}
+                                >
                                     <RichTextView parts={message} />
                                 </p>
                                 <p className="mt-0.5 text-xs text-muted sm:hidden">{time}</p>

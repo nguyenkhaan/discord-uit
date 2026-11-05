@@ -26,7 +26,7 @@ export function SectionCard({ title, viewAllTo, className, children }: SectionCa
     return (
         <section className={cn('rounded-2xl border border-line bg-surface p-4 sm:p-5', className)}>
             <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-heading">{title}</h2>
+                <h2 className="min-w-0 truncate text-lg font-semibold text-heading" title={title}>{title}</h2>
                 {viewAllTo && (
                     <Link
                         to={viewAllTo}
