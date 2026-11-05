@@ -18,7 +18,7 @@ const DEFAULT_NOTIFICATION_LIST_REQUEST = {
     size: 20,
 } satisfies NotificationListRequest;
 
-const notificationKeys = {
+export const notificationKeys = {
     all: ['notifications'] as const,
     list: (request: NotificationListRequest) =>
         [...notificationKeys.all, 'list', request] as const,

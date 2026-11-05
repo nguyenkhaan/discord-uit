@@ -11,6 +11,7 @@ import NotFound from '@/pages/NotFound';
 import ComingSoonPage from '@/pages/ComingSoonPage';
 import TestMainLayout from '@/pages/TestMainLayout';
 import ServerListPage from '@/features/server/pages/ServerListPage';
+import InviteJoinPage from '@/features/server/pages/InviteJoinPage';
 import AuthGuard from '@/components/AuthGuard';
 import { Header } from '@/components/Header/Header';
 import { AuthGuardLayout } from '@/components/layout/AuthGuardLayout';
@@ -37,6 +38,16 @@ export default function AppRoutes() {
                     <Route
                         path="/reset-password"
                         element={<ResetPasswordPage />}
+                    />
+
+                    {/* Trang tham gia server bằng link mời: cần đăng nhập nhưng không dùng MainLayout */}
+                    <Route
+                        path="/invite/:token"
+                        element={
+                            <AuthGuard>
+                                <InviteJoinPage />
+                            </AuthGuard>
+                        }
                     />
 
                     {/* ===== Các trang NẰM TRONG MainLayout =====

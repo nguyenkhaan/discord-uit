@@ -13,9 +13,11 @@ import {
     SearchX,
     ServerOff,
     Trash2,
+    UserPlus,
     Users,
 } from 'lucide-react';
 
+import { ServerAvatar } from '@/features/server/components/ServerAvatar';
 import { getServerStatus, SERVER_STATUS_META } from '@/features/server/server.status';
 import type { ServerMemberRole, ServerResponse, ServerStatus } from '@/features/server/server.type';
 import { showToast } from '@/lib/toast';
@@ -28,14 +30,16 @@ export interface ServerTableListProps {
     isFiltering?: boolean;
     currentPage: number;
     onPageChange: (page: number) => void;
+    /** Mở modal mời thành viên; chỉ hiển thị với OWNER */
+    onInviteMembers?: (server: ServerResponse) => void;
 }
 
 const ITEMS_PER_PAGE = 8;
 const MENU_WIDTH = 176;
-const MENU_HEIGHT = 230;
+const MENU_HEIGHT = 270;
 const COLUMN_COUNT = 9;
 
-type ServerActionKey = 'view' | 'edit' | 'lock' | 'unlock' | 'close' | 'reopen' | 'delete';
+type ServerActionKey = 'view' | 'invite' | 'edit' | 'lock' | 'unlock' | 'close' | 'reopen' | 'delete';
 type ServerActionTone = 'default' | 'success' | 'warning' | 'danger';
 
 type ServerAction = {
@@ -47,6 +51,7 @@ type ServerAction = {
 };
 
 const VIEW_ACTION: ServerAction = { key: 'view', label: 'Xem chi tiết', icon: Eye, tone: 'default' };
+const INVITE_ACTION: ServerAction = { key: 'invite', label: 'Mời thành viên', icon: UserPlus, tone: 'default' };
 const EDIT_ACTION: ServerAction = { key: 'edit', label: 'Chỉnh sửa', icon: Pencil, tone: 'default' };
 const LOCK_ACTION: ServerAction = { key: 'lock', label: 'Khóa server', icon: Lock, tone: 'danger' };
 const UNLOCK_ACTION: ServerAction = { key: 'unlock', label: 'Mở khóa server', icon: LockOpen, tone: 'success' };
@@ -61,10 +66,11 @@ const STATUS_ACTIONS: Record<ServerStatus, ServerAction[]> = {
     CLOSED: [REOPEN_ACTION],
 };
 
-function getServerActions(status: ServerStatus): ServerAction[] {
-    const [firstStatusAction, ...restStatusActions] = STATUS_ACTIONS[status];
+function getServerActions(server: ServerResponse): ServerAction[] {
+    const [firstStatusAction, ...restStatusActions] = STATUS_ACTIONS[getServerStatus(server)];
     return [
         VIEW_ACTION,
+        ...(server.myRole === 'OWNER' ? [INVITE_ACTION] : []),
         EDIT_ACTION,
         { ...firstStatusAction, dividerBefore: true },
         ...restStatusActions,
@@ -126,29 +132,6 @@ function ServerRoleBadge({ role }: { role: ServerMemberRole | undefined }) {
     );
 }
 
-function ServerAvatar({ name, imageUrl }: { name?: string; imageUrl?: string }) {
-    const [hasError, setHasError] = useState(false);
-    const initial = name?.trim().charAt(0).toUpperCase() || 'S';
-
-    if (imageUrl && !hasError) {
-        return (
-            <img
-                src={imageUrl}
-                alt={name ?? 'Ảnh server'}
-                loading="lazy"
-                onError={() => setHasError(true)}
-                className="w-10 h-10 rounded-lg object-cover shrink-0 bg-gray-100 border border-gray-100"
-            />
-        );
-    }
-
-    return (
-        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shrink-0">
-            {initial}
-        </div>
-    );
-}
-
 function SkeletonRows() {
     return (
         <>
@@ -183,6 +166,7 @@ export const ServerTableList = ({
     isFiltering = false,
     currentPage,
     onPageChange,
+    onInviteMembers,
 }: ServerTableListProps) => {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [menu, setMenu] = useState<MenuState | null>(null);
@@ -251,6 +235,10 @@ export const ServerTableList = ({
 
     const handleAction = (action: ServerAction, server: ServerResponse) => {
         setMenu(null);
+        if (action.key === 'invite' && onInviteMembers) {
+            onInviteMembers(server);
+            return;
+        }
         showToast(`Chức năng "${action.label}" cho server "${server.name ?? ''}" đang được phát triển.`);
     };
 
@@ -485,7 +473,7 @@ export const ServerTableList = ({
                     style={{ top: menu.top, bottom: menu.bottom, left: menu.left, width: MENU_WIDTH }}
                     className="fixed z-50 py-1 bg-white rounded-lg shadow-lg border border-gray-100 text-left animate-in fade-in zoom-in duration-100"
                 >
-                    {getServerActions(getServerStatus(activeServer)).map((action) => {
+                    {getServerActions(activeServer).map((action) => {
                         const Icon = action.icon;
                         return (
                             <div key={action.key}>

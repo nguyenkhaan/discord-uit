@@ -10,4 +10,7 @@ export const serverKeys = {
     details: () => [...serverKeys.all, 'detail'] as const,
     detail: (serverId: string) => [...serverKeys.details(), serverId] as const,
     members: (serverId: string) => [...serverKeys.detail(serverId), 'members'] as const,
+    inviteLinks: (serverId: string) => [...serverKeys.detail(serverId), 'invite-links'] as const,
+    inviteLinkDetails: (token: string) => [...serverKeys.all, 'invite-link', token] as const,
+    myInvites: () => [...serverKeys.all, 'my-invites'] as const,
 };

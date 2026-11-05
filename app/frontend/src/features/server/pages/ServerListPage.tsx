@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 
 import { CreateServerModal } from '@/features/server/components/CreateServerModal';
+import { ServerInviteModal } from '@/features/server/components/ServerInviteModal';
 import { ServerSummary } from '@/features/server/components/ServerSummary';
 import { ServerTableList } from '@/features/server/components/ServerTableList';
 import { useServerList, useServerStatusCounts } from '@/features/server/server.hooks';
@@ -78,6 +79,7 @@ export default function ServerListPage() {
     const [sortBy, setSortBy] = useState<SortOption>('NEWEST');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+    const [serverToInvite, setServerToInvite] = useState<ServerResponse | null>(null);
 
     // Lọc trạng thái ở backend; tìm kiếm và sắp xếp xử lý ở client
     const serverListQuery = useServerList(toServerStatusFilter(statusFilter));
@@ -199,10 +201,12 @@ export default function ServerListPage() {
                     isFiltering={isFiltering}
                     currentPage={currentPage}
                     onPageChange={setCurrentPage}
+                    onInviteMembers={setServerToInvite}
                 />
             )}
 
             <CreateServerModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+            <ServerInviteModal server={serverToInvite} onClose={() => setServerToInvite(null)} />
         </div>
     );
 }

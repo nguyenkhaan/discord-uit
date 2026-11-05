@@ -164,6 +164,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/realtime/session/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["validateSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/realtime/servers/{serverId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createChatMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/realtime/servers/{serverId}/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["authorizeServer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/verify-email": {
         parameters: {
             query?: never;
@@ -388,6 +436,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lookupByEmail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}": {
         parameters: {
             query?: never;
@@ -500,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/realtime/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -572,6 +652,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["testingAuthentication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/.well-known/jwks.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKeys"];
         put?: never;
         post?: never;
         delete?: never;
@@ -739,6 +835,38 @@ export interface components {
             acceptedAt?: string;
             message?: string;
         };
+        RealtimeSessionResponse: {
+            /** Format: uuid */
+            userId?: string;
+            /** Format: uuid */
+            sessionId?: string;
+            /** @enum {string} */
+            accountStatus?: "UNVERIFIED" | "ACTIVE" | "BANNED";
+        };
+        RealtimeChatMessageRequest: {
+            /** Format: uuid */
+            clientRequestId: string;
+            contentText: string;
+        };
+        RealtimeChatMessageResponse: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            serverId?: string;
+            /** Format: uuid */
+            senderUserId?: string;
+            /** Format: uuid */
+            clientRequestId?: string;
+            contentText?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        RealtimeServerAuthorizationResponse: {
+            /** Format: uuid */
+            serverId?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER";
+        };
         VerifyEmailRequest: {
             token: string;
         };
@@ -839,6 +967,12 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        UserLookupResponse: {
+            /** Format: uuid */
+            userId?: string;
+            fullName?: string;
+            email?: string;
+        };
         ServerMemberResponse: {
             /** Format: uuid */
             userId?: string;
@@ -904,6 +1038,17 @@ export interface components {
         };
         HealthResponse: {
             message?: string;
+        };
+        JsonWebKey: {
+            kty?: string;
+            use?: string;
+            alg?: string;
+            kid?: string;
+            n?: string;
+            e?: string;
+        };
+        JwkSetResponse: {
+            keys?: components["schemas"]["JsonWebKey"][];
         };
         DeleteServerRequest: {
             reason: string;
@@ -1184,6 +1329,74 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AcceptInviteResponse"];
+                };
+            };
+        };
+    };
+    validateSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RealtimeSessionResponse"];
+                };
+            };
+        };
+    };
+    createChatMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RealtimeChatMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RealtimeChatMessageResponse"];
+                };
+            };
+        };
+    };
+    authorizeServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RealtimeServerAuthorizationResponse"];
                 };
             };
         };
@@ -1538,6 +1751,28 @@ export interface operations {
             };
         };
     };
+    lookupByEmail: {
+        parameters: {
+            query: {
+                email: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserLookupResponse"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -1710,6 +1945,28 @@ export interface operations {
             };
         };
     };
+    health: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     liveness: {
         parameters: {
             query?: never;
@@ -1806,6 +2063,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    getKeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JwkSetResponse"];
                 };
             };
         };

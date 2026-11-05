@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -15,10 +15,12 @@ import {
     MailIcon,
     VisualPanel,
 } from '@/features/auth/components/AuthShared';
+import { getPostLoginRedirect } from '@/features/auth/auth.redirect';
 
 export default function LoginPage() {
     const { login, isLoggingIn } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -35,7 +37,7 @@ export default function LoginPage() {
         try {
             await login({ username: email, password });
             setPassword('');
-            navigate('/home', { replace: true });
+            navigate(getPostLoginRedirect(location.state), { replace: true });
         } catch {
             setError(
                 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.'

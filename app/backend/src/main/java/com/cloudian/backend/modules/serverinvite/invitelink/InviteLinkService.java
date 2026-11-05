@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class InviteLinkService {
 
     private static final String SERVER_NOT_FOUND = "Server not found.";
+    private static final int MAX_ACTIVE_INVITE_LINKS = 2;
 
     private final ServerInviteRepository inviteRepository;
     private final ServerRepository serverRepository;
@@ -56,8 +57,10 @@ public class InviteLinkService {
             UUID serverId,
             UUID currentUserId,
             CreateInviteLinkRequest request) {
-        Server server = findActiveServer(serverId);
+        // Lock the server row so concurrent requests cannot both pass the active-link limit.
+        Server server = findAndLockActiveServer(serverId);
         requireOwner(serverId, currentUserId, "create invite links");
+        requireInviteLinkCapacity(serverId);
         UserAccount creator = findUser(currentUserId);
 
         GeneratedInviteLink generatedInvite = generateInviteLink(server, creator, request);
@@ -127,6 +130,14 @@ public class InviteLinkService {
 
         recordUse(invite, joinedAt);
         inviteRepository.save(invite);
+        // Runs after save: the bulk update clears the persistence context.
+        inviteRepository.closePendingInvitesForRecipient(
+                server.getId(),
+                currentUserId,
+                ServerInviteType.DIRECT,
+                ServerInviteStatus.PENDING,
+                ServerInviteStatus.ACCEPTED,
+                joinedAt);
         return new JoinServerInviteResponse(
                 server.getId(),
                 server.getName(),
@@ -155,6 +166,20 @@ public class InviteLinkService {
                 ServerMemberRole.OWNER);
         if (!owner) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Only the server owner can " + action + ".");
+        }
+    }
+
+    private void requireInviteLinkCapacity(UUID serverId) {
+        long activeLinks = inviteRepository.countRedeemableInvites(
+                serverId,
+                ServerInviteType.LINK,
+                ServerInviteStatus.PENDING,
+                Instant.now());
+        if (activeLinks >= MAX_ACTIVE_INVITE_LINKS) {
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
+                    "A server can have at most " + MAX_ACTIVE_INVITE_LINKS
+                            + " active invite links. Revoke one before creating another.");
         }
     }
 

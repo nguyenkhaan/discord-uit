@@ -1,6 +1,7 @@
 import { Check, Mail, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/common/Button';
+import { ServerInvitationActions } from '@/features/notification/components/ServerInvitationActions';
 import type {
     NotificationKind,
     NotificationResponse,
@@ -86,6 +87,12 @@ export function NotificationCard({
                     >
                         {formatNotificationDate(notification.createdAt)}
                     </time>
+                    {notification.kind === 'SERVER_INVITATION' &&
+                        notification.relatedEntityId && (
+                            <ServerInvitationActions
+                                inviteId={notification.relatedEntityId}
+                            />
+                        )}
                 </div>
 
                 {notificationId && (
