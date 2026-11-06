@@ -6,6 +6,7 @@
 *.class
 .vscode
 .codex
+.idea/
 # Log file
 *.log
 application.properties
