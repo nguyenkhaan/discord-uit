@@ -27,18 +27,17 @@ import com.cloudian.backend.modules.server.dto.ServerStatusCountResponse;
 import com.cloudian.backend.modules.server.dto.UpdateServerStatusRequest;
 import com.cloudian.backend.commons.enums.ServerStatus;
 import com.cloudian.backend.security.CustomUserDetails;
-
+import com.cloudian.backend.modules.server.dto.ChatMessageHistoryResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/servers")
 public class ServerController {
 
     private final ServerService serverService;
-
-    public ServerController(ServerService serverService) {
-        this.serverService = serverService;
-    }
+    private final ChatMessageHistoryService chatMessageHistoryService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -72,6 +71,19 @@ public class ServerController {
     @PreAuthorize("@serverAccess.isMember(#serverId)")
     public List<ServerMemberResponse> listMembers(@PathVariable("serverId") UUID serverId) {
         return serverService.listMembers(serverId);
+    }
+
+    @GetMapping("/{serverId}/messages")
+    @PreAuthorize("@serverAccess.isMember(#serverId)")
+    public ChatMessageHistoryResponse getMessageHistory(
+            @PathVariable("serverId") UUID serverId,
+            @RequestParam(name = "before", required = false) String before,
+            @RequestParam(name = "limit", defaultValue = "20") int limit) {
+
+        return chatMessageHistoryService.getHistory(
+                serverId,
+                before,
+                limit);
     }
 
     @PatchMapping("/{serverId}/status")
