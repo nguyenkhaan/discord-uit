@@ -14,8 +14,6 @@ import org.springframework.data.repository.query.Param;
 
 import com.cloudian.backend.models.ChatMessage;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> {
 
