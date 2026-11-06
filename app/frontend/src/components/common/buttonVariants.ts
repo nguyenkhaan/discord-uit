@@ -10,6 +10,7 @@ export const buttonVariants = cva(
                 secondary:
                     'border-line-brand bg-surface text-brand hover:bg-brand-subtle',
                 ghost: 'border-transparent bg-transparent text-muted shadow-none hover:bg-brand-subtle hover:text-brand',
+                danger: 'border-transparent bg-feedback-danger text-on-brand hover:bg-feedback-danger/90',
                 tab: '-mb-px rounded-none border-x-0 border-t-0 border-b-2 border-transparent bg-transparent px-3 font-normal text-muted shadow-none hover:text-brand aria-selected:border-brand aria-selected:font-bold aria-selected:text-brand',
             },
             size: {

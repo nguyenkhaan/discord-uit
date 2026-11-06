@@ -184,6 +184,26 @@ class DirectInviteServiceTests {
     }
 
     @Test
+    void acceptingWhenAlreadyMemberClosesInviteWithoutNewMembership() {
+        UUID recipientId = UUID.randomUUID();
+        ServerInvite invite = directInvite(recipientId);
+        Server server = invite.getServer();
+        when(inviteRepository.findByIdForUpdate(invite.getId())).thenReturn(Optional.of(invite));
+        when(serverRepository.findByIdAndDeletedAtIsNullForUpdate(server.getId()))
+                .thenReturn(Optional.of(server));
+        when(membershipRepository.findByServer_IdAndUser_IdAndLeftAtIsNull(server.getId(), recipientId))
+                .thenReturn(Optional.of(new ServerMembership()));
+
+        var response = directInviteService.acceptDirectInvite(invite.getId(), recipientId);
+
+        assertThat(response.status()).isEqualTo(ServerInviteStatus.ACCEPTED);
+        assertThat(invite.getStatus()).isEqualTo(ServerInviteStatus.ACCEPTED);
+        verify(inviteRepository).save(invite);
+        verify(membershipRepository, never()).save(any());
+        verify(eventWriter, never()).writeMembershipCreated(any());
+    }
+
+    @Test
     void declinesPendingDirectInviteForItsRecipient() {
         UUID recipientId = UUID.randomUUID();
         ServerInvite invite = directInvite(recipientId);

@@ -3,6 +3,7 @@ package com.cloudian.backend.modules.serverinvite.invitelink;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -65,7 +66,7 @@ class InviteLinkServiceTests {
         UUID inviteId = UUID.randomUUID();
         Server server = server(serverId);
         UserAccount owner = user(ownerId);
-        when(serverRepository.findByIdAndDeletedAtIsNull(serverId)).thenReturn(Optional.of(server));
+        when(serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId)).thenReturn(Optional.of(server));
         when(membershipRepository.existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
                 serverId, ownerId, ServerMemberRole.OWNER)).thenReturn(true);
         when(userRepository.findById(ownerId)).thenReturn(Optional.of(owner));
@@ -91,7 +92,7 @@ class InviteLinkServiceTests {
     void rejectsInviteLinkCreationFromNonOwner() {
         UUID serverId = UUID.randomUUID();
         UUID currentUserId = UUID.randomUUID();
-        when(serverRepository.findByIdAndDeletedAtIsNull(serverId))
+        when(serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId))
                 .thenReturn(Optional.of(server(serverId)));
         when(membershipRepository.existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
                 serverId, currentUserId, ServerMemberRole.OWNER)).thenReturn(false);
@@ -244,6 +245,13 @@ class InviteLinkServiceTests {
         assertThat(invite.getStatus()).isEqualTo(ServerInviteStatus.ACCEPTED);
         assertThat(invite.getAcceptedAt()).isNotNull();
         verify(eventWriter).writeMembershipCreated(membershipCaptor.getValue());
+        verify(inviteRepository).closePendingInvitesForRecipient(
+                eq(invite.getServer().getId()),
+                eq(userId),
+                eq(ServerInviteType.DIRECT),
+                eq(ServerInviteStatus.PENDING),
+                eq(ServerInviteStatus.ACCEPTED),
+                any(Instant.class));
     }
 
     @Test
@@ -268,6 +276,49 @@ class InviteLinkServiceTests {
         assertThat(invite.getUseCount()).isEqualTo(1);
         assertThat(invite.getStatus()).isEqualTo(ServerInviteStatus.PENDING);
         assertThat(invite.getAcceptedAt()).isNull();
+    }
+
+    @Test
+    void createsLinkWhenOneActiveLinkExists() {
+        UUID serverId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        givenOwnerOfLockedServer(serverId, ownerId);
+        when(inviteRepository.countRedeemableInvites(
+                eq(serverId), eq(ServerInviteType.LINK), eq(ServerInviteStatus.PENDING), any(Instant.class)))
+                .thenReturn(1L);
+        when(userRepository.findById(ownerId)).thenReturn(Optional.of(user(ownerId)));
+        when(inviteRepository.save(any(ServerInvite.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = inviteLinkService.createInviteLink(serverId, ownerId, new CreateInviteLinkRequest(10, 3));
+
+        assertThat(response.status()).isEqualTo(ServerInviteStatus.PENDING);
+        assertThat(response.expiresAt()).isNotNull();
+    }
+
+    @Test
+    void rejectsThirdActiveInviteLink() {
+        UUID serverId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        givenOwnerOfLockedServer(serverId, ownerId);
+        when(inviteRepository.countRedeemableInvites(
+                eq(serverId), eq(ServerInviteType.LINK), eq(ServerInviteStatus.PENDING), any(Instant.class)))
+                .thenReturn(2L);
+
+        assertThatThrownBy(() -> inviteLinkService.createInviteLink(
+                serverId,
+                ownerId,
+                new CreateInviteLinkRequest(10, 3)))
+                .isInstanceOfSatisfying(ApiException.class, exception ->
+                        assertThat(exception.getStatus()).isEqualTo(HttpStatus.CONFLICT));
+
+        verify(inviteRepository, never()).save(any(ServerInvite.class));
+    }
+
+    private void givenOwnerOfLockedServer(UUID serverId, UUID ownerId) {
+        when(serverRepository.findByIdAndDeletedAtIsNullForUpdate(serverId))
+                .thenReturn(Optional.of(server(serverId)));
+        when(membershipRepository.existsByServer_IdAndUser_IdAndRoleAndLeftAtIsNull(
+                serverId, ownerId, ServerMemberRole.OWNER)).thenReturn(true);
     }
 
     private static ServerInvite linkInvite(UUID serverId, int maxUses, int useCount) {

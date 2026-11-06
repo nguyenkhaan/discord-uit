@@ -98,13 +98,13 @@ public class DirectInviteService {
         Instant acceptedAt = Instant.now();
         requireNotExpired(invite, acceptedAt);
         Server server = findAndLockActiveServer(invite.getServer().getId());
-        requireNotActiveMember(
-                server.getId(),
-                currentUserId,
-                "You are already a member of this server.");
-
-        ServerMembership membership = createMembership(server, findUser(currentUserId), acceptedAt);
-        eventWriter.writeMembershipCreated(membership);
+        // The recipient may already have joined through an invite link: close this invite
+        // instead of failing, so it stops appearing as actionable.
+        boolean alreadyMember = isActiveMember(server.getId(), currentUserId);
+        if (!alreadyMember) {
+            ServerMembership membership = createMembership(server, findUser(currentUserId), acceptedAt);
+            eventWriter.writeMembershipCreated(membership);
+        }
 
         invite.setStatus(ServerInviteStatus.ACCEPTED);
         invite.setAcceptedAt(acceptedAt);
@@ -116,7 +116,9 @@ public class DirectInviteService {
                 server.getName(),
                 invite.getStatus(),
                 invite.getAcceptedAt(),
-                "Invite accepted successfully.");
+                alreadyMember
+                        ? "You are already a member of this server."
+                        : "Invite accepted successfully.");
     }
 
     @Transactional
@@ -164,11 +166,14 @@ public class DirectInviteService {
         }
     }
 
-    private void requireNotActiveMember(UUID serverId, UUID userId, String errorMessage) {
-        boolean activeMember = membershipRepository
+    private boolean isActiveMember(UUID serverId, UUID userId) {
+        return membershipRepository
                 .findByServer_IdAndUser_IdAndLeftAtIsNull(serverId, userId)
                 .isPresent();
-        if (activeMember) {
+    }
+
+    private void requireNotActiveMember(UUID serverId, UUID userId, String errorMessage) {
+        if (isActiveMember(serverId, userId)) {
             throw new ApiException(HttpStatus.CONFLICT, errorMessage);
         }
     }
