@@ -388,6 +388,22 @@ export interface paths {
         patch: operations["updateStatus"];
         trace?: never;
     };
+    "/servers/{serverId}/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch: operations["edit"];
+        trace?: never;
+    };
     "/notifications/{notificationId}/read": {
         parameters: {
             query?: never;
@@ -460,6 +476,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMessageHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -934,6 +966,26 @@ export interface components {
             /** @enum {string} */
             status: "ACTIVE" | "LOCKED" | "CLOSED";
         };
+        EditChatMessageRequest: {
+            contentText: string;
+        };
+        ChatMessageResponse: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            serverId?: string;
+            /** Format: uuid */
+            senderUserId?: string;
+            /** Format: uuid */
+            clientRequestId?: string;
+            contentText?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            editedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
         UpdateMeRequest: {
             fullName?: string;
         };
@@ -972,6 +1024,21 @@ export interface components {
             userId?: string;
             fullName?: string;
             email?: string;
+        };
+        ChatMessageHistoryItem: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            senderUserId?: string;
+            contentText?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            deleted?: boolean;
+        };
+        ChatMessageHistoryResponse: {
+            messages?: components["schemas"]["ChatMessageHistoryItem"][];
+            nextCursor?: string;
+            hasMore?: boolean;
         };
         ServerMemberResponse: {
             /** Format: uuid */
@@ -1049,6 +1116,9 @@ export interface components {
         };
         JwkSetResponse: {
             keys?: components["schemas"]["JsonWebKey"][];
+        };
+        DeleteChatMessageRequest: {
+            reason?: string;
         };
         DeleteServerRequest: {
             reason: string;
@@ -1667,6 +1737,60 @@ export interface operations {
             };
         };
     };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DeleteChatMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatMessageResponse"];
+                };
+            };
+        };
+    };
+    edit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditChatMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatMessageResponse"];
+                };
+            };
+        };
+    };
     markAsRead: {
         parameters: {
             query?: never;
@@ -1791,6 +1915,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ServerResponse"];
+                };
+            };
+        };
+    };
+    getMessageHistory: {
+        parameters: {
+            query?: {
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatMessageHistoryResponse"];
                 };
             };
         };
