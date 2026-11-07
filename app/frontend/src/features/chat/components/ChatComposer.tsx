@@ -1,14 +1,18 @@
-import { SendHorizontal } from 'lucide-react';
+import { ImagePlus, SendHorizontal } from 'lucide-react';
 import {
     useEffect,
     useId,
     useRef,
     useState,
+    type ChangeEvent,
     type FormEvent,
     type KeyboardEvent,
 } from 'react';
 
 import { Button } from '@/components/common/Button';
+import { ChatAttachmentPreview } from '@/features/chat/components/ChatAttachmentPreview';
+import { ChatEmojiPicker } from '@/features/chat/components/ChatEmojiPicker';
+import { useChatAttachments } from '@/features/chat/chat.hooks';
 import { MAX_CHAT_MESSAGE_LENGTH } from '@/features/chat/chat.utils';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +33,15 @@ export function ChatComposer({
     const inputId = useId();
     const hintId = useId();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [content, setContent] = useState('');
+    const {
+        attachments,
+        error: attachmentError,
+        addFiles,
+        removeAttachment,
+        clearAttachments,
+    } = useChatAttachments();
 
     const isDisabled = Boolean(disabledReason);
     const length = content.trim().length;
@@ -48,7 +60,29 @@ export function ChatComposer({
         if (!canSend) return;
         onSend(content);
         setContent('');
+        // Chưa có API upload: chỉ gửi chữ, bỏ ảnh đã chọn
+        clearAttachments();
         textareaRef.current?.focus();
+    }
+
+    function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+        addFiles(Array.from(event.target.files ?? []));
+        // Cho phép chọn lại cùng một file
+        event.target.value = '';
+    }
+
+    // Chèn emoji tại vị trí con trỏ
+    function insertEmoji(emoji: string) {
+        const textarea = textareaRef.current;
+        const start = textarea?.selectionStart ?? content.length;
+        const end = textarea?.selectionEnd ?? content.length;
+        setContent(content.slice(0, start) + emoji + content.slice(end));
+        requestAnimationFrame(() => {
+            if (!textarea) return;
+            const cursor = start + emoji.length;
+            textarea.focus();
+            textarea.setSelectionRange(cursor, cursor);
+        });
     }
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -76,12 +110,42 @@ export function ChatComposer({
             <label className="sr-only" htmlFor={inputId}>
                 Nhập tin nhắn
             </label>
+            <ChatAttachmentPreview
+                attachments={attachments}
+                onRemove={removeAttachment}
+            />
+            {attachmentError && (
+                <p
+                    className="mb-2 text-caption text-feedback-danger"
+                    role="alert"
+                >
+                    {attachmentError}
+                </p>
+            )}
+            <input
+                accept="image/*"
+                className="hidden"
+                multiple
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                type="file"
+            />
             <div
                 className={cn(
                     'flex items-end gap-2 rounded-xl border border-line bg-surface-subtle px-3 py-2 transition-colors focus-within:border-brand focus-within:ring-3 focus-within:ring-focus/20',
                     isDisabled && 'opacity-70'
                 )}
             >
+                <Button
+                    aria-label="Đính kèm ảnh"
+                    className="size-9 min-h-9 shrink-0 rounded-lg"
+                    disabled={isDisabled}
+                    onClick={() => fileInputRef.current?.click()}
+                    size="icon"
+                    variant="ghost"
+                >
+                    <ImagePlus aria-hidden="true" className="size-5" />
+                </Button>
                 <textarea
                     aria-describedby={hintId}
                     className="max-h-40 min-h-6 flex-1 resize-none bg-transparent py-1.5 text-body text-foreground outline-none placeholder:text-placeholder disabled:cursor-not-allowed"
@@ -97,6 +161,7 @@ export function ChatComposer({
                     rows={1}
                     value={content}
                 />
+                <ChatEmojiPicker disabled={isDisabled} onSelect={insertEmoji} />
                 <Button
                     aria-label="Gửi tin nhắn"
                     className="size-9 min-h-9 shrink-0 rounded-lg"

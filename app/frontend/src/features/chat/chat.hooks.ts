@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { getRealtimeSocket } from '@/api/socket';
+import { pickChatAttachments } from '@/features/chat/chat.attachments';
 import { chatKeys } from '@/features/chat/chat.keys';
 import { getChatHistory } from '@/features/chat/chat.service';
 import {
@@ -18,6 +19,7 @@ import {
     sendChatMessage,
 } from '@/features/chat/chat.socket';
 import type {
+    ChatAttachmentDraft,
     ChatConnectionStatus,
     ChatMessageDto,
     ChatMessageView,
@@ -275,4 +277,60 @@ export function useServerChat(
         retryMessage,
         reconnect,
     };
+}
+
+/** Quản lý ảnh đính kèm đang chọn (mock, chưa upload) */
+export function useChatAttachments() {
+    const [attachments, setAttachments] = useState<ChatAttachmentDraft[]>([]);
+    const [error, setError] = useState<string>();
+    const attachmentsRef = useRef(attachments);
+
+    useEffect(() => {
+        attachmentsRef.current = attachments;
+    }, [attachments]);
+
+    // Giải phóng URL xem trước khi rời trang
+    useEffect(
+        () => () =>
+            attachmentsRef.current.forEach((item) =>
+                URL.revokeObjectURL(item.previewUrl)
+            ),
+        []
+    );
+
+    const addFiles = useCallback((files: File[]) => {
+        const { accepted, error: pickError } = pickChatAttachments(
+            files,
+            attachmentsRef.current.length
+        );
+        setError(pickError);
+        if (accepted.length === 0) return;
+        setAttachments((current) => [
+            ...current,
+            ...accepted.map((file) => ({
+                id: crypto.randomUUID(),
+                file,
+                previewUrl: URL.createObjectURL(file),
+            })),
+        ]);
+    }, []);
+
+    const removeAttachment = useCallback((id: string) => {
+        setError(undefined);
+        setAttachments((current) => {
+            const removed = current.find((item) => item.id === id);
+            if (removed) URL.revokeObjectURL(removed.previewUrl);
+            return current.filter((item) => item.id !== id);
+        });
+    }, []);
+
+    const clearAttachments = useCallback(() => {
+        setError(undefined);
+        setAttachments((current) => {
+            current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+            return [];
+        });
+    }, []);
+
+    return { attachments, error, addFiles, removeAttachment, clearAttachments };
 }
