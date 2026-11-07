@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
     Archive,
@@ -18,7 +19,8 @@ import {
 } from 'lucide-react';
 
 import { ServerAvatar } from '@/features/server/components/ServerAvatar';
-import { getServerStatus, SERVER_STATUS_META } from '@/features/server/server.status';
+import { ServerStatusBadge } from '@/features/server/components/ServerStatusBadge';
+import { getServerStatus } from '@/features/server/server.status';
 import type { ServerMemberRole, ServerResponse, ServerStatus } from '@/features/server/server.type';
 import { showToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -84,21 +86,6 @@ const ACTION_TONE_CLASSES: Record<ServerActionTone, string> = {
     warning: 'text-amber-600 hover:bg-amber-100/70 focus-visible:bg-amber-100/70',
     danger: 'text-red-600 hover:bg-red-100/70 focus-visible:bg-red-100/70',
 };
-
-function ServerStatusBadge({ status }: { status: ServerStatus }) {
-    const meta = SERVER_STATUS_META[status];
-    return (
-        <span
-            className={cn(
-                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap ring-1 ring-inset',
-                meta.badgeClass
-            )}
-        >
-            <span className={cn('w-1.5 h-1.5 rounded-full', meta.dotClass)} />
-            {meta.label}
-        </span>
-    );
-}
 
 type MenuState = { serverId: string; left: number; top?: number; bottom?: number };
 
@@ -172,6 +159,7 @@ export const ServerTableList = ({
     const [menu, setMenu] = useState<MenuState | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const navigate = useNavigate();
 
     const totalItems = servers.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
@@ -235,6 +223,10 @@ export const ServerTableList = ({
 
     const handleAction = (action: ServerAction, server: ServerResponse) => {
         setMenu(null);
+        if (action.key === 'view' && server.id) {
+            navigate(`/servers/${server.id}`);
+            return;
+        }
         if (action.key === 'invite' && onInviteMembers) {
             onInviteMembers(server);
             return;
@@ -362,9 +354,19 @@ export const ServerTableList = ({
                                             <div className="flex items-center gap-3">
                                                 <ServerAvatar name={server.name} imageUrl={server.groupImageUrl} />
                                                 <div className="min-w-0">
-                                                    <p className="font-semibold text-gray-900 line-clamp-1" title={server.name}>
-                                                        {server.name || 'Chưa đặt tên'}
-                                                    </p>
+                                                    {server.id ? (
+                                                        <Link
+                                                            to={`/servers/${server.id}`}
+                                                            title={server.name}
+                                                            className="block font-semibold text-gray-900 line-clamp-1 rounded hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                                                        >
+                                                            {server.name || 'Chưa đặt tên'}
+                                                        </Link>
+                                                    ) : (
+                                                        <p className="font-semibold text-gray-900 line-clamp-1" title={server.name}>
+                                                            {server.name || 'Chưa đặt tên'}
+                                                        </p>
+                                                    )}
                                                     <p className="text-xs text-gray-500 line-clamp-1">Mô tả server đang cập nhật...</p>
                                                 </div>
                                             </div>
