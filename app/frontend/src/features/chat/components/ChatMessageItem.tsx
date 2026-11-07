@@ -2,6 +2,7 @@ import { CircleAlert, RotateCw } from 'lucide-react';
 
 import { Button } from '@/components/common/Button';
 import { UserAvatar } from '@/components/common/UserAvatar';
+import { chatBubbleVariants } from '@/features/chat/components/chatBubbleVariants';
 import { ChatMessageContent } from '@/features/chat/components/ChatMessageContent';
 import type { ChatMessageView } from '@/features/chat/chat.type';
 import {
@@ -18,6 +19,7 @@ interface ChatMessageItemProps {
     onRetry: (clientRequestId: string) => void;
 }
 
+/** Một tin nhắn: của mình bên phải, người khác bên trái */
 export function ChatMessageItem({
     message,
     senderName,
@@ -26,62 +28,61 @@ export function ChatMessageItem({
     onRetry,
 }: ChatMessageItemProps) {
     const time = formatChatTime(message.createdAt);
+    const bubbleTone = message.isDeleted ? 'deleted' : isOwn ? 'own' : 'other';
 
     return (
         <article
-            aria-label={`${senderName}, ${time}`}
+            aria-label={`${isOwn ? 'Bạn' : senderName}, ${time}`}
             className={cn(
-                'group flex gap-3 rounded-lg px-2 py-0.5 hover:bg-surface-subtle',
-                isGroupStart && 'mt-3 pt-1.5'
+                'flex gap-2',
+                isOwn ? 'justify-end' : 'justify-start',
+                isGroupStart ? 'mt-3' : 'mt-0.5'
             )}
         >
-            <div className="w-10 shrink-0">
-                {isGroupStart ? (
-                    <UserAvatar
-                        name={senderName}
-                        tone={isOwn ? 'brand' : 'subtle'}
-                    />
-                ) : (
-                    <time
-                        className="block pt-1 text-right text-[0.6875rem] text-subtle opacity-0 group-hover:opacity-100"
-                        dateTime={message.createdAt}
-                    >
-                        {time}
-                    </time>
-                )}
-            </div>
+            {!isOwn && (
+                <div className="w-8 shrink-0">
+                    {isGroupStart && <UserAvatar name={senderName} size="sm" />}
+                </div>
+            )}
 
-            <div className="min-w-0 flex-1">
+            <div
+                className={cn(
+                    'flex min-w-0 max-w-[80%] flex-col sm:max-w-[70%]',
+                    isOwn ? 'items-end' : 'items-start'
+                )}
+            >
                 {isGroupStart && (
-                    <p className="flex items-baseline gap-2">
-                        <span className="truncate text-sm font-bold text-heading">
-                            {isOwn ? `${senderName} (Bạn)` : senderName}
-                        </span>
-                        <time
-                            className="shrink-0 text-caption text-muted"
-                            dateTime={message.createdAt}
-                        >
-                            {time}
-                        </time>
+                    <p className="mb-1 flex items-baseline gap-2 px-1 text-caption text-muted">
+                        {!isOwn && (
+                            <span className="truncate font-semibold text-foreground-secondary">
+                                {senderName}
+                            </span>
+                        )}
+                        <time dateTime={message.createdAt}>{time}</time>
                     </p>
                 )}
 
-                {message.isDeleted ? (
-                    <p className="text-body italic text-muted">
-                        {DELETED_MESSAGE_TEXT}
-                    </p>
-                ) : (
-                    <div
-                        className={cn(
-                            message.status === 'sending' && 'opacity-60'
-                        )}
-                    >
-                        <ChatMessageContent content={message.contentText} />
-                    </div>
-                )}
+                <div
+                    className={cn(
+                        chatBubbleVariants({ tone: bubbleTone }),
+                        message.status === 'sending' && 'opacity-60'
+                    )}
+                    title={time}
+                >
+                    {message.isDeleted ? (
+                        DELETED_MESSAGE_TEXT
+                    ) : (
+                        <ChatMessageContent
+                            content={message.contentText}
+                            tone={isOwn ? 'onBrand' : 'default'}
+                        />
+                    )}
+                </div>
 
                 {message.status === 'sending' && (
-                    <p className="text-caption text-muted">Đang gửi...</p>
+                    <p className="mt-0.5 px-1 text-caption text-muted">
+                        Đang gửi...
+                    </p>
                 )}
 
                 {message.status === 'failed' && message.clientRequestId && (
