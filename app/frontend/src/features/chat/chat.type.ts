@@ -57,3 +57,10 @@ export type ChatConnectionStatus =
     | 'not-member'
     | 'unauthenticated'
     | 'error';
+
+/** Ảnh đã chọn, chưa gửi (chưa có API upload) */
+export interface ChatAttachmentDraft {
+    id: string;
+    file: File;
+    previewUrl: string;
+}
