@@ -76,7 +76,7 @@ export default function ServerDetailPage() {
     const server = serverQuery.data;
 
     return (
-        <div className="flex h-[calc(100svh-6rem)] flex-col overflow-hidden rounded-2xl border border-line bg-surface sm:h-[calc(100svh-7rem)]">
+        <div className="flex h-[calc(100svh-6rem)] flex-col overflow-hidden border-none bg-surface sm:h-[calc(100svh-7rem)]">
             <ServerDetailHeader
                 isPanelOpen={isPanelOpen}
                 onTogglePanel={() => setIsPanelOpen((open) => !open)}

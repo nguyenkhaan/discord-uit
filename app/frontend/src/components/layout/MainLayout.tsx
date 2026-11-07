@@ -15,7 +15,7 @@ export function MainLayout({ children }: PropsWithChildren) {
 
             <div className="min-h-screen md:pl-60">
                 <Header isMenuOpen={isSidebarOpen} onMenuClick={openSidebar} />
-                <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6" id="main-content">
+                <main className="min-h-[calc(100vh-4rem)]" id="main-content">
                     {/* Dùng như route cha → render trang con qua <Outlet />.
                         Vẫn hỗ trợ cách cũ <MainLayout>...</MainLayout> qua children. */}
                     {children ?? <Outlet />}

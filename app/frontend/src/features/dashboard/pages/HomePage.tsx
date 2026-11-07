@@ -17,7 +17,7 @@ export default function HomePage() {
     const userName = user?.fullName ?? 'bạn';
 
     return (
-        <div className="mx-auto w-full max-w-7xl space-y-5">
+        <div className="mx-auto sm:py-6 py-4 w-full max-w-7xl space-y-5">
             <header>
                 <h1 className="text-2xl font-bold text-heading sm:text-3xl">
                     Chào {userName} <span aria-hidden="true">👋</span>
