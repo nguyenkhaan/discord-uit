@@ -56,7 +56,7 @@ export default function ServerDetailPage() {
         return (
             <div
                 aria-busy="true"
-                className="h-[calc(100svh-6rem)] animate-pulse rounded-2xl bg-surface sm:h-[calc(100svh-7rem)]"
+                className="h-[calc(100svh-4rem)] animate-pulse bg-surface"
             />
         );
     }
@@ -76,7 +76,7 @@ export default function ServerDetailPage() {
     const server = serverQuery.data;
 
     return (
-        <div className="flex h-[calc(100svh-6rem)] flex-col overflow-hidden border-none bg-surface sm:h-[calc(100svh-7rem)]">
+        <div className="flex h-[calc(100svh-4rem)] flex-col overflow-hidden bg-surface">
             <ServerDetailHeader
                 isPanelOpen={isPanelOpen}
                 onTogglePanel={() => setIsPanelOpen((open) => !open)}
