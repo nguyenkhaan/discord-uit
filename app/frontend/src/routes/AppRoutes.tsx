@@ -17,7 +17,13 @@ import AuthGuard from '@/components/AuthGuard';
 import { Header } from '@/components/Header/Header';
 import { AuthGuardLayout } from '@/components/layout/AuthGuardLayout';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { AdminNotificationForm } from '@/features/admin/AdminNotificationForm';
+import { AdminNotificationForm } from '@/features/admin/components/AdminNotificationForm';
+import { AdminGuard } from '@/features/admin/components/AdminGuard';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import AdminAccountsPage from '@/features/admin/pages/AdminAccountsPage';
+import AdminReportsPage from '@/features/admin/pages/AdminReportsPage';
+import AdminServersPage from '@/features/admin/pages/AdminServersPage';
+import AdminComingSoonPage from '@/pages/AdminComingSoonPage';
 
 export default function AppRoutes() {
     return (
@@ -64,6 +70,7 @@ export default function AppRoutes() {
                     >
                         <Route path="/home" element={<HomePage />} />
                         <Route path="/servers" element={<ServerListPage />} />
+                        
                         <Route
                             path="/servers/:serverId"
                             element={<ServerDetailPage />}
@@ -90,16 +97,52 @@ export default function AppRoutes() {
                         />
                     </Route>
 
-                    {/* ===== Trang test / admin (giữ như cũ) ===== */}
+                    {/* ===== Trang test ===== */}
                     <Route path="/test-header" element={<Header />} />
+
+                    {/* ===== Khu vực quản trị: chỉ ADMIN, dùng AdminLayout riêng ===== */}
                     <Route
-                        path="/admin/notifications"
+                        path="/admin"
                         element={
-                            <MainLayout>
-                                <AdminNotificationForm />
-                            </MainLayout>
+                            <AuthGuard>
+                                <AdminGuard>
+                                    <AdminLayout />
+                                </AdminGuard>
+                            </AuthGuard>
                         }
-                    />
+                    >
+                        <Route
+                            index
+                            element={<AdminComingSoonPage title="Tổng quan" />}
+                        />
+                        <Route
+                            path="accounts"
+                            element={<AdminAccountsPage />}
+                        />
+                        <Route path="servers" element={<AdminServersPage />} />
+                        <Route
+                            path="documents"
+                            element={
+                                <AdminComingSoonPage title="Quản lý tài liệu" />
+                            }
+                        />
+                        <Route
+                            path="forum"
+                            element={
+                                <AdminComingSoonPage title="Quản lý diễn đàn" />
+                            }
+                        />
+                        <Route path="reports" element={<AdminReportsPage />} />
+                        <Route
+                            path="notifications"
+                            element={<AdminNotificationForm />}
+                        />
+                        <Route
+                            path="settings"
+                            element={<AdminComingSoonPage title="Cài đặt" />}
+                        />
+                    </Route>
+
                     <Route
                         path="/test-main-layout"
                         element={<TestMainLayout />}

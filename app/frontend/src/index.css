@@ -8,6 +8,9 @@
     --color-background-brand-subtle-hover: #e5eeff;
     --color-background-danger-subtle: #fff0f0;
     --color-background-success-subtle: #e7f8ee;
+    --color-background-warning-subtle: #fff4e5;
+    --color-background-info-subtle: #e8f1ff;
+    --color-background-violet-subtle: #f3edff;
 
     --color-text-heading: #0f1f4a;
     --color-text-primary: #14264b;
@@ -32,9 +35,13 @@
     --color-danger: #b42318;
     --color-danger-border: #e5484d;
     --color-success: #16834b;
+    --color-warning: #b45309;
+    --color-warning-accent: #f59e0b;
+    --color-violet: #7c3aed;
 
     --shadow-card: 0 18px 50px rgb(25 54 100 / 12%);
     --shadow-action: 0 6px 16px rgb(31 95 224 / 28%);
+    --shadow-card-soft: 0 2px 10px -4px rgb(15 31 74 / 10%);
     --shadow-focus: 0 0 0 3px rgb(54 104 210 / 12%);
     --shadow-focus-danger: 0 0 0 3px rgb(229 72 77 / 14%);
 
@@ -68,6 +75,9 @@
     --color-brand-subtle-hover: var(--color-background-brand-subtle-hover);
     --color-danger-subtle: var(--color-background-danger-subtle);
     --color-success-subtle: var(--color-background-success-subtle);
+    --color-warning-subtle: var(--color-background-warning-subtle);
+    --color-info-subtle: var(--color-background-info-subtle);
+    --color-violet-subtle: var(--color-background-violet-subtle);
 
     --color-heading: var(--color-text-heading);
     --color-foreground: var(--color-text-primary);
@@ -92,6 +102,9 @@
     --color-feedback-danger: var(--color-danger);
     --color-feedback-danger-border: var(--color-danger-border);
     --color-feedback-success: var(--color-success);
+    --color-feedback-warning: var(--color-warning);
+    --color-feedback-warning-accent: var(--color-warning-accent);
+    --color-feedback-violet: var(--color-violet);
 
     --font-sans: var(--font-family-sans);
     --font-heading: var(--font-family-heading);
@@ -111,6 +124,7 @@
 
     --shadow-auth-card: var(--shadow-card);
     --shadow-auth-action: var(--shadow-action);
+    --shadow-soft: var(--shadow-card-soft);
     --shadow-auth-focus: var(--shadow-focus);
     --shadow-auth-focus-danger: var(--shadow-focus-danger);
 }
