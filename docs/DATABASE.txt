@@ -238,6 +238,7 @@ table chat_message {
   client_request_id string
   linked_content_type MessageLinkType
   linked_content_id uuid
+  reply_to_message_id uuid [null]
   created_at datetime
   edited_at datetime
   deleted_at datetime
@@ -247,6 +248,7 @@ table chat_message {
 
   indexes {
     (server_id, sender_user_id, client_request_id) [unique]
+    reply_to_message_id
   }
 }
 
@@ -580,6 +582,7 @@ Ref: server_invite.recipient_user_id > user_account.id
 Ref: chat_message.server_id > server.id
 Ref: chat_message.sender_user_id > user_account.id
 Ref: chat_message.deleted_by_user_id > user_account.id
+Ref: chat_message.reply_to_message_id > chat_message.id
 Ref: message_reaction.message_id > chat_message.id
 Ref: message_reaction.reacted_by_user_id > user_account.id
 Ref: message_reaction.icon_id > react_icon.id
