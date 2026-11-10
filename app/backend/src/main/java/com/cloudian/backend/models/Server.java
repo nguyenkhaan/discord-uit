@@ -39,6 +39,9 @@ public class Server {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "description", length = 500)
+    private String description;
+
     @Column(name = "group_image_url")
     private String groupImageUrl;
 

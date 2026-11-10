@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE server
+    ADD COLUMN IF NOT EXISTS description VARCHAR(500);
+
+COMMIT;
