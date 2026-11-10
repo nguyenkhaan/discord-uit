@@ -171,6 +171,32 @@ class ServerStatusServiceTests {
         assertThat(savedServer.getValue().getDescription()).isNull();
     }
 
+    @Test
+    void createTrimsUnicodeWhitespaceFromDescription() {
+        UUID userId = UUID.randomUUID();
+
+        serverService.create(userId, new CreateServerRequest(
+                "Cloud Computing",
+                "\u2003Tài nguyên và thảo luận về điện toán đám mây.\u00a0",
+                null));
+
+        ArgumentCaptor<Server> savedServer = ArgumentCaptor.forClass(Server.class);
+        verify(serverRepository).save(savedServer.capture());
+        assertThat(savedServer.getValue().getDescription())
+                .isEqualTo("Tài nguyên và thảo luận về điện toán đám mây.");
+    }
+
+    @Test
+    void createNormalizesNonBreakingSpaceOnlyDescriptionToNull() {
+        UUID userId = UUID.randomUUID();
+
+        serverService.create(userId, new CreateServerRequest("Cloud Computing", "\u00a0", null));
+
+        ArgumentCaptor<Server> savedServer = ArgumentCaptor.forClass(Server.class);
+        verify(serverRepository).save(savedServer.capture());
+        assertThat(savedServer.getValue().getDescription()).isNull();
+    }
+
     private static Server server(ServerStatus status) {
         Server server = new Server();
         server.setId(UUID.randomUUID());

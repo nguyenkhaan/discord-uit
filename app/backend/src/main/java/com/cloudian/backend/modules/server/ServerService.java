@@ -214,10 +214,24 @@ public class ServerService {
     }
 
     private static String normalizeDescription(String description) {
-        if (description == null || description.isBlank()) {
+        if (description == null) {
             return null;
         }
-        return description.trim();
+
+        int start = 0;
+        int end = description.length();
+        while (start < end && isDescriptionWhitespace(description.codePointAt(start))) {
+            start += Character.charCount(description.codePointAt(start));
+        }
+        while (start < end && isDescriptionWhitespace(description.codePointBefore(end))) {
+            end -= Character.charCount(description.codePointBefore(end));
+        }
+
+        return start == end ? null : description.substring(start, end);
+    }
+
+    private static boolean isDescriptionWhitespace(int codePoint) {
+        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
     }
 
     // use this when Image is upload but the transaction is not committed
