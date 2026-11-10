@@ -2,6 +2,7 @@ package com.cloudian.backend.modules.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,7 @@ import com.cloudian.backend.commons.enums.ServerStatus;
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.models.Server;
 import com.cloudian.backend.models.ServerMembership;
+import com.cloudian.backend.modules.server.dto.CreateServerRequest;
 import com.cloudian.backend.modules.server.dto.ServerResponse;
 import com.cloudian.backend.modules.server.dto.ServerStatusCountResponse;
 import com.cloudian.backend.repositories.ServerMembershipRepository;
@@ -140,6 +143,32 @@ class ServerStatusServiceTests {
                 .hasMessage("Only server owners can change server status.");
 
         assertThat(server.getStatus()).isEqualTo(ServerStatus.ACTIVE);
+    }
+
+    @Test
+    void createTrimsDescriptionBeforeSavingTheServer() {
+        UUID userId = UUID.randomUUID();
+
+        serverService.create(userId, new CreateServerRequest(
+                "Cloud Computing",
+                "  Tài nguyên và thảo luận về điện toán đám mây.  ",
+                null));
+
+        ArgumentCaptor<Server> savedServer = ArgumentCaptor.forClass(Server.class);
+        verify(serverRepository).save(savedServer.capture());
+        assertThat(savedServer.getValue().getDescription())
+                .isEqualTo("Tài nguyên và thảo luận về điện toán đám mây.");
+    }
+
+    @Test
+    void createNormalizesWhitespaceOnlyDescriptionToNull() {
+        UUID userId = UUID.randomUUID();
+
+        serverService.create(userId, new CreateServerRequest("Cloud Computing", "   ", null));
+
+        ArgumentCaptor<Server> savedServer = ArgumentCaptor.forClass(Server.class);
+        verify(serverRepository).save(savedServer.capture());
+        assertThat(savedServer.getValue().getDescription()).isNull();
     }
 
     private static Server server(ServerStatus status) {

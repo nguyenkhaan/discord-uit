@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
  */
 public record CreateServerRequest(
         @NotBlank @Size(max = 100) String name,
+        @Size(max = 500) String description,
         MultipartFile image
 ) {
 

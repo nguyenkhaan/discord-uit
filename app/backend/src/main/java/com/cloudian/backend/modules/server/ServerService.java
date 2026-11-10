@@ -85,6 +85,7 @@ public class ServerService {
 
         Server server = new Server();
         server.setName(request.name().trim());
+        server.setDescription(normalizeDescription(request.description()));
         server.setGroupImageUrl(imageKey);
         server.setCreatedBy(creator);
         serverRepository.save(server);
@@ -210,6 +211,13 @@ public class ServerService {
             return EnumSet.allOf(ServerStatus.class);
         }
         return EnumSet.copyOf(requestedStatuses);
+    }
+
+    private static String normalizeDescription(String description) {
+        if (description == null || description.isBlank()) {
+            return null;
+        }
+        return description.trim();
     }
 
     // use this when Image is upload but the transaction is not committed

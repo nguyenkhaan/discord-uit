@@ -17,6 +17,7 @@ class ServerResponseStatusTest {
         Server server = new Server();
         server.setId(UUID.randomUUID());
         server.setName("Cloud Computing");
+        server.setDescription("Tài nguyên và thảo luận về điện toán đám mây.");
         server.setStatus(ServerStatus.LOCKED);
 
         ServerResponse response = ServerResponse.of(
@@ -26,5 +27,6 @@ class ServerResponseStatusTest {
                 1);
 
         assertThat(response.status()).isEqualTo(ServerStatus.LOCKED);
+        assertThat(response.description()).isEqualTo("Tài nguyên và thảo luận về điện toán đám mây.");
     }
 }

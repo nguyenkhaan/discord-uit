@@ -10,6 +10,7 @@ import com.cloudian.backend.models.Server;
 public record ServerResponse(
         UUID id,
         String name,
+        String description,
         String groupImageUrl,        // short-lived presigned link, NOT the object key stored in the DB
         ServerMemberRole myRole,
         ServerStatus status,
@@ -22,6 +23,7 @@ public record ServerResponse(
         return new ServerResponse(
                 server.getId(),
                 server.getName(),
+                server.getDescription(),
                 groupImageUrl,
                 myRole,
                 server.getStatus(),
