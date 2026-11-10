@@ -252,6 +252,19 @@ table chat_message {
   }
 }
 
+// Ảnh đính kèm của tin nhắn
+table chat_message_attachment {
+  chat_message_id uuid
+  media_id uuid
+  position int
+
+  indexes {
+    (chat_message_id, media_id) [pk]
+    (chat_message_id, position) [unique]
+    media_id
+  }
+}
+
 table react_icon {
   id uuid PK
   icon_image string
@@ -583,6 +596,8 @@ Ref: chat_message.server_id > server.id
 Ref: chat_message.sender_user_id > user_account.id
 Ref: chat_message.deleted_by_user_id > user_account.id
 Ref: chat_message.reply_to_message_id > chat_message.id
+Ref: chat_message_attachment.chat_message_id > chat_message.id
+Ref: chat_message_attachment.media_id > media.id
 Ref: message_reaction.message_id > chat_message.id
 Ref: message_reaction.reacted_by_user_id > user_account.id
 Ref: message_reaction.icon_id > react_icon.id
