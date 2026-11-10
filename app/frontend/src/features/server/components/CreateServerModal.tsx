@@ -13,6 +13,7 @@ const MAX_IMAGE_SIZE_MB = 5;
 
 export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, onClose }) => {
     const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -39,6 +40,7 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
 
     const resetForm = () => {
         setName('');
+        setDescription('');
         updateImage(null);
     };
 
@@ -79,12 +81,17 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const trimmedName = name.trim();
+        const trimmedDescription = description.trim();
         if (!trimmedName) {
             showToast('Vui lòng nhập tên server.');
             return;
         }
 
-        createServer({ name: trimmedName, image: imageFile }, {
+        createServer({
+            name: trimmedName,
+            description: trimmedDescription || undefined,
+            image: imageFile,
+        }, {
             onSuccess: () => {
                 showToast(`Đã tạo server "${trimmedName}" thành công.`);
                 resetForm();
@@ -140,6 +147,26 @@ export const CreateServerModal: React.FC<CreateServerModalProps> = ({ isOpen, on
                             className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all placeholder:text-slate-400 disabled:bg-slate-50"
                             placeholder="Nhập tên server..."
                         />
+                    </div>
+
+                    <div>
+                        <label htmlFor="server-description" className="block text-sm font-medium text-slate-700 mb-2">
+                            Mô tả server <span className="text-slate-400">(Tùy chọn)</span>
+                        </label>
+                        <textarea
+                            id="server-description"
+                            rows={3}
+                            maxLength={500}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            disabled={isPending}
+                            aria-describedby="server-description-help"
+                            className="w-full resize-y px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all placeholder:text-slate-400 disabled:bg-slate-50"
+                            placeholder="Giới thiệu ngắn về mục đích của server..."
+                        />
+                        <p id="server-description-help" className="mt-1.5 text-xs text-slate-500">
+                            Tối đa 500 ký tự ({description.length}/500)
+                        </p>
                     </div>
 
                     <div>

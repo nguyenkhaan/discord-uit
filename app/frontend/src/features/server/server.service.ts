@@ -46,9 +46,15 @@ export async function getServer(serverId: string): Promise<ServerResponse> {
 }
 
 /** POST /servers (multipart/form-data) */
-export async function createServer({ name, image }: CreateServerPayload): Promise<ServerResponse> {
+export async function createServer({
+    name,
+    description,
+    image,
+}: CreateServerPayload): Promise<ServerResponse> {
     const formData = new FormData();
     formData.append('name', name);
+    const normalizedDescription = description?.trim();
+    if (normalizedDescription) formData.append('description', normalizedDescription);
     if (image) formData.append('image', image);
 
     // Ghi đè Content-Type JSON mặc định của client; trình duyệt sẽ tự gắn boundary

@@ -40,6 +40,7 @@ export type ServerStatusCounts = Record<ServerStatus, number>;
 
 export interface CreateServerPayload {
     name: string;
+    description?: string;
     image?: File | null;
 }
 

@@ -42,6 +42,12 @@ export function ServerInfoTab({
 
     return (
         <div className="space-y-4">
+            <InfoSection title="Giới thiệu server">
+                <p className="whitespace-pre-wrap break-words text-body-sm text-muted">
+                    {server.description?.trim() || 'Server này chưa có mô tả.'}
+                </p>
+            </InfoSection>
+
             <InfoSection title="Link đã gửi">
                 <ServerSharedLinks
                     getSenderName={getSenderName}

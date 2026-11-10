@@ -778,6 +778,7 @@ export interface components {
     schemas: {
         CreateServerRequest: {
             name: string;
+            description?: string;
             /** Format: binary */
             image?: string;
         };
@@ -785,6 +786,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             name?: string;
+            description?: string;
             groupImageUrl?: string;
             /** @enum {string} */
             myRole?: "OWNER" | "MEMBER";
