@@ -17,6 +17,18 @@ export const ChatSendCommandSchema = z
         serverId: UuidSchema,
         clientRequestId: UuidSchema,
         contentText: z.string().trim().min(1).max(2000),
+        // Id tin được trả lời, bỏ trống khi không reply
+        replyToMessageId: UuidSchema.optional(),
+    })
+    .strict();
+
+// Trích dẫn tin được trả lời; contentText là null khi tin gốc đã thu hồi
+export const ChatReplyPreviewSchema = z
+    .object({
+        messageId: UuidSchema,
+        senderUserId: UuidSchema,
+        contentText: z.string().max(2000).nullable(),
+        deleted: z.boolean(),
     })
     .strict();
 
@@ -28,6 +40,7 @@ export const ChatMessageDtoSchema = z
         clientRequestId: UuidSchema,
         contentText: z.string().min(1).max(2000),
         createdAt: IsoTimestampSchema,
+        replyTo: ChatReplyPreviewSchema.nullable().optional(),
     })
     .strict();
 

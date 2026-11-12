@@ -40,11 +40,18 @@ public class RealtimeChatMessageService {
                         HttpStatus.NOT_FOUND,
                         SERVER_NOT_FOUND));
 
-        ChatMessage message = messageWriter.createOrGet(
-                serverId,
-                senderUserId,
-                request.clientRequestId(),
-                contentText);
+        ChatMessage message = request.replyToMessageId() == null
+                ? messageWriter.createOrGet(
+                        serverId,
+                        senderUserId,
+                        request.clientRequestId(),
+                        contentText)
+                : messageWriter.createOrGet(
+                        serverId,
+                        senderUserId,
+                        request.clientRequestId(),
+                        contentText,
+                        request.replyToMessageId());
 
         return RealtimeChatMessageResponse.from(message);
     }

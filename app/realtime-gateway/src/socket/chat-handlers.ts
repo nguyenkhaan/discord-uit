@@ -75,6 +75,10 @@ export function registerChatHandlers(
                     {
                         clientRequestId: command.clientRequestId,
                         contentText: command.contentText,
+                        // Chỉ gửi khi có reply
+                        ...(command.replyToMessageId
+                            ? { replyToMessageId: command.replyToMessageId }
+                            : {}),
                     },
                 );
             } catch (error) {

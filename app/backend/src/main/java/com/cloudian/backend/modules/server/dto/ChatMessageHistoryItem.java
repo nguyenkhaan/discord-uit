@@ -5,13 +5,15 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.cloudian.backend.models.ChatMessage;
+import com.cloudian.backend.modules.chat.dto.ChatMessageReplyPreview;
 
 public record ChatMessageHistoryItem(
         UUID messageId,
         UUID senderUserId,
         String contentText,
         Instant createdAt,
-        boolean deleted) {
+        boolean deleted,
+        ChatMessageReplyPreview replyTo) {
 
     public static ChatMessageHistoryItem from(ChatMessage message) {
         boolean deleted = message.getDeletedAt() != null;
@@ -21,6 +23,7 @@ public record ChatMessageHistoryItem(
                 message.getSender().getId(),
                 deleted ? null : message.getContentText(),
                 message.getCreatedAt(),
-                deleted);
+                deleted,
+                ChatMessageReplyPreview.of(message.getReplyTo()));
     }
 }

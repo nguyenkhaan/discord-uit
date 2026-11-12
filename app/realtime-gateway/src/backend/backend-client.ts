@@ -203,7 +203,10 @@ export class BackendClient {
     async createChatMessage(
         accessToken: string,
         serverId: string,
-        command: Pick<ChatSendCommand, "clientRequestId" | "contentText">,
+        command: Pick<
+            ChatSendCommand,
+            "clientRequestId" | "contentText" | "replyToMessageId"
+        >,
     ): Promise<ChatMessageDto> {
         let response: Response;
 

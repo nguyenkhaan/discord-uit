@@ -23,6 +23,7 @@ import type {
     ChatConnectionStatus,
     ChatMessageDto,
     ChatMessageView,
+    ChatReplyView,
 } from '@/features/chat/chat.type';
 import {
     chatReducer,
@@ -62,7 +63,7 @@ export interface ServerChat {
     connectionStatus: ChatConnectionStatus;
     /** Đã vào room, có thể gửi tin */
     isReady: boolean;
-    sendMessage: (content: string) => void;
+    sendMessage: (content: string, replyTo?: ChatReplyView) => void;
     retryMessage: (clientRequestId: string) => void;
     reconnect: () => void;
 }
@@ -178,7 +179,11 @@ export function useServerChat(
     }, [serverId, refetchHistory]);
 
     const deliver = useCallback(
-        async (clientRequestId: string, contentText: string) => {
+        async (
+            clientRequestId: string,
+            contentText: string,
+            replyToMessageId?: string
+        ) => {
             const socket = getRealtimeSocket();
             if (!socket.connected) {
                 dispatch({
@@ -192,6 +197,7 @@ export function useServerChat(
                 serverId,
                 clientRequestId,
                 contentText,
+                ...(replyToMessageId ? { replyToMessageId } : {}),
             });
             if (result.ok) {
                 dispatch({ type: 'confirmed', message: result.data });
@@ -210,7 +216,7 @@ export function useServerChat(
     );
 
     const sendMessage = useCallback(
-        (content: string) => {
+        (content: string, replyTo?: ChatReplyView) => {
             const contentText = content.trim();
             if (
                 !currentUserId ||
@@ -231,9 +237,10 @@ export function useServerChat(
                     createdAt: new Date().toISOString(),
                     status: 'sending',
                     isDeleted: false,
+                    replyTo,
                 },
             });
-            void deliver(clientRequestId, contentText);
+            void deliver(clientRequestId, contentText, replyTo?.messageId);
         },
         [currentUserId, deliver]
     );
@@ -245,7 +252,11 @@ export function useServerChat(
             );
             if (!message || message.status !== 'failed') return;
             dispatch({ type: 'retrying', clientRequestId });
-            void deliver(clientRequestId, message.contentText);
+            void deliver(
+                clientRequestId,
+                message.contentText,
+                message.replyTo?.messageId
+            );
         },
         [deliver]
     );

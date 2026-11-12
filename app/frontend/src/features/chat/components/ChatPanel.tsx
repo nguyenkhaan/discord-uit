@@ -1,7 +1,11 @@
+import { useState } from 'react';
+
 import { ChatComposer } from '@/features/chat/components/ChatComposer';
 import { ChatConnectionBanner } from '@/features/chat/components/ChatConnectionBanner';
 import { ChatMessageList } from '@/features/chat/components/ChatMessageList';
 import type { ServerChat } from '@/features/chat/chat.hooks';
+import type { ChatMessageView, ChatReplyView } from '@/features/chat/chat.type';
+import { toReplyTarget } from '@/features/chat/chat.utils';
 
 interface ChatPanelProps {
     chat: ServerChat;
@@ -21,8 +25,19 @@ export function ChatPanel({
     getSenderName,
     lockedReason,
 }: ChatPanelProps) {
+    const [replyTarget, setReplyTarget] = useState<ChatReplyView | null>(null);
     const disabledReason =
         lockedReason ?? (chat.isReady ? undefined : CONNECTION_DISABLED_REASON);
+
+    function handleReply(message: ChatMessageView) {
+        setReplyTarget(toReplyTarget(message));
+    }
+
+    // Gửi kèm tin đang trả lời rồi bỏ chọn
+    function handleSend(content: string) {
+        chat.sendMessage(content, replyTarget ?? undefined);
+        setReplyTarget(null);
+    }
 
     return (
         <section
@@ -38,11 +53,19 @@ export function ChatPanel({
                 getSenderName={getSenderName}
                 history={chat.history}
                 messages={chat.messages}
+                onReply={handleReply}
                 onRetry={chat.retryMessage}
             />
             <ChatComposer
                 disabledReason={disabledReason}
-                onSend={chat.sendMessage}
+                onCancelReply={() => setReplyTarget(null)}
+                onSend={handleSend}
+                replySenderName={
+                    replyTarget
+                        ? getSenderName(replyTarget.senderUserId)
+                        : undefined
+                }
+                replyTarget={replyTarget}
                 serverName={serverName}
             />
         </section>

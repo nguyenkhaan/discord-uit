@@ -12,7 +12,9 @@ import {
 import { Button } from '@/components/common/Button';
 import { ChatAttachmentPreview } from '@/features/chat/components/ChatAttachmentPreview';
 import { ChatEmojiPicker } from '@/features/chat/components/ChatEmojiPicker';
+import { ChatReplyBar } from '@/features/chat/components/ChatReplyBar';
 import { useChatAttachments } from '@/features/chat/chat.hooks';
+import type { ChatReplyView } from '@/features/chat/chat.type';
 import { MAX_CHAT_MESSAGE_LENGTH } from '@/features/chat/chat.utils';
 import { cn } from '@/lib/utils';
 
@@ -23,12 +25,19 @@ interface ChatComposerProps {
     serverName?: string;
     disabledReason?: string;
     onSend: (content: string) => void;
+    /** Tin đang được trả lời */
+    replyTarget?: ChatReplyView | null;
+    replySenderName?: string;
+    onCancelReply?: () => void;
 }
 
 export function ChatComposer({
     serverName,
     disabledReason,
     onSend,
+    replyTarget,
+    replySenderName,
+    onCancelReply,
 }: ChatComposerProps) {
     const inputId = useId();
     const hintId = useId();
@@ -47,6 +56,12 @@ export function ChatComposer({
     const length = content.trim().length;
     const isTooLong = length > MAX_CHAT_MESSAGE_LENGTH;
     const canSend = !isDisabled && length > 0 && !isTooLong;
+
+    // Chọn trả lời thì đưa con trỏ vào ô nhập
+    const replyTargetId = replyTarget?.messageId;
+    useEffect(() => {
+        if (replyTargetId) textareaRef.current?.focus();
+    }, [replyTargetId]);
 
     // Tự tăng chiều cao ô nhập
     useEffect(() => {
@@ -91,6 +106,12 @@ export function ChatComposer({
     }
 
     function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+        // Esc để huỷ trả lời
+        if (event.key === 'Escape' && replyTarget && onCancelReply) {
+            event.preventDefault();
+            onCancelReply();
+            return;
+        }
         // Enter để gửi, bỏ qua khi bộ gõ tiếng Việt đang ghép dấu
         if (
             event.key === 'Enter' &&
@@ -110,6 +131,13 @@ export function ChatComposer({
             <label className="sr-only" htmlFor={inputId}>
                 Nhập tin nhắn
             </label>
+            {replyTarget && onCancelReply && (
+                <ChatReplyBar
+                    onCancel={onCancelReply}
+                    senderName={replySenderName ?? 'Thành viên'}
+                    target={replyTarget}
+                />
+            )}
             <ChatAttachmentPreview
                 attachments={attachments}
                 onRemove={removeAttachment}

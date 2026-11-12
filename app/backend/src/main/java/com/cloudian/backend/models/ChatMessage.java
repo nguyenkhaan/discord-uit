@@ -62,6 +62,11 @@ public class ChatMessage {
     @Column(name = "linked_content_id", updatable = false)
     private UUID linkedContentId;
 
+    /** Tin được trả lời, null khi không reply */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reply_to_message_id", updatable = false)
+    private ChatMessage replyTo;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

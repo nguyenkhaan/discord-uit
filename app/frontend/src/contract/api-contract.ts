@@ -881,6 +881,16 @@ export interface components {
             /** Format: uuid */
             clientRequestId: string;
             contentText: string;
+            /** Format: uuid */
+            replyToMessageId?: string;
+        };
+        ChatMessageReplyPreview: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            senderUserId?: string;
+            contentText?: string;
+            deleted?: boolean;
         };
         RealtimeChatMessageResponse: {
             /** Format: uuid */
@@ -894,6 +904,7 @@ export interface components {
             contentText?: string;
             /** Format: date-time */
             createdAt?: string;
+            replyTo?: components["schemas"]["ChatMessageReplyPreview"];
         };
         RealtimeServerAuthorizationResponse: {
             /** Format: uuid */
@@ -1036,6 +1047,7 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             deleted?: boolean;
+            replyTo?: components["schemas"]["ChatMessageReplyPreview"];
         };
         ChatMessageHistoryResponse: {
             messages?: components["schemas"]["ChatMessageHistoryItem"][];
