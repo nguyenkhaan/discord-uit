@@ -1,7 +1,9 @@
 package com.cloudian.backend.modules.realtime;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.models.ChatMessage;
+import com.cloudian.backend.models.ChatMessageAttachment;
+import com.cloudian.backend.models.Media;
 import com.cloudian.backend.repositories.ChatMessageRepository;
 import com.cloudian.backend.repositories.ServerRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
@@ -56,6 +60,17 @@ public class ChatMessageWriter {
             UUID clientRequestId,
             String contentText,
             UUID replyToMessageId) {
+        return createOrGet(serverId, senderUserId, clientRequestId, contentText, replyToMessageId, List::of);
+    }
+
+    /** Tạo tin kèm ảnh; chỉ kiểm tra ảnh khi tin chưa tồn tại (gửi lại thì ảnh đã được gắn) */
+    public ChatMessage createOrGet(
+            UUID serverId,
+            UUID senderUserId,
+            UUID clientRequestId,
+            String contentText,
+            UUID replyToMessageId,
+            Supplier<List<Media>> attachments) {
         return messageRepository
                 .findByServer_IdAndSender_IdAndClientRequestId(
                         serverId,
@@ -66,7 +81,8 @@ public class ChatMessageWriter {
                         senderUserId,
                         clientRequestId,
                         contentText,
-                        findReplyTarget(serverId, replyToMessageId)));
+                        findReplyTarget(serverId, replyToMessageId),
+                        attachments.get()));
     }
 
     /** Tin được trả lời phải cùng server và chưa bị thu hồi */
@@ -87,7 +103,8 @@ public class ChatMessageWriter {
             UUID senderUserId,
             UUID clientRequestId,
             String contentText,
-            ChatMessage replyTo) {
+            ChatMessage replyTo,
+            List<Media> attachments) {
         try {
             ChatMessage inserted = insertTransaction.execute(status -> {
                 ChatMessage message = new ChatMessage();
@@ -96,6 +113,14 @@ public class ChatMessageWriter {
                 message.setClientRequestId(clientRequestId);
                 message.setContentText(contentText);
                 message.setReplyTo(replyTo);
+                // Ảnh được lưu cùng tin trong 1 transaction
+                for (int position = 0; position < attachments.size(); position++) {
+                    ChatMessageAttachment attachment = new ChatMessageAttachment();
+                    attachment.setMessage(message);
+                    attachment.setMedia(attachments.get(position));
+                    attachment.setPosition((short) position);
+                    message.getAttachments().add(attachment);
+                }
                 return messageRepository.saveAndFlush(message);
             });
 

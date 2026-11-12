@@ -205,7 +205,10 @@ export class BackendClient {
         serverId: string,
         command: Pick<
             ChatSendCommand,
-            "clientRequestId" | "contentText" | "replyToMessageId"
+            | "clientRequestId"
+            | "contentText"
+            | "replyToMessageId"
+            | "attachmentMediaIds"
         >,
     ): Promise<ChatMessageDto> {
         let response: Response;

@@ -79,6 +79,10 @@ export function registerChatHandlers(
                         ...(command.replyToMessageId
                             ? { replyToMessageId: command.replyToMessageId }
                             : {}),
+                        // Chỉ gửi khi có ảnh
+                        ...(command.attachmentMediaIds?.length
+                            ? { attachmentMediaIds: command.attachmentMediaIds }
+                            : {}),
                     },
                 );
             } catch (error) {

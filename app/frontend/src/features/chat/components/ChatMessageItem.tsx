@@ -3,6 +3,7 @@ import { CircleAlert, CornerUpLeft, RotateCw } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { chatBubbleVariants } from '@/features/chat/components/chatBubbleVariants';
+import { ChatMessageAttachments } from '@/features/chat/components/ChatMessageAttachments';
 import { ChatMessageContent } from '@/features/chat/components/ChatMessageContent';
 import { ChatReplyQuote } from '@/features/chat/components/ChatReplyQuote';
 import type { ChatMessageView } from '@/features/chat/chat.type';
@@ -38,6 +39,9 @@ export function ChatMessageItem({
     const time = formatChatTime(message.createdAt);
     const bubbleTone = message.isDeleted ? 'deleted' : isOwn ? 'own' : 'other';
     const canReply = toReplyTarget(message) !== null;
+    const attachments = message.isDeleted ? [] : (message.attachments ?? []);
+    // Tin chỉ có ảnh thì không hiện bong bóng chữ rỗng
+    const hasBubble = message.isDeleted || message.contentText.trim() !== '';
 
     return (
         <article
@@ -93,18 +97,33 @@ export function ChatMessageItem({
                 >
                     <div
                         className={cn(
-                            chatBubbleVariants({ tone: bubbleTone }),
+                            'flex min-w-0 flex-col gap-1',
+                            isOwn ? 'items-end' : 'items-start',
                             message.status === 'sending' && 'opacity-60'
                         )}
                         title={time}
                     >
-                        {message.isDeleted ? (
-                            DELETED_MESSAGE_TEXT
-                        ) : (
-                            <ChatMessageContent
-                                content={message.contentText}
-                                tone={isOwn ? 'onBrand' : 'default'}
+                        {attachments.length > 0 && (
+                            <ChatMessageAttachments
+                                attachments={attachments}
+                                isLinkable={message.status === 'sent'}
                             />
+                        )}
+                        {hasBubble && (
+                            <div
+                                className={chatBubbleVariants({
+                                    tone: bubbleTone,
+                                })}
+                            >
+                                {message.isDeleted ? (
+                                    DELETED_MESSAGE_TEXT
+                                ) : (
+                                    <ChatMessageContent
+                                        content={message.contentText}
+                                        tone={isOwn ? 'onBrand' : 'default'}
+                                    />
+                                )}
+                            </div>
                         )}
                     </div>
 

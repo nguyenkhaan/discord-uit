@@ -1,5 +1,6 @@
 package com.cloudian.backend.modules.realtime;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.models.ChatMessage;
+import com.cloudian.backend.modules.chat.ChatAttachmentService;
 import com.cloudian.backend.modules.realtime.dto.RealtimeChatMessageRequest;
 import com.cloudian.backend.modules.realtime.dto.RealtimeChatMessageResponse;
 import com.cloudian.backend.repositories.ServerMembershipRepository;
@@ -20,12 +22,15 @@ public class RealtimeChatMessageService {
 
     private final ServerMembershipRepository membershipRepository;
     private final ChatMessageWriter messageWriter;
+    private final ChatAttachmentService attachmentService;
 
     public RealtimeChatMessageService(
             ServerMembershipRepository membershipRepository,
-            ChatMessageWriter messageWriter) {
+            ChatMessageWriter messageWriter,
+            ChatAttachmentService attachmentService) {
         this.membershipRepository = membershipRepository;
         this.messageWriter = messageWriter;
+        this.attachmentService = attachmentService;
     }
 
     public RealtimeChatMessageResponse createOrGet(
@@ -39,6 +44,20 @@ public class RealtimeChatMessageService {
                 .orElseThrow(() -> new ApiException(
                         HttpStatus.NOT_FOUND,
                         SERVER_NOT_FOUND));
+
+        List<UUID> mediaIds = request.attachmentMediaIdsOrEmpty();
+        if (!mediaIds.isEmpty()) {
+            ChatMessage message = messageWriter.createOrGet(
+                    serverId,
+                    senderUserId,
+                    request.clientRequestId(),
+                    contentText,
+                    request.replyToMessageId(),
+                    () -> attachmentService.resolveForSend(serverId, senderUserId, mediaIds));
+            return RealtimeChatMessageResponse.from(
+                    message,
+                    attachmentService.findByMessageId(message.getId()));
+        }
 
         ChatMessage message = request.replyToMessageId() == null
                 ? messageWriter.createOrGet(
@@ -69,7 +88,9 @@ public class RealtimeChatMessageService {
 
         String normalizedContent = contentText.trim();
 
-        if (normalizedContent.isEmpty()
+        // Tin chỉ có ảnh thì được để trống chữ
+        boolean hasAttachments = !request.attachmentMediaIdsOrEmpty().isEmpty();
+        if ((normalizedContent.isEmpty() && !hasAttachments)
                 || normalizedContent.length() > MAX_CONTENT_LENGTH) {
             throw invalidMessage();
         }
