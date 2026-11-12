@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-const UuidSchema = z.uuid();
+// Chỉ kiểm tra định dạng 8-4-4-4-12, chấp nhận cả id seed dạng 00000000-…
+const UuidSchema = z.guid();
 const IsoTimestampSchema = z.iso.datetime({ offset: true });
 
 export const ServerJoinCommandSchema = z
