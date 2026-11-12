@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/password-change": {
         parameters: {
             query?: never;
@@ -832,6 +848,15 @@ export interface components {
             /** @enum {string} */
             status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
         };
+        ChatAttachmentResponse: {
+            /** Format: uuid */
+            mediaId?: string;
+            url?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
@@ -881,6 +906,17 @@ export interface components {
             /** Format: uuid */
             clientRequestId: string;
             contentText: string;
+            /** Format: uuid */
+            replyToMessageId?: string;
+            attachmentMediaIds?: string[];
+        };
+        ChatMessageReplyPreview: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            senderUserId?: string;
+            contentText?: string;
+            deleted?: boolean;
         };
         RealtimeChatMessageResponse: {
             /** Format: uuid */
@@ -894,6 +930,8 @@ export interface components {
             contentText?: string;
             /** Format: date-time */
             createdAt?: string;
+            replyTo?: components["schemas"]["ChatMessageReplyPreview"];
+            attachments?: components["schemas"]["ChatAttachmentResponse"][];
         };
         RealtimeServerAuthorizationResponse: {
             /** Format: uuid */
@@ -1036,6 +1074,8 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             deleted?: boolean;
+            replyTo?: components["schemas"]["ChatMessageReplyPreview"];
+            attachments?: components["schemas"]["ChatAttachmentResponse"][];
         };
         ChatMessageHistoryResponse: {
             messages?: components["schemas"]["ChatMessageHistoryItem"][];
@@ -1291,6 +1331,35 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CreateInviteLinkResponse"];
+                };
+            };
+        };
+    };
+    upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatAttachmentResponse"];
                 };
             };
         };

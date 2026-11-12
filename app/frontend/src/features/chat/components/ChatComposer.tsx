@@ -12,7 +12,13 @@ import {
 import { Button } from '@/components/common/Button';
 import { ChatAttachmentPreview } from '@/features/chat/components/ChatAttachmentPreview';
 import { ChatEmojiPicker } from '@/features/chat/components/ChatEmojiPicker';
+import { ChatReplyBar } from '@/features/chat/components/ChatReplyBar';
+import { CHAT_ATTACHMENT_TYPES } from '@/features/chat/chat.attachments';
 import { useChatAttachments } from '@/features/chat/chat.hooks';
+import type {
+    ChatAttachmentDraft,
+    ChatReplyView,
+} from '@/features/chat/chat.type';
 import { MAX_CHAT_MESSAGE_LENGTH } from '@/features/chat/chat.utils';
 import { cn } from '@/lib/utils';
 
@@ -22,13 +28,20 @@ const COUNTER_VISIBLE_FROM = MAX_CHAT_MESSAGE_LENGTH - 200;
 interface ChatComposerProps {
     serverName?: string;
     disabledReason?: string;
-    onSend: (content: string) => void;
+    onSend: (content: string, attachments: ChatAttachmentDraft[]) => void;
+    /** Tin đang được trả lời */
+    replyTarget?: ChatReplyView | null;
+    replySenderName?: string;
+    onCancelReply?: () => void;
 }
 
 export function ChatComposer({
     serverName,
     disabledReason,
     onSend,
+    replyTarget,
+    replySenderName,
+    onCancelReply,
 }: ChatComposerProps) {
     const inputId = useId();
     const hintId = useId();
@@ -40,13 +53,21 @@ export function ChatComposer({
         error: attachmentError,
         addFiles,
         removeAttachment,
-        clearAttachments,
+        takeAttachments,
     } = useChatAttachments();
 
     const isDisabled = Boolean(disabledReason);
     const length = content.trim().length;
     const isTooLong = length > MAX_CHAT_MESSAGE_LENGTH;
-    const canSend = !isDisabled && length > 0 && !isTooLong;
+    // Gửi được khi có chữ hoặc có ảnh
+    const canSend =
+        !isDisabled && (length > 0 || attachments.length > 0) && !isTooLong;
+
+    // Chọn trả lời thì đưa con trỏ vào ô nhập
+    const replyTargetId = replyTarget?.messageId;
+    useEffect(() => {
+        if (replyTargetId) textareaRef.current?.focus();
+    }, [replyTargetId]);
 
     // Tự tăng chiều cao ô nhập
     useEffect(() => {
@@ -58,10 +79,8 @@ export function ChatComposer({
 
     function submit() {
         if (!canSend) return;
-        onSend(content);
+        onSend(content, takeAttachments());
         setContent('');
-        // Chưa có API upload: chỉ gửi chữ, bỏ ảnh đã chọn
-        clearAttachments();
         textareaRef.current?.focus();
     }
 
@@ -91,6 +110,12 @@ export function ChatComposer({
     }
 
     function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+        // Esc để huỷ trả lời
+        if (event.key === 'Escape' && replyTarget && onCancelReply) {
+            event.preventDefault();
+            onCancelReply();
+            return;
+        }
         // Enter để gửi, bỏ qua khi bộ gõ tiếng Việt đang ghép dấu
         if (
             event.key === 'Enter' &&
@@ -110,6 +135,13 @@ export function ChatComposer({
             <label className="sr-only" htmlFor={inputId}>
                 Nhập tin nhắn
             </label>
+            {replyTarget && onCancelReply && (
+                <ChatReplyBar
+                    onCancel={onCancelReply}
+                    senderName={replySenderName ?? 'Thành viên'}
+                    target={replyTarget}
+                />
+            )}
             <ChatAttachmentPreview
                 attachments={attachments}
                 onRemove={removeAttachment}
@@ -123,7 +155,7 @@ export function ChatComposer({
                 </p>
             )}
             <input
-                accept="image/*"
+                accept={CHAT_ATTACHMENT_TYPES.join(',')}
                 className="hidden"
                 multiple
                 onChange={handleFileChange}

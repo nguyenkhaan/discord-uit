@@ -9,9 +9,13 @@ import {
 } from 'react';
 
 import { getRealtimeSocket } from '@/api/socket';
+import { getApiErrorStatus } from '@/lib/api-error';
 import { pickChatAttachments } from '@/features/chat/chat.attachments';
 import { chatKeys } from '@/features/chat/chat.keys';
-import { getChatHistory } from '@/features/chat/chat.service';
+import {
+    getChatHistory,
+    uploadChatAttachment,
+} from '@/features/chat/chat.service';
 import {
     CHAT_EVENTS,
     joinServerRoom,
@@ -23,10 +27,12 @@ import type {
     ChatConnectionStatus,
     ChatMessageDto,
     ChatMessageView,
+    ChatReplyView,
 } from '@/features/chat/chat.type';
 import {
     chatReducer,
     getChatErrorMessage,
+    getChatUploadErrorMessage,
     MAX_CHAT_MESSAGE_LENGTH,
     mergeChatMessages,
 } from '@/features/chat/chat.utils';
@@ -62,9 +68,24 @@ export interface ServerChat {
     connectionStatus: ChatConnectionStatus;
     /** Đã vào room, có thể gửi tin */
     isReady: boolean;
-    sendMessage: (content: string) => void;
+    sendMessage: (
+        content: string,
+        replyTo?: ChatReplyView,
+        attachments?: ChatAttachmentDraft[]
+    ) => void;
     retryMessage: (clientRequestId: string) => void;
     reconnect: () => void;
+}
+
+/** Ảnh của tin đang gửi; mediaId có rồi thì gửi lại không upload lại */
+interface PendingUpload {
+    draft: ChatAttachmentDraft;
+    mediaId?: string;
+}
+
+/** Giải phóng ảnh xem trước trên máy */
+function revokePreviews(uploads: PendingUpload[] | undefined) {
+    uploads?.forEach((upload) => URL.revokeObjectURL(upload.draft.previewUrl));
 }
 
 /** Quản lý chat của một server: kết nối, nhận tin, gửi tin, lịch sử */
@@ -96,6 +117,17 @@ export function useServerChat(
         setConnectionStatus('connecting');
     }
     const liveMessagesRef = useRef(liveMessages);
+    // Ảnh của các tin chưa gửi xong, theo clientRequestId
+    const pendingUploadsRef = useRef(new Map<string, PendingUpload[]>());
+
+    // Rời trang: giải phóng ảnh xem trước còn lại
+    useEffect(() => {
+        const pendingUploads = pendingUploadsRef.current;
+        return () => {
+            pendingUploads.forEach(revokePreviews);
+            pendingUploads.clear();
+        };
+    }, []);
 
     useEffect(() => {
         liveMessagesRef.current = liveMessages;
@@ -178,7 +210,11 @@ export function useServerChat(
     }, [serverId, refetchHistory]);
 
     const deliver = useCallback(
-        async (clientRequestId: string, contentText: string) => {
+        async (
+            clientRequestId: string,
+            contentText: string,
+            replyToMessageId?: string
+        ) => {
             const socket = getRealtimeSocket();
             if (!socket.connected) {
                 dispatch({
@@ -188,13 +224,49 @@ export function useServerChat(
                 });
                 return;
             }
+
+            // Upload ảnh trước, chỉ những ảnh chưa upload
+            const uploads =
+                pendingUploadsRef.current.get(clientRequestId) ?? [];
+            try {
+                await Promise.all(
+                    uploads.map(async (upload) => {
+                        if (upload.mediaId) return;
+                        const uploaded = await uploadChatAttachment(
+                            serverId,
+                            upload.draft.file
+                        );
+                        upload.mediaId = uploaded.mediaId;
+                    })
+                );
+            } catch (error) {
+                dispatch({
+                    type: 'failed',
+                    clientRequestId,
+                    errorMessage: getChatUploadErrorMessage(
+                        getApiErrorStatus(error)
+                    ),
+                });
+                return;
+            }
+            const attachmentMediaIds = uploads.flatMap((upload) =>
+                upload.mediaId ? [upload.mediaId] : []
+            );
+
             const result = await sendChatMessage(socket, {
                 serverId,
                 clientRequestId,
                 contentText,
+                ...(replyToMessageId ? { replyToMessageId } : {}),
+                ...(attachmentMediaIds.length > 0
+                    ? { attachmentMediaIds }
+                    : {}),
             });
             if (result.ok) {
                 dispatch({ type: 'confirmed', message: result.data });
+                // Đã có ảnh từ server, bỏ ảnh xem trước
+                revokePreviews(pendingUploadsRef.current.get(clientRequestId));
+                pendingUploadsRef.current.delete(clientRequestId);
                 return;
             }
             if (result.error.code === 'NOT_A_MEMBER') {
@@ -210,17 +282,27 @@ export function useServerChat(
     );
 
     const sendMessage = useCallback(
-        (content: string) => {
+        (
+            content: string,
+            replyTo?: ChatReplyView,
+            attachments: ChatAttachmentDraft[] = []
+        ) => {
             const contentText = content.trim();
+            // Phải có chữ hoặc ảnh
             if (
                 !currentUserId ||
-                !contentText ||
+                (!contentText && attachments.length === 0) ||
                 contentText.length > MAX_CHAT_MESSAGE_LENGTH
             ) {
+                revokePreviews(attachments.map((draft) => ({ draft })));
                 return;
             }
             // Mã định danh tin, dùng để chống gửi trùng
             const clientRequestId = crypto.randomUUID();
+            pendingUploadsRef.current.set(
+                clientRequestId,
+                attachments.map((draft) => ({ draft }))
+            );
             dispatch({
                 type: 'sending',
                 message: {
@@ -231,9 +313,16 @@ export function useServerChat(
                     createdAt: new Date().toISOString(),
                     status: 'sending',
                     isDeleted: false,
+                    replyTo,
+                    // Hiện ảnh trên máy trong lúc upload
+                    attachments: attachments.map((draft) => ({
+                        key: draft.id,
+                        url: draft.previewUrl,
+                        fileName: draft.file.name,
+                    })),
                 },
             });
-            void deliver(clientRequestId, contentText);
+            void deliver(clientRequestId, contentText, replyTo?.messageId);
         },
         [currentUserId, deliver]
     );
@@ -245,7 +334,11 @@ export function useServerChat(
             );
             if (!message || message.status !== 'failed') return;
             dispatch({ type: 'retrying', clientRequestId });
-            void deliver(clientRequestId, message.contentText);
+            void deliver(
+                clientRequestId,
+                message.contentText,
+                message.replyTo?.messageId
+            );
         },
         [deliver]
     );
@@ -279,7 +372,7 @@ export function useServerChat(
     };
 }
 
-/** Quản lý ảnh đính kèm đang chọn (mock, chưa upload) */
+/** Quản lý ảnh đính kèm đang chọn trong ô nhập */
 export function useChatAttachments() {
     const [attachments, setAttachments] = useState<ChatAttachmentDraft[]>([]);
     const [error, setError] = useState<string>();
@@ -332,5 +425,21 @@ export function useChatAttachments() {
         });
     }, []);
 
-    return { attachments, error, addFiles, removeAttachment, clearAttachments };
+    /** Lấy ảnh để gửi; ảnh xem trước giao cho tin nhắn nên không giải phóng */
+    const takeAttachments = useCallback(() => {
+        const taken = attachmentsRef.current;
+        attachmentsRef.current = [];
+        setError(undefined);
+        setAttachments([]);
+        return taken;
+    }, []);
+
+    return {
+        attachments,
+        error,
+        addFiles,
+        removeAttachment,
+        clearAttachments,
+        takeAttachments,
+    };
 }
