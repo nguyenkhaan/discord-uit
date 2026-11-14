@@ -1,7 +1,11 @@
 import type {
+    ChatAttachmentDto,
+    ChatAttachmentView,
     ChatHistoryItem,
     ChatMessageDto,
     ChatMessageView,
+    ChatReplyPreview,
+    ChatReplyView,
 } from '@/features/chat/chat.type';
 
 /** Độ dài tối đa của tin nhắn */
@@ -21,9 +25,40 @@ export type ChatAction =
     | { type: 'confirmed'; message: ChatMessageDto }
     | { type: 'failed'; clientRequestId: string; errorMessage: string };
 
+/** Chuyển trích dẫn từ BE sang dạng hiển thị */
+function toReplyView(
+    preview: ChatReplyPreview | null | undefined
+): ChatReplyView | undefined {
+    if (!preview?.messageId || !preview.senderUserId) return undefined;
+    return {
+        messageId: preview.messageId,
+        senderUserId: preview.senderUserId,
+        contentText: preview.contentText ?? null,
+        isDeleted: Boolean(preview.deleted),
+    };
+}
+
+/** Chuyển ảnh từ BE sang dạng hiển thị */
+function toAttachmentViews(
+    attachments: ChatAttachmentDto[] | null | undefined
+): ChatAttachmentView[] {
+    return (attachments ?? []).flatMap((attachment) =>
+        attachment.mediaId
+            ? [
+                  {
+                      key: attachment.mediaId,
+                      url: attachment.url ?? null,
+                      fileName: attachment.fileName ?? 'Ảnh',
+                  },
+              ]
+            : []
+    );
+}
+
 function realtimeToView(dto: ChatMessageDto): ChatMessageView | null {
     const key = dto.clientRequestId ?? dto.messageId;
-    if (!key || !dto.senderUserId || !dto.contentText) return null;
+    // Tin chỉ có ảnh thì contentText rỗng
+    if (!key || !dto.senderUserId || dto.contentText == null) return null;
     return {
         key,
         messageId: dto.messageId,
@@ -33,6 +68,8 @@ function realtimeToView(dto: ChatMessageDto): ChatMessageView | null {
         createdAt: dto.createdAt ?? new Date().toISOString(),
         status: 'sent',
         isDeleted: false,
+        replyTo: toReplyView(dto.replyTo),
+        attachments: toAttachmentViews(dto.attachments),
     };
 }
 
@@ -108,6 +145,8 @@ function historyToView(item: ChatHistoryItem): ChatMessageView | null {
         createdAt: item.createdAt ?? new Date(0).toISOString(),
         status: 'sent',
         isDeleted: Boolean(item.deleted),
+        replyTo: toReplyView(item.replyTo),
+        attachments: toAttachmentViews(item.attachments),
     };
 }
 
@@ -291,6 +330,45 @@ const CHAT_ERROR_MESSAGES: Record<string, string> = {
     DISCONNECTED: 'Đang mất kết nối. Tin sẽ cần gửi lại.',
 };
 
+/** Lỗi upload ảnh theo mã HTTP */
+export function getChatUploadErrorMessage(status: number | undefined): string {
+    if (status === 400 || status === 413) {
+        return 'Ảnh không hợp lệ: chỉ PNG, JPEG, WEBP, tối đa 5MB.';
+    }
+    return 'Không tải được ảnh lên. Bấm Gửi lại để thử lại.';
+}
+
 export function getChatErrorMessage(code: string): string {
     return CHAT_ERROR_MESSAGES[code] ?? 'Không gửi được tin nhắn.';
+}
+
+// ---------------------------------------------------------------------------
+// Reply
+// ---------------------------------------------------------------------------
+
+export const RECALLED_REPLY_TEXT = 'Tin nhắn đã bị thu hồi';
+export const IMAGE_ONLY_REPLY_TEXT = '[Hình ảnh]';
+
+/** Tin có thể được trả lời: đã gửi xong và chưa thu hồi */
+export function toReplyTarget(message: ChatMessageView): ChatReplyView | null {
+    if (!message.messageId || message.status !== 'sent' || message.isDeleted) {
+        return null;
+    }
+    return {
+        messageId: message.messageId,
+        senderUserId: message.senderUserId,
+        contentText: message.contentText,
+        isDeleted: false,
+    };
+}
+
+/** Nội dung hiển thị trong trích dẫn */
+export function getReplyPreviewText(reply: ChatReplyView): string {
+    if (reply.isDeleted) return RECALLED_REPLY_TEXT;
+    return reply.contentText?.trim() || IMAGE_ONLY_REPLY_TEXT;
+}
+
+/** Id của tin trong danh sách, dùng để cuộn tới tin gốc */
+export function chatMessageElementId(messageId: string): string {
+    return `chat-message-${messageId}`;
 }
