@@ -16,7 +16,8 @@ import com.cloudian.backend.repositories.ChatMessageRepository;
 import com.cloudian.backend.repositories.MessageReactionRepository;
 import com.cloudian.backend.repositories.ReactIconRepository;
 import com.cloudian.backend.repositories.ServerMembershipRepository;
-
+import org.springframework.context.ApplicationEventPublisher;
+import com.cloudian.backend.modules.chat.events.MessageReactionChangedEvent;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,6 +28,7 @@ public class MessageReactionService {
     private final ServerMembershipRepository membershipRepository;
     private final ReactIconRepository reactIconRepository;
     private final MessageReactionRepository reactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Add a reaction or replace the user's existing reaction.
@@ -51,7 +53,12 @@ public class MessageReactionService {
 
         reactionRepository.upsertReaction(messageId, userId, iconId);
 
-        return buildReactionResponse(messageId, userId);
+        MessageReactionListResponse response = buildReactionResponse(messageId, userId);
+
+        eventPublisher.publishEvent(
+                new MessageReactionChangedEvent(serverId, response));
+
+        return response;
     }
 
     /**
@@ -70,7 +77,12 @@ public class MessageReactionService {
 
         reactionRepository.deleteReaction(messageId, userId);
 
-        return buildReactionResponse(messageId, userId);
+        MessageReactionListResponse response = buildReactionResponse(messageId, userId);
+
+        eventPublisher.publishEvent(
+                new MessageReactionChangedEvent(serverId, response));
+
+        return response;
     }
 
     /**
