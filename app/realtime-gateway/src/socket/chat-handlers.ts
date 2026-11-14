@@ -78,6 +78,7 @@ export function registerChatHandlers(
                     },
                 );
             } catch (error) {
+                console.error("[chat-send] backend error:", error);
                 const failure = mapBackendError(error);
 
                 if (failure.error.code === "NOT_A_MEMBER") {
