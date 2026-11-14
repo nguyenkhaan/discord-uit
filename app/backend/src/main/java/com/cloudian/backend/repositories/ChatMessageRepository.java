@@ -19,48 +19,52 @@ import org.springframework.data.repository.query.Param;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> {
 
-    Optional<ChatMessage> findByServer_IdAndSender_IdAndClientRequestId(
-            UUID serverId,
-            UUID senderUserId,
-            UUID clientRequestId);
+        Optional<ChatMessage> findByServer_IdAndSender_IdAndClientRequestId(
+                        UUID serverId,
+                        UUID senderUserId,
+                        UUID clientRequestId);
 
-    @Query("""
-            SELECT m
-            FROM ChatMessage m
-            WHERE m.server.id = :serverId
-            ORDER BY m.createdAt DESC, m.id DESC
-            """)
-    List<ChatMessage> findLatestByServerId(
-            @Param("serverId") UUID serverId,
-            Pageable pageable);
+        @Query("""
+                        SELECT m
+                        FROM ChatMessage m
+                        WHERE m.server.id = :serverId
+                        ORDER BY m.createdAt DESC, m.id DESC
+                        """)
+        List<ChatMessage> findLatestByServerId(
+                        @Param("serverId") UUID serverId,
+                        Pageable pageable);
 
-    @Query("""
-            SELECT m
-            FROM ChatMessage m
-            WHERE m.server.id = :serverId
-              AND (
-                    m.createdAt < :beforeCreatedAt
-                    OR (
-                        m.createdAt = :beforeCreatedAt
-                        AND m.id < :beforeId
-                    )
-              )
-            ORDER BY m.createdAt DESC, m.id DESC
-            """)
-    List<ChatMessage> findBeforeCursor(
-            @Param("serverId") UUID serverId,
-            @Param("beforeCreatedAt") Instant beforeCreatedAt,
-            @Param("beforeId") UUID beforeId,
-            Pageable pageable);
+        @Query("""
+                        SELECT m
+                        FROM ChatMessage m
+                        WHERE m.server.id = :serverId
+                          AND (
+                                m.createdAt < :beforeCreatedAt
+                                OR (
+                                    m.createdAt = :beforeCreatedAt
+                                    AND m.id < :beforeId
+                                )
+                          )
+                        ORDER BY m.createdAt DESC, m.id DESC
+                        """)
+        List<ChatMessage> findBeforeCursor(
+                        @Param("serverId") UUID serverId,
+                        @Param("beforeCreatedAt") Instant beforeCreatedAt,
+                        @Param("beforeId") UUID beforeId,
+                        Pageable pageable);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            select m
-              from ChatMessage m
-             where m.id = :messageId
-               and m.server.id = :serverId
-            """)
-    Optional<ChatMessage> findByIdAndServerIdForUpdate(
-            @Param("serverId") UUID serverId,
-            @Param("messageId") UUID messageId);
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("""
+                        select m
+                          from ChatMessage m
+                         where m.id = :messageId
+                           and m.server.id = :serverId
+                        """)
+        Optional<ChatMessage> findByIdAndServerIdForUpdate(
+                        @Param("serverId") UUID serverId,
+                        @Param("messageId") UUID messageId);
+
+        Optional<ChatMessage> findByIdAndServer_Id(
+                        UUID id,
+                        UUID serverId);
 }

@@ -50,3 +50,24 @@ export type SocketAck<T> =
           ok: false;
           error: SocketError;
       };
+
+export const MessageReactionUpdatedEventSchema = z
+    .object({
+        serverId: UuidSchema,
+        messageId: UuidSchema,
+        reactions: z.array(
+            z
+                .object({
+                    iconId: UuidSchema,
+                    iconImage: z.string(),
+                    name: z.string(),
+                    count: z.number().int().nonnegative(),
+                })
+                .strict(),
+        ),
+    })
+    .strict();
+
+export type MessageReactionUpdatedEvent = z.infer<
+    typeof MessageReactionUpdatedEventSchema
+>;

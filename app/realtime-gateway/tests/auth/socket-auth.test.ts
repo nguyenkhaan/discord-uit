@@ -28,6 +28,7 @@ async function startServer(
     const created = createSocketServer({
         frontendOrigin: "http://localhost:5173",
         socketIoPath: SOCKET_IO_PATH,
+        gatewayServiceToken: "test-gateway-token",
     });
 
     httpServer = created.httpServer;
