@@ -84,8 +84,10 @@ export default function ServerDetailPage() {
             />
 
             <div className="relative flex min-h-0 flex-1">
+                {/* Đổi server thì tạo lại khung chat, bỏ tin đang trả lời */}
                 <ChatPanel
                     chat={chat}
+                    key={serverId}
                     currentUserId={user?.id}
                     getSenderName={getSenderName}
                     lockedReason={LOCKED_REASONS[getServerStatus(server)]}

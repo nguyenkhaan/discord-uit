@@ -17,6 +17,7 @@ interface ChatMessageListProps {
     currentUserId?: string;
     getSenderName: (userId: string) => string;
     onRetry: (clientRequestId: string) => void;
+    onReply: (message: ChatMessageView) => void;
 }
 
 export function ChatMessageList({
@@ -25,6 +26,7 @@ export function ChatMessageList({
     currentUserId,
     getSenderName,
     onRetry,
+    onReply,
 }: ChatMessageListProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -176,7 +178,12 @@ export function ChatMessageList({
                             isOwn={item.message.senderUserId === currentUserId}
                             key={item.key}
                             message={item.message}
+                            onReply={onReply}
                             onRetry={onRetry}
+                            replySenderName={
+                                item.message.replyTo &&
+                                getSenderName(item.message.replyTo.senderUserId)
+                            }
                             senderName={getSenderName(
                                 item.message.senderUserId
                             )}
