@@ -75,6 +75,14 @@ export function registerChatHandlers(
                     {
                         clientRequestId: command.clientRequestId,
                         contentText: command.contentText,
+                        // Chỉ gửi khi có reply
+                        ...(command.replyToMessageId
+                            ? { replyToMessageId: command.replyToMessageId }
+                            : {}),
+                        // Chỉ gửi khi có ảnh
+                        ...(command.attachmentMediaIds?.length
+                            ? { attachmentMediaIds: command.attachmentMediaIds }
+                            : {}),
                     },
                 );
             } catch (error) {

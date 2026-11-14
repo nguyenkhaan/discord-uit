@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.models.ChatMessage;
+import com.cloudian.backend.modules.chat.ChatAttachmentService;
+import com.cloudian.backend.modules.chat.dto.ChatAttachmentResponse;
 import com.cloudian.backend.modules.server.dto.ChatMessageCursor;
 import com.cloudian.backend.modules.server.dto.ChatMessageHistoryItem;
 import com.cloudian.backend.modules.server.dto.ChatMessageHistoryResponse;
@@ -29,10 +32,13 @@ public class ChatMessageHistoryService {
     private static final String INVALID_CURSOR = "Invalid chat history cursor.";
 
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatAttachmentService attachmentService;
 
     public ChatMessageHistoryService(
-            ChatMessageRepository chatMessageRepository) {
+            ChatMessageRepository chatMessageRepository,
+            ChatAttachmentService attachmentService) {
         this.chatMessageRepository = chatMessageRepository;
+        this.attachmentService = attachmentService;
     }
 
     @Transactional(readOnly = true)
@@ -81,8 +87,17 @@ public class ChatMessageHistoryService {
                     oldestMessage.getId()));
         }
 
+        // Lấy ảnh của cả trang trong 1 query, bỏ qua tin đã thu hồi
+        Map<UUID, List<ChatAttachmentResponse>> attachments = attachmentService.findByMessageIds(
+                fetchedMessages.stream()
+                        .filter(message -> message.getDeletedAt() == null)
+                        .map(ChatMessage::getId)
+                        .toList());
+
         List<ChatMessageHistoryItem> items = fetchedMessages.stream()
-                .map(ChatMessageHistoryItem::from)
+                .map(message -> ChatMessageHistoryItem.from(
+                        message,
+                        attachments.getOrDefault(message.getId(), List.of())))
                 .toList();
 
         return new ChatMessageHistoryResponse(
