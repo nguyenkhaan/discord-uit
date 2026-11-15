@@ -38,8 +38,11 @@ async function main() {
         backendClient.validateSession.bind(backendClient),
     );
 
-    const { httpServer, io, readiness } = createSocketServer(envConfigs);
-
+    const { httpServer, io, readiness } = createSocketServer({
+        frontendOrigin: envConfigs.frontendOrigin,
+        socketIoPath: envConfigs.socketIoPath,
+        gatewayServiceToken: envConfigs.gatewayServiceToken,
+    });
     io.use(createSocketAuthMiddleware(authenticateAccessToken));
 
     const chatRateLimiter = new ChatRateLimiter(

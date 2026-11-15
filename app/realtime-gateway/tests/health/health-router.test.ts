@@ -15,8 +15,9 @@ async function listen(): Promise<{
     readiness: ReturnType<typeof createSocketServer>["readiness"];
 }> {
     const socketServer = createSocketServer({
-        frontendOrigin: FRONTEND_ORIGIN,
+        frontendOrigin: "http://localhost:5173",
         socketIoPath: SOCKET_IO_PATH,
+        gatewayServiceToken: "test-gateway-token",
     });
 
     httpServer = socketServer.httpServer;
