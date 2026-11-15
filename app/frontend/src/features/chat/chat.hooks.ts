@@ -4,6 +4,7 @@ import {
     useQuery,
     useQueryClient,
 } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import {
     useCallback,
     useEffect,
@@ -25,6 +26,8 @@ import {
 } from '@/features/chat/chat.reactions';
 import {
     addMessageReaction,
+    deleteChatMessage,
+    editChatMessage,
     getChatHistory,
     getMessageReactions,
     removeMessageReaction,
@@ -46,11 +49,16 @@ import type {
     MessageReactionUpdatedEvent,
 } from '@/features/chat/chat.type';
 import {
+    applyMessagePatches,
     chatReducer,
+    getChatEditErrorMessage,
     getChatErrorMessage,
+    getChatRecallErrorMessage, 
     getChatUploadErrorMessage,
     MAX_CHAT_MESSAGE_LENGTH,
     mergeChatMessages,
+    toMessagePatch,
+    type ChatMessagePatch,
 } from '@/features/chat/chat.utils';
 
 /** Mã lỗi khi gateway từ chối xác thực */
@@ -65,7 +73,8 @@ export function useChatHistory(serverId: string) {
         initialPageParam: undefined as string | undefined,
         getNextPageParam: (lastPage) =>
             lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
-        // Không tự tải lại, tin mới đã đến qua socket
+        // Đang ở trong server thì không tự tải lại, tin mới đã đến qua socket.
+        // Rời server thì cache bị xoá (xem useServerChat), nên vào lại luôn hiện skeleton rồi tải mới.
         staleTime: Infinity,
         refetchOnWindowFocus: false,
     });
@@ -91,6 +100,8 @@ export interface ServerChat {
         attachments?: ChatAttachmentDraft[]
     ) => void;
     retryMessage: (clientRequestId: string) => void;
+    editMessage: (messageId: string, content: string) => Promise<void>;
+    recallMessage: (messageId: string, reason?: string) => Promise<void>;
     reconnect: () => void;
 }
 
@@ -112,17 +123,26 @@ export function useServerChat(
 ): ServerChat {
     const queryClient = useQueryClient();
     const [liveMessages, dispatch] = useReducer(chatReducer, []);
+    // Thay đổi sau khi sửa / thu hồi, đè lên cả tin lịch sử lẫn tin realtime
+    const [messagePatches, setMessagePatches] = useState<
+        Record<string, ChatMessagePatch>
+    >({});
     const historyQuery = useChatHistory(serverId);
     const { refetch: refetchHistory } = historyQuery;
+    const queryClient = useQueryClient();
     const hasConnectedRef = useRef(false);
     const messages = useMemo(
         () =>
-            mergeChatMessages(
-                historyQuery.data?.pages.map((page) => page.messages ?? []) ??
-                    [],
-                liveMessages
+            applyMessagePatches(
+                mergeChatMessages(
+                    historyQuery.data?.pages.map(
+                        (page) => page.messages ?? []
+                    ) ?? [],
+                    liveMessages
+                ),
+                messagePatches
             ),
-        [historyQuery.data, liveMessages]
+        [historyQuery.data, liveMessages, messagePatches]
     );
     const [connectionStatus, setConnectionStatus] =
         useState<ChatConnectionStatus>('connecting');
@@ -132,11 +152,21 @@ export function useServerChat(
     if (activeServerId !== serverId) {
         setActiveServerId(serverId);
         dispatch({ type: 'reset' });
+        setMessagePatches({});
         setConnectionStatus('connecting');
     }
     const liveMessagesRef = useRef(liveMessages);
     // Ảnh của các tin chưa gửi xong, theo clientRequestId
     const pendingUploadsRef = useRef(new Map<string, PendingUpload[]>());
+
+    // Xóa cache
+    useEffect(() => {
+        return () => {
+            queryClient.removeQueries({
+                queryKey: chatKeys.history(serverId),
+            });
+        };
+    }, [queryClient, serverId]);
 
     // Rời trang: giải phóng ảnh xem trước còn lại
     useEffect(() => {
@@ -158,11 +188,14 @@ export function useServerChat(
         let isActive = true;
         hasConnectedRef.current = false;
 
-        async function joinRoom() {
+        async function joinRoom(shouldRefetch: boolean) {
             const result = await joinServerRoom(socket, { serverId });
             if (!isActive) return;
             if (result.ok) {
                 setConnectionStatus('joined');
+                // Phải vào room thì mới fetch lịch sử
+                // tin gửi sau thời điểm này chắc chắn đến qua socket
+                if (shouldRefetch) void refetchHistory();
             } else {
                 setConnectionStatus(
                     result.error.code === 'NOT_A_MEMBER'
@@ -175,9 +208,8 @@ export function useServerChat(
         function handleConnect() {
             // Vào lại room mỗi lần kết nối
             setConnectionStatus('connecting');
-            void joinRoom();
-            // Kết nối lại: tải lại lịch sử để lấy tin bị lỡ
-            if (hasConnectedRef.current) void refetchHistory();
+            // Lần đầu không refetch (query tự tải), các lần sau thì có
+            void joinRoom(hasConnectedRef.current);
             hasConnectedRef.current = true;
         }
 
@@ -219,7 +251,7 @@ export function useServerChat(
 
         if (socket.connected) {
             hasConnectedRef.current = true;
-            void joinRoom();
+            void joinRoom(false);
         } else {
             socket.connect();
         }
@@ -376,6 +408,49 @@ export function useServerChat(
         [deliver]
     );
 
+    const editMessage = useCallback(
+        async (messageId: string, content: string) => {
+            try {
+                const response = await editChatMessage(
+                    serverId,
+                    messageId,
+                    content.trim()
+                );
+                setMessagePatches((patches) => ({
+                    ...patches,
+                    [messageId]: toMessagePatch(response),
+                }));
+            } catch (error) {
+                throw new Error(
+                    getChatEditErrorMessage(getApiErrorStatus(error))
+                );
+            }
+        },
+        [serverId]
+    );
+
+    const recallMessage = useCallback(
+        async (messageId: string, reason?: string) => {
+            try {
+                const response = await deleteChatMessage(
+                    serverId,
+                    messageId,
+                    reason
+                );
+                // Dùng chung lớp patch với Sửa: isDeleted = true, contentText rỗng
+                setMessagePatches((patches) => ({
+                    ...patches,
+                    [messageId]: toMessagePatch(response),
+                }));
+            } catch (error) {
+                throw new Error(
+                    getChatRecallErrorMessage(getApiErrorStatus(error))
+                );
+            }
+        },
+        [serverId]
+    );
+
     const reconnect = useCallback(() => {
         const socket = getRealtimeSocket();
         setConnectionStatus('connecting');
@@ -402,6 +477,8 @@ export function useServerChat(
         isReady: connectionStatus === 'joined',
         sendMessage,
         retryMessage,
+        editMessage,
+        recallMessage,
         reconnect,
     };
 }

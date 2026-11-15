@@ -1,0 +1,28 @@
+[project]
+name = "document-classifier"
+version = "0.1.0"
+description = "Local MVP for document tag and collection suggestions"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "google-genai>=1.0,<2.0",
+    "jinja2>=3.1,<4.0",
+    "paddleocr>=3.7,<4.0",
+    "paddlepaddle>=3.2,<4.0",
+    "pypdf>=5.0,<7.0",
+    "pymupdf>=1.27,<2.0",
+    "pydantic-settings>=2.6,<3.0",
+    "python-docx>=1.1,<2.0",
+    "python-multipart>=0.0.18,<1.0",
+    "uvicorn>=0.32,<1.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28,<1.0",
+    "pytest>=8.3,<10.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

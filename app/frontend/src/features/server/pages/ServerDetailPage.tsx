@@ -50,6 +50,20 @@ export default function ServerDetailPage() {
         [memberNames, user]
     );
 
+    // Id các owner, để owner không thu hồi tin của owner khác
+    const ownerIds = useMemo(() => {
+        const ids = new Set<string>();
+        membersQuery.data?.forEach((member) => {
+            if (member.isOwner && member.userId) ids.add(member.userId);
+        });
+        return ids;
+    }, [membersQuery.data]);
+
+    const isOwnerUser = useCallback(
+        (userId: string) => ownerIds.has(userId),
+        [ownerIds]
+    );
+
     const sharedLinks = useMemo(
         () => extractSharedLinks(chat.messages),
         [chat.messages]
@@ -97,6 +111,8 @@ export default function ServerDetailPage() {
                     key={serverId}
                     currentUserId={user?.id}
                     getSenderName={getSenderName}
+                    isOwnerUser={isOwnerUser}
+                    isServerOwner={server.myRole === 'OWNER'}
                     lockedReason={LOCKED_REASONS[getServerStatus(server)]}
                     serverName={server.name}
                 />

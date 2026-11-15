@@ -32,6 +32,11 @@ export type ChatAttachmentDto = Schemas['ChatAttachmentResponse'];
 export type ServerRoomAuthorization =
     Schemas['RealtimeServerAuthorizationResponse'];
 
+/** Kết quả sửa / thu hồi tin (PATCH, DELETE) */
+export type ChatMessageResponse = Schemas['ChatMessageResponse'];
+export type EditChatMessageRequest = Schemas['EditChatMessageRequest'];
+export type DeleteChatMessageRequest = Schemas['DeleteChatMessageRequest'];
+
 /* Type socket, theo realtime-gateway/src/contracts/realtime.ts */
 export interface SocketError {
     code: string;
@@ -96,6 +101,7 @@ export interface ChatMessageView {
     senderUserId: string;
     contentText: string;
     createdAt: string;
+    editedAt?: string;
     status: ChatDeliveryStatus;
     isDeleted: boolean;
     errorMessage?: string;

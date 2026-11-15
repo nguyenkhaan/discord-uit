@@ -13,6 +13,7 @@ public record ChatMessageHistoryItem(
         UUID senderUserId,
         String contentText,
         Instant createdAt,
+        Instant editedAt,
         boolean deleted,
         ChatMessageReplyPreview replyTo,
         List<ChatAttachmentResponse> attachments) {
@@ -32,6 +33,7 @@ public record ChatMessageHistoryItem(
                 message.getSender().getId(),
                 deleted ? null : message.getContentText(),
                 message.getCreatedAt(),
+                message.getEditedAt(),
                 deleted,
                 ChatMessageReplyPreview.of(message.getReplyTo()),
                 deleted ? List.of() : attachments);
