@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/messages/{messageId}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReactions"];
+        put?: never;
+        post: operations["addReaction"];
+        delete: operations["removeReaction"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}/members/{userId}/promote": {
         parameters: {
             query?: never;
@@ -813,6 +829,24 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        AddMessageReactionRequest: {
+            /** Format: uuid */
+            iconId: string;
+        };
+        MessageReactionItemResponse: {
+            /** Format: uuid */
+            iconId?: string;
+            iconImage?: string;
+            name?: string;
+            /** Format: int64 */
+            count?: number;
+            reactedByMe?: boolean;
+        };
+        MessageReactionListResponse: {
+            /** Format: uuid */
+            messageId?: string;
+            reactions?: components["schemas"]["MessageReactionItemResponse"][];
+        };
         CreateDirectInviteRequest: {
             /** Format: uuid */
             recipientId: string;
@@ -1216,6 +1250,79 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ServerResponse"];
+                };
+            };
+        };
+    };
+    getReactions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MessageReactionListResponse"];
+                };
+            };
+        };
+    };
+    addReaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMessageReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MessageReactionListResponse"];
+                };
+            };
+        };
+    };
+    removeReaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MessageReactionListResponse"];
                 };
             };
         };

@@ -5,7 +5,10 @@ import { UserAvatar } from '@/components/common/UserAvatar';
 import { chatBubbleVariants } from '@/features/chat/components/chatBubbleVariants';
 import { ChatMessageAttachments } from '@/features/chat/components/ChatMessageAttachments';
 import { ChatMessageContent } from '@/features/chat/components/ChatMessageContent';
+import { ChatReactionBar } from '@/features/chat/components/ChatReactionBar';
+import { ChatReactionPicker } from '@/features/chat/components/ChatReactionPicker';
 import { ChatReplyQuote } from '@/features/chat/components/ChatReplyQuote';
+import { useChatReactions } from '@/features/chat/chat.hooks';
 import type { ChatMessageView } from '@/features/chat/chat.type';
 import {
     chatMessageElementId,
@@ -16,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface ChatMessageItemProps {
+    serverId: string;
     message: ChatMessageView;
     senderName: string;
     isOwn: boolean;
@@ -28,6 +32,7 @@ interface ChatMessageItemProps {
 
 /** Một tin nhắn: của mình bên phải, người khác bên trái */
 export function ChatMessageItem({
+    serverId,
     message,
     senderName,
     isOwn,
@@ -39,6 +44,8 @@ export function ChatMessageItem({
     const time = formatChatTime(message.createdAt);
     const bubbleTone = message.isDeleted ? 'deleted' : isOwn ? 'own' : 'other';
     const canReply = toReplyTarget(message) !== null;
+    // Chỉ tin đã gửi xong và chưa thu hồi mới có reaction
+    const reactions = useChatReactions(serverId, message.messageId, canReply);
     const attachments = message.isDeleted ? [] : (message.attachments ?? []);
     // Tin chỉ có ảnh thì không hiện bong bóng chữ rỗng
     const hasBubble = message.isDeleted || message.contentText.trim() !== '';
@@ -128,6 +135,15 @@ export function ChatMessageItem({
                     </div>
 
                     {canReply && (
+                        <ChatReactionPicker
+                            align={isOwn ? 'right' : 'left'}
+                            disabled={reactions.isPending}
+                            myIconId={reactions.myIconId}
+                            onSelect={reactions.react}
+                        />
+                    )}
+
+                    {canReply && (
                         <Button
                             aria-label={`Trả lời tin của ${isOwn ? 'bạn' : senderName}`}
                             className="size-8 min-h-8 shrink-0 opacity-100 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
@@ -143,6 +159,23 @@ export function ChatMessageItem({
                         </Button>
                     )}
                 </div>
+
+                {canReply && (
+                    <ChatReactionBar
+                        disabled={reactions.isPending}
+                        onToggle={reactions.react}
+                        reactions={reactions.reactions}
+                    />
+                )}
+
+                {reactions.isError && (
+                    <p
+                        className="mt-0.5 px-1 text-caption text-feedback-danger"
+                        role="alert"
+                    >
+                        Không thả được cảm xúc. Vui lòng thử lại.
+                    </p>
+                )}
 
                 {message.status === 'sending' && (
                     <p className="mt-0.5 px-1 text-caption text-muted">

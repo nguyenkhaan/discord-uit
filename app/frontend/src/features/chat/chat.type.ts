@@ -12,6 +12,19 @@ export type ChatHistoryItem = Schemas['ChatMessageHistoryItem'];
 /** Trích dẫn tin được trả lời (từ BE) */
 export type ChatReplyPreview = Schemas['ChatMessageReplyPreview'];
 
+/** Reaction của một tin (từ BE) */
+export type MessageReactionList = Schemas['MessageReactionListResponse'];
+export type MessageReactionItem = Schemas['MessageReactionItemResponse'];
+export type AddMessageReactionRequest = Schemas['AddMessageReactionRequest'];
+
+/** Reaction hiển thị dưới tin nhắn */
+export interface ChatReactionView {
+    iconId: string;
+    iconImage: string;
+    count: number;
+    reactedByMe: boolean;
+}
+
 /** Ảnh đính kèm (từ BE) */
 export type ChatAttachmentDto = Schemas['ChatAttachmentResponse'];
 
@@ -31,6 +44,18 @@ export type SocketAck<TData> =
 
 export interface ServerRoomCommand {
     serverId: string;
+}
+
+/** Event khi reaction thay đổi, theo MessageReactionUpdatedEventSchema của gateway */
+export interface MessageReactionUpdatedEvent {
+    serverId: string;
+    messageId: string;
+    reactions: {
+        iconId: string;
+        iconImage: string;
+        name: string;
+        count: number;
+    }[];
 }
 
 export interface ChatSendCommand {

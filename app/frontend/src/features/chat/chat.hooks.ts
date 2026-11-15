@@ -1,4 +1,9 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import {
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import {
     useCallback,
     useEffect,
@@ -13,7 +18,16 @@ import { getApiErrorStatus } from '@/lib/api-error';
 import { pickChatAttachments } from '@/features/chat/chat.attachments';
 import { chatKeys } from '@/features/chat/chat.keys';
 import {
+    applyMyReaction,
+    getMyReactionIconId,
+    mergeReactionEvent,
+    toReactionViews,
+} from '@/features/chat/chat.reactions';
+import {
+    addMessageReaction,
     getChatHistory,
+    getMessageReactions,
+    removeMessageReaction,
     uploadChatAttachment,
 } from '@/features/chat/chat.service';
 import {
@@ -27,7 +41,9 @@ import type {
     ChatConnectionStatus,
     ChatMessageDto,
     ChatMessageView,
+    ChatReactionView,
     ChatReplyView,
+    MessageReactionUpdatedEvent,
 } from '@/features/chat/chat.type';
 import {
     chatReducer,
@@ -56,6 +72,7 @@ export function useChatHistory(serverId: string) {
 }
 
 export interface ServerChat {
+    serverId: string;
     messages: ChatMessageView[];
     history: {
         isLoading: boolean;
@@ -93,6 +110,7 @@ export function useServerChat(
     serverId: string,
     currentUserId: string | undefined
 ): ServerChat {
+    const queryClient = useQueryClient();
     const [liveMessages, dispatch] = useReducer(chatReducer, []);
     const historyQuery = useChatHistory(serverId);
     const { refetch: refetchHistory } = historyQuery;
@@ -186,7 +204,18 @@ export function useServerChat(
         socket.on('connect', handleConnect);
         socket.on('disconnect', handleDisconnect);
         socket.on('connect_error', handleConnectError);
+        // Reaction thay đổi: chỉ cập nhật tin đã tải reaction
+        function handleReactionUpdated(event: MessageReactionUpdatedEvent) {
+            if (event.serverId !== serverId) return;
+            queryClient.setQueryData<ChatReactionView[]>(
+                chatKeys.reactions(serverId, event.messageId),
+                (current) =>
+                    current ? mergeReactionEvent(current, event) : current
+            );
+        }
+
         socket.on(CHAT_EVENTS.chatCreated, handleChatCreated);
+        socket.on(CHAT_EVENTS.messageReactionUpdated, handleReactionUpdated);
 
         if (socket.connected) {
             hasConnectedRef.current = true;
@@ -201,13 +230,17 @@ export function useServerChat(
             socket.off('disconnect', handleDisconnect);
             socket.off('connect_error', handleConnectError);
             socket.off(CHAT_EVENTS.chatCreated, handleChatCreated);
+            socket.off(
+                CHAT_EVENTS.messageReactionUpdated,
+                handleReactionUpdated
+            );
             if (socket.connected) {
                 void leaveServerRoom(socket, { serverId });
             }
             // Đóng kết nối khi rời trang
             socket.disconnect();
         };
-    }, [serverId, refetchHistory]);
+    }, [serverId, refetchHistory, queryClient]);
 
     const deliver = useCallback(
         async (
@@ -355,6 +388,7 @@ export function useServerChat(
     }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
     return {
+        serverId,
         messages,
         history: {
             isLoading: historyQuery.isPending,
@@ -369,6 +403,76 @@ export function useServerChat(
         sendMessage,
         retryMessage,
         reconnect,
+    };
+}
+
+export interface ChatReactions {
+    reactions: ChatReactionView[];
+    myIconId: string | null;
+    /** iconId null là bỏ reaction của mình */
+    react: (iconId: string | null) => void;
+    isPending: boolean;
+    isError: boolean;
+}
+
+/** Reaction của một tin: tải, thả/đổi/bỏ (cập nhật tạm, lỗi thì quay lại) */
+export function useChatReactions(
+    serverId: string,
+    messageId: string | undefined,
+    enabled: boolean
+): ChatReactions {
+    const queryClient = useQueryClient();
+    const queryKey = chatKeys.reactions(serverId, messageId ?? '');
+
+    const query = useQuery({
+        enabled: enabled && serverId !== '' && Boolean(messageId),
+        queryKey,
+        queryFn: async () =>
+            toReactionViews(
+                (await getMessageReactions(serverId, messageId ?? '')).reactions
+            ),
+        // Cập nhật về sau đến từ socket
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+    });
+
+    const mutation = useMutation({
+        mutationFn: (iconId: string | null) =>
+            iconId
+                ? addMessageReaction(serverId, messageId ?? '', iconId)
+                : removeMessageReaction(serverId, messageId ?? ''),
+        onMutate: async (iconId) => {
+            await queryClient.cancelQueries({ queryKey });
+            const previous =
+                queryClient.getQueryData<ChatReactionView[]>(queryKey);
+            queryClient.setQueryData<ChatReactionView[]>(
+                queryKey,
+                applyMyReaction(previous ?? [], iconId)
+            );
+            return { previous };
+        },
+        // Lỗi thì trả lại trạng thái cũ
+        onError: (_error, _iconId, context) => {
+            queryClient.setQueryData(queryKey, context?.previous);
+        },
+        onSuccess: (data) => {
+            queryClient.setQueryData(queryKey, toReactionViews(data.reactions));
+        },
+    });
+
+    const reactions = query.data ?? [];
+    const { mutate } = mutation;
+    const react = useCallback(
+        (iconId: string | null) => mutate(iconId),
+        [mutate]
+    );
+
+    return {
+        reactions,
+        myIconId: getMyReactionIconId(reactions),
+        react,
+        isPending: mutation.isPending,
+        isError: mutation.isError,
     };
 }
 

@@ -12,6 +12,7 @@ import { buildChatTimeline } from '@/features/chat/chat.utils';
 const STICK_TO_BOTTOM_PX = 120;
 
 interface ChatMessageListProps {
+    serverId: string;
     messages: ChatMessageView[];
     history: ServerChat['history'];
     currentUserId?: string;
@@ -21,6 +22,7 @@ interface ChatMessageListProps {
 }
 
 export function ChatMessageList({
+    serverId,
     messages,
     history,
     currentUserId,
@@ -187,6 +189,7 @@ export function ChatMessageList({
                             senderName={getSenderName(
                                 item.message.senderUserId
                             )}
+                            serverId={serverId}
                         />
                     )
                 )

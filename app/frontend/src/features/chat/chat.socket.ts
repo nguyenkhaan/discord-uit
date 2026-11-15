@@ -14,6 +14,7 @@ export const CHAT_EVENTS = {
     serverLeave: 'server-leave',
     chatSend: 'chat-send',
     chatCreated: 'chat-created',
+    messageReactionUpdated: 'message-reaction-updated',
 } as const;
 
 const ACK_TIMEOUT_MS = 10_000;
