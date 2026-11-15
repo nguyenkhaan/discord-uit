@@ -1,4 +1,4 @@
-import { CircleAlert, CornerUpLeft, RotateCw } from 'lucide-react';
+import { CircleAlert, CornerUpLeft, Pencil, RotateCw, Undo2 } from 'lucide-react';
 
 import { Button } from '@/components/common/Button';
 import { UserAvatar } from '@/components/common/UserAvatar';
@@ -10,9 +10,12 @@ import type { ChatMessageView } from '@/features/chat/chat.type';
 import {
     chatMessageElementId,
     DELETED_MESSAGE_TEXT,
+    EDITED_MESSAGE_LABEL,
     formatChatTime,
     toReplyTarget,
 } from '@/features/chat/chat.utils';
+import { DropdownMenu, type DropdownMenuItem } from '@/components/common/DropdownMenu';
+import type { ChatMessageActions } from '@/features/chat/chat.utils';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageItemProps {
@@ -24,6 +27,9 @@ interface ChatMessageItemProps {
     onReply: (message: ChatMessageView) => void;
     /** Tên người viết tin được trả lời */
     replySenderName?: string;
+    actions: ChatMessageActions;
+    onEdit: (message: ChatMessageView) => void;
+    onRecall: (message: ChatMessageView) => void;
 }
 
 /** Một tin nhắn: của mình bên phải, người khác bên trái */
@@ -35,10 +41,27 @@ export function ChatMessageItem({
     onRetry,
     onReply,
     replySenderName,
+    actions,
+    onEdit,
+    onRecall
 }: ChatMessageItemProps) {
     const time = formatChatTime(message.createdAt);
     const bubbleTone = message.isDeleted ? 'deleted' : isOwn ? 'own' : 'other';
     const canReply = toReplyTarget(message) !== null;
+    const menuItems: DropdownMenuItem[] = [
+    ...(actions.canEdit
+        ? [{ key: 'edit', label: 'Sửa', icon: Pencil, onSelect: () => onEdit(message) }]
+        : []),
+    ...(actions.canRecall
+        ? [{
+              key: 'recall',
+              label: 'Thu hồi',
+              icon: Undo2,
+              tone: 'danger' as const,
+              onSelect: () => onRecall(message),
+          }]
+        : []),
+];
     const attachments = message.isDeleted ? [] : (message.attachments ?? []);
     // Tin chỉ có ảnh thì không hiện bong bóng chữ rỗng
     const hasBubble = message.isDeleted || message.contentText.trim() !== '';
@@ -87,6 +110,15 @@ export function ChatMessageItem({
                         reply={message.replyTo}
                         senderName={replySenderName ?? 'Thành viên'}
                     />
+                )}
+
+                {message.editedAt && !message.isDeleted && (
+                    <p
+                        className="mb-0.5 px-1 text-caption text-info-accent"
+                        title={`Đã sửa lúc ${formatChatTime(message.editedAt)}`}
+                    >
+                        {EDITED_MESSAGE_LABEL}
+                    </p>
                 )}
 
                 <div
@@ -141,6 +173,13 @@ export function ChatMessageItem({
                                 className="size-4"
                             />
                         </Button>
+                    )}
+                    {menuItems.length > 0 && (
+                        <DropdownMenu
+                            className="shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100"
+                            items={menuItems}
+                            label={`Tuỳ chọn tin của ${isOwn ? 'bạn' : senderName}`}
+                        />
                     )}
                 </div>
 

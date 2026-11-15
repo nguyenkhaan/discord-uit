@@ -3,6 +3,7 @@ import type {
     ChatAttachmentView,
     ChatHistoryItem,
     ChatMessageDto,
+    ChatMessageResponse,
     ChatMessageView,
     ChatReplyPreview,
     ChatReplyView,
@@ -143,6 +144,7 @@ function historyToView(item: ChatHistoryItem): ChatMessageView | null {
         senderUserId: item.senderUserId,
         contentText: item.contentText ?? '',
         createdAt: item.createdAt ?? new Date(0).toISOString(),
+        editedAt: item.editedAt,
         status: 'sent',
         isDeleted: Boolean(item.deleted),
         replyTo: toReplyView(item.replyTo),
@@ -371,4 +373,120 @@ export function getReplyPreviewText(reply: ChatReplyView): string {
 /** Id của tin trong danh sách, dùng để cuộn tới tin gốc */
 export function chatMessageElementId(messageId: string): string {
     return `chat-message-${messageId}`;
+}
+
+export interface ChatMessagePermissionInput {
+    /** Tin của chính người đang xem */
+    isOwn: boolean;
+    /** Người đang xem là owner server */
+    isServerOwner: boolean;
+    /** Người gửi tin là owner server */
+    isSenderOwner: boolean;
+}
+
+export interface ChatMessageActions {
+    canEdit: boolean;
+    canRecall: boolean;
+}
+
+const NO_MESSAGE_ACTIONS: ChatMessageActions = { canEdit: false, canRecall: false };
+
+export function getMessageActions(
+    message: ChatMessageView,
+    { isOwn, isServerOwner, isSenderOwner }: ChatMessagePermissionInput
+): ChatMessageActions {
+    // Chỉ tin đã lưu trên server và chưa thu hồi mới thao tác được
+    if (!message.messageId || message.status !== 'sent' || message.isDeleted) {
+        return NO_MESSAGE_ACTIONS;
+    }
+    // Người gửi: sửa và thu hồi (kể cả khi người gửi là owner)
+    if (isOwn) return { canEdit: true, canRecall: true };
+    // Owner: chỉ thu hồi tin của member, không đụng tin owner khác
+    if (isServerOwner && !isSenderOwner) return { canEdit: false, canRecall: true };
+    return NO_MESSAGE_ACTIONS;
+}
+
+export const EDITED_MESSAGE_LABEL = 'Đã thay đổi';
+
+/** Phần thay đổi của một tin sau khi sửa hoặc thu hồi */
+export type ChatMessagePatch = Pick<
+    ChatMessageView,
+    'contentText' | 'editedAt' | 'isDeleted'
+>;
+
+/** Chuyển kết quả PATCH / DELETE từ BE thành phần thay đổi */
+export function toMessagePatch(response: ChatMessageResponse): ChatMessagePatch {
+    return {
+        contentText: response.contentText ?? '',
+        editedAt: response.editedAt,
+        isDeleted: Boolean(response.deletedAt),
+    };
+}
+
+/** Đè các thay đổi lên danh sách tin, theo messageId; cập nhật cả trích dẫn trỏ tới tin đó */
+export function applyMessagePatches(
+    messages: ChatMessageView[],
+    patches: Record<string, ChatMessagePatch>
+): ChatMessageView[] {
+    if (Object.keys(patches).length === 0) return messages;
+    return messages.map((message) => {
+        const patch = message.messageId ? patches[message.messageId] : undefined;
+        const replyPatch = message.replyTo
+            ? patches[message.replyTo.messageId]
+            : undefined;
+        if (!patch && !replyPatch) return message;
+
+        return {
+            ...message,
+            ...patch,
+            // Thu hồi thì ẩn luôn ảnh
+            ...(patch?.isDeleted ? { attachments: [] } : {}),
+            // Tin đang trích dẫn tin vừa sửa / thu hồi thì cập nhật trích dẫn
+            ...(replyPatch && message.replyTo
+                ? {
+                      replyTo: {
+                          ...message.replyTo,
+                          contentText: replyPatch.isDeleted
+                              ? null
+                              : replyPatch.contentText,
+                          isDeleted: replyPatch.isDeleted,
+                      },
+                  }
+                : {}),
+        };
+    });
+}
+
+/** Nội dung mới chỉ tính là thay đổi khi khác tin gốc (bỏ khoảng trắng hai đầu) */
+export function isEditChanged(original: string, next: string): boolean {
+    return next.trim() !== original.trim();
+}
+
+const EDIT_ERROR_MESSAGES: Record<number, string> = {
+    400: 'Nội dung không hợp lệ.',
+    403: 'Bạn không có quyền sửa tin nhắn này.',
+    404: 'Tin nhắn không còn tồn tại.',
+    409: 'Tin nhắn đã bị thu hồi, không thể sửa.',
+};
+
+export function getChatEditErrorMessage(status: number | undefined): string {
+    return (
+        (status !== undefined && EDIT_ERROR_MESSAGES[status]) ||
+        'Không sửa được tin nhắn. Vui lòng thử lại.'
+    );
+}
+
+export const MAX_RECALL_REASON_LENGTH = 255;
+
+const RECALL_ERROR_MESSAGES: Record<number, string> = {
+    400: 'Cần nhập lý do hợp lệ (tối đa 255 ký tự).',
+    403: 'Bạn không có quyền thu hồi tin nhắn này.',
+    404: 'Tin nhắn không còn tồn tại.',
+};
+
+export function getChatRecallErrorMessage(status: number | undefined): string {
+    return (
+        (status !== undefined && RECALL_ERROR_MESSAGES[status]) ||
+        'Không thu hồi được tin nhắn. Vui lòng thử lại.'
+    );
 }

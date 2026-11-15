@@ -248,6 +248,8 @@ export class BackendClient {
         const parsed = ChatMessageDtoSchema.safeParse(body);
 
         if (!parsed.success) {
+            console.error("[createChatMessage] body:", body);
+            console.error("[createChatMessage] issues:", parsed.error.issues);
             throw new BackendError("invalid-response", response.status);
         }
 

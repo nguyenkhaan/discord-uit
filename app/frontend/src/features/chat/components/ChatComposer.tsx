@@ -1,4 +1,4 @@
-import { ImagePlus, SendHorizontal } from 'lucide-react';
+import { Check, ImagePlus, SendHorizontal } from 'lucide-react'; 
 import {
     useEffect,
     useId,
@@ -11,15 +11,20 @@ import {
 
 import { Button } from '@/components/common/Button';
 import { ChatAttachmentPreview } from '@/features/chat/components/ChatAttachmentPreview';
+import { ChatEditBar } from '@/features/chat/components/ChatEditBar'; 
 import { ChatEmojiPicker } from '@/features/chat/components/ChatEmojiPicker';
 import { ChatReplyBar } from '@/features/chat/components/ChatReplyBar';
 import { CHAT_ATTACHMENT_TYPES } from '@/features/chat/chat.attachments';
 import { useChatAttachments } from '@/features/chat/chat.hooks';
 import type {
     ChatAttachmentDraft,
+    ChatMessageView, 
     ChatReplyView,
 } from '@/features/chat/chat.type';
-import { MAX_CHAT_MESSAGE_LENGTH } from '@/features/chat/chat.utils';
+import {
+    isEditChanged, 
+    MAX_CHAT_MESSAGE_LENGTH,
+} from '@/features/chat/chat.utils';
 import { cn } from '@/lib/utils';
 
 const MAX_TEXTAREA_HEIGHT_PX = 160;
@@ -33,6 +38,12 @@ interface ChatComposerProps {
     replyTarget?: ChatReplyView | null;
     replySenderName?: string;
     onCancelReply?: () => void;
+    /** Tin đang được sửa */
+    editTarget?: ChatMessageView | null;
+    isSavingEdit?: boolean;
+    editError?: string;
+    onSubmitEdit?: (content: string) => void;
+    onCancelEdit?: () => void;
 }
 
 export function ChatComposer({
@@ -42,6 +53,11 @@ export function ChatComposer({
     replyTarget,
     replySenderName,
     onCancelReply,
+    editTarget, 
+    isSavingEdit = false, 
+    editError, 
+    onSubmitEdit, 
+    onCancelEdit, 
 }: ChatComposerProps) {
     const inputId = useId();
     const hintId = useId();
@@ -56,18 +72,45 @@ export function ChatComposer({
         takeAttachments,
     } = useChatAttachments();
 
+    const isEditing = Boolean(editTarget);
+    const editingId = editTarget?.messageId;
+    const [prevEditingId, setPrevEditingId] = useState(editingId);
+    // Tin đang gõ dở trước khi bấm sửa, trả lại khi thoát sửa
+    const [draftBeforeEdit, setDraftBeforeEdit] = useState('');
+    if (prevEditingId !== editingId) {
+        setPrevEditingId(editingId);
+        if (editTarget) {
+            if (!prevEditingId) setDraftBeforeEdit(content);
+            setContent(editTarget.contentText);
+        } else {
+            setContent(draftBeforeEdit);
+            setDraftBeforeEdit('');
+        }
+    }
+
     const isDisabled = Boolean(disabledReason);
     const length = content.trim().length;
     const isTooLong = length > MAX_CHAT_MESSAGE_LENGTH;
-    // Gửi được khi có chữ hoặc có ảnh
-    const canSend =
-        !isDisabled && (length > 0 || attachments.length > 0) && !isTooLong;
+    const isChanged = editTarget
+        ? isEditChanged(editTarget.contentText, content)
+        : true;
+    const canSend = isEditing
+        ? !isDisabled && !isSavingEdit && length > 0 && !isTooLong && isChanged
+        : !isDisabled && (length > 0 || attachments.length > 0) && !isTooLong;
 
     // Chọn trả lời thì đưa con trỏ vào ô nhập
     const replyTargetId = replyTarget?.messageId;
     useEffect(() => {
         if (replyTargetId) textareaRef.current?.focus();
     }, [replyTargetId]);
+
+    useEffect(() => {
+        const textarea = textareaRef.current;
+        if (!editingId || !textarea) return;
+        textarea.focus();
+        const end = textarea.value.length;
+        textarea.setSelectionRange(end, end);
+    }, [editingId]);
 
     // Tự tăng chiều cao ô nhập
     useEffect(() => {
@@ -79,6 +122,10 @@ export function ChatComposer({
 
     function submit() {
         if (!canSend) return;
+        if (isEditing) {
+            onSubmitEdit?.(content);
+            return;
+        }
         onSend(content, takeAttachments());
         setContent('');
         textareaRef.current?.focus();
@@ -110,7 +157,11 @@ export function ChatComposer({
     }
 
     function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-        // Esc để huỷ trả lời
+        if (event.key === 'Escape' && isEditing && onCancelEdit) {
+            event.preventDefault();
+            onCancelEdit();
+            return;
+        }
         if (event.key === 'Escape' && replyTarget && onCancelReply) {
             event.preventDefault();
             onCancelReply();
@@ -133,19 +184,30 @@ export function ChatComposer({
             onSubmit={handleSubmit}
         >
             <label className="sr-only" htmlFor={inputId}>
-                Nhập tin nhắn
+                {isEditing ? 'Sửa tin nhắn' : 'Nhập tin nhắn'}
             </label>
-            {replyTarget && onCancelReply && (
+            {}
+            {editTarget && onCancelEdit && (
+                <ChatEditBar
+                    errorMessage={editError}
+                    onCancel={onCancelEdit}
+                    originalText={editTarget.contentText}
+                />
+            )}
+            {!isEditing && replyTarget && onCancelReply && (
                 <ChatReplyBar
                     onCancel={onCancelReply}
                     senderName={replySenderName ?? 'Thành viên'}
                     target={replyTarget}
                 />
             )}
-            <ChatAttachmentPreview
-                attachments={attachments}
-                onRemove={removeAttachment}
-            />
+            {/* Ảnh đang chọn được giữ lại, chỉ ẩn trong lúc sửa */}
+            {!isEditing && (
+                <ChatAttachmentPreview
+                    attachments={attachments}
+                    onRemove={removeAttachment}
+                />
+            )}
             {attachmentError && (
                 <p
                     className="mb-2 text-caption text-feedback-danger"
@@ -171,7 +233,7 @@ export function ChatComposer({
                 <Button
                     aria-label="Đính kèm ảnh"
                     className="size-9 min-h-9 shrink-0 rounded-lg"
-                    disabled={isDisabled}
+                    disabled={isDisabled || isEditing}
                     onClick={() => fileInputRef.current?.click()}
                     size="icon"
                     variant="ghost"
@@ -181,7 +243,7 @@ export function ChatComposer({
                 <textarea
                     aria-describedby={hintId}
                     className="max-h-40 min-h-6 flex-1 resize-none bg-transparent py-1.5 text-body text-foreground outline-none placeholder:text-placeholder disabled:cursor-not-allowed"
-                    disabled={isDisabled}
+                    disabled={isDisabled || isSavingEdit}
                     id={inputId}
                     onChange={(event) => setContent(event.target.value)}
                     onKeyDown={handleKeyDown}
@@ -195,13 +257,17 @@ export function ChatComposer({
                 />
                 <ChatEmojiPicker disabled={isDisabled} onSelect={insertEmoji} />
                 <Button
-                    aria-label="Gửi tin nhắn"
+                    aria-label={isEditing ? 'Lưu thay đổi' : 'Gửi tin nhắn'}
                     className="size-9 min-h-9 shrink-0 rounded-lg"
                     disabled={!canSend}
                     size="icon"
                     type="submit"
                 >
-                    <SendHorizontal aria-hidden="true" className="size-4" />
+                    {isEditing ? (
+                        <Check aria-hidden="true" className="size-4" />
+                    ) : (
+                        <SendHorizontal aria-hidden="true" className="size-4" />
+                    )}
                 </Button>
             </div>
             <div
@@ -209,7 +275,13 @@ export function ChatComposer({
                 id={hintId}
             >
                 <span className="hidden sm:inline">
-                    Enter để gửi · Shift + Enter để xuống dòng
+                    {isEditing
+                        ? isSavingEdit
+                            ? 'Đang lưu...'
+                            : isChanged
+                              ? 'Enter để lưu · Esc để huỷ'
+                              : 'Chưa có thay đổi · Esc để huỷ'
+                        : 'Enter để gửi · Shift + Enter để xuống dòng'}
                 </span>
                 {length >= COUNTER_VISIBLE_FROM && (
                     <span

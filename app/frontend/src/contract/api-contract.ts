@@ -1073,6 +1073,8 @@ export interface components {
             contentText?: string;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: date-time */
+            editedAt?: string;
             deleted?: boolean;
             replyTo?: components["schemas"]["ChatMessageReplyPreview"];
             attachments?: components["schemas"]["ChatAttachmentResponse"][];
