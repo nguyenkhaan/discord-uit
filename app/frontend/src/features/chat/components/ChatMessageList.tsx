@@ -6,7 +6,7 @@ import { ChatDayDivider } from '@/features/chat/components/ChatDayDivider';
 import { ChatMessageItem } from '@/features/chat/components/ChatMessageItem';
 import type { ServerChat } from '@/features/chat/chat.hooks';
 import type { ChatMessageView } from '@/features/chat/chat.type';
-import { buildChatTimeline } from '@/features/chat/chat.utils';
+import { buildChatTimeline, getMessageActions } from '@/features/chat/chat.utils';
 
 /** Khoảng cách tới đáy để tự cuộn */
 const STICK_TO_BOTTOM_PX = 120;
@@ -18,6 +18,10 @@ interface ChatMessageListProps {
     getSenderName: (userId: string) => string;
     onRetry: (clientRequestId: string) => void;
     onReply: (message: ChatMessageView) => void;
+    isServerOwner: boolean;
+    isOwnerUser: (userId: string) => boolean;
+    onEdit: (message: ChatMessageView) => void;
+    onRecall: (message: ChatMessageView) => void;
 }
 
 export function ChatMessageList({
@@ -27,6 +31,10 @@ export function ChatMessageList({
     getSenderName,
     onRetry,
     onReply,
+    isServerOwner,
+    isOwnerUser,
+    onEdit,
+    onRecall
 }: ChatMessageListProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -187,6 +195,13 @@ export function ChatMessageList({
                             senderName={getSenderName(
                                 item.message.senderUserId
                             )}
+                            actions={getMessageActions(item.message, {
+                                isOwn: item.message.senderUserId === currentUserId,
+                                isServerOwner,
+                                isSenderOwner: isOwnerUser(item.message.senderUserId),
+                            })}
+                            onEdit={onEdit}
+                            onRecall={onRecall}
                         />
                     )
                 )
