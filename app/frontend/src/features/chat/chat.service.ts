@@ -1,7 +1,9 @@
 import { privateClient } from '@/api/client';
 import type {
     ChatAttachmentDto,
+    AddMessageReactionRequest,
     ChatHistoryResponse,
+    MessageReactionList,
     ChatMessageResponse,
     EditChatMessageRequest,
     DeleteChatMessageRequest
@@ -38,6 +40,30 @@ export async function uploadChatAttachment(
     return response.data;
 }
 
+function reactionsUrl(serverId: string, messageId: string): string {
+    return `/servers/${serverId}/messages/${messageId}/reactions`;
+}
+
+/** Reaction của một tin */
+export async function getMessageReactions(
+    serverId: string,
+    messageId: string
+): Promise<MessageReactionList> {
+    const response = await privateClient.get<MessageReactionList>(
+        reactionsUrl(serverId, messageId)
+    );
+    return response.data;
+}
+
+/** Thả hoặc đổi reaction của mình */
+export async function addMessageReaction(
+    serverId: string,
+    messageId: string,
+    iconId: string
+): Promise<MessageReactionList> {
+    const body: AddMessageReactionRequest = { iconId };
+    const response = await privateClient.post<MessageReactionList>(
+        reactionsUrl(serverId, messageId),
 /** Sửa nội dung một tin nhắn */
 export async function editChatMessage(
     serverId: string,
@@ -52,6 +78,13 @@ export async function editChatMessage(
     return response.data;
 }
 
+/** Bỏ reaction của mình */
+export async function removeMessageReaction(
+    serverId: string,
+    messageId: string
+): Promise<MessageReactionList> {
+    const response = await privateClient.delete<MessageReactionList>(
+        reactionsUrl(serverId, messageId)
 /** Thu hồi (xoá mềm) một tin nhắn; owner gỡ tin người khác phải kèm lý do */
 export async function deleteChatMessage(
     serverId: string,

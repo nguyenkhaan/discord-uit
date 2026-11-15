@@ -9,7 +9,10 @@ import type {
     ServerMemberResponse,
     ServerResponse,
 } from '@/features/server/server.type';
-import type { SharedChatLink } from '@/features/chat/chat.utils';
+import type {
+    SharedChatImage,
+    SharedChatLink,
+} from '@/features/chat/chat.utils';
 
 type SidePanelTab = 'members' | 'info';
 
@@ -21,6 +24,7 @@ interface ServerSidePanelProps {
     onRetryMembers: () => void;
     currentUserId?: string;
     sharedLinks: SharedChatLink[];
+    sharedImages: SharedChatImage[];
     getSenderName: (userId: string) => string;
     /** Đóng panel trên màn hình nhỏ */
     onClose: () => void;
@@ -34,6 +38,7 @@ export function ServerSidePanel({
     onRetryMembers,
     currentUserId,
     sharedLinks,
+    sharedImages,
     getSenderName,
     onClose,
 }: ServerSidePanelProps) {
@@ -70,6 +75,7 @@ export function ServerSidePanel({
                                     isLoading={isMembersLoading}
                                     members={members}
                                     onRetry={onRetryMembers}
+                                    serverId={server.id ?? ''}
                                 />
                             ),
                         },
@@ -81,6 +87,7 @@ export function ServerSidePanel({
                                 <ServerInfoTab
                                     getSenderName={getSenderName}
                                     server={server}
+                                    sharedImages={sharedImages}
                                     sharedLinks={sharedLinks}
                                 />
                             ),

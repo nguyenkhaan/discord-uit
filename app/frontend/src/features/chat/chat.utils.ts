@@ -318,6 +318,30 @@ export function extractSharedLinks(
     return links;
 }
 
+export interface SharedChatImage extends ChatAttachmentView {
+    senderUserId: string;
+    createdAt: string;
+}
+
+/** Danh sách ảnh đã gửi, mới nhất trước */
+export function extractSharedImages(
+    messages: ChatMessageView[]
+): SharedChatImage[] {
+    const images: SharedChatImage[] = [];
+
+    for (const message of [...messages].reverse()) {
+        if (message.status !== 'sent' || message.isDeleted) continue;
+        for (const attachment of message.attachments ?? []) {
+            images.push({
+                ...attachment,
+                senderUserId: message.senderUserId,
+                createdAt: message.createdAt,
+            });
+        }
+    }
+    return images;
+}
+
 // ---------------------------------------------------------------------------
 // Thông báo lỗi
 // ---------------------------------------------------------------------------

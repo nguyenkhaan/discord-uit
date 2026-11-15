@@ -147,6 +147,7 @@ export function ChatPanel({
                 onRecall={handleRecall}
                 onReply={handleReply}
                 onRetry={chat.retryMessage}
+                serverId={chat.serverId}
             />
             <ChatComposer
                 disabledReason={disabledReason}

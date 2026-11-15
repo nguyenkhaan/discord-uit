@@ -1,55 +1,72 @@
 import { ImageOff } from 'lucide-react';
 import { useState } from 'react';
 
+import { ChatImageViewer } from '@/features/chat/components/ChatImageViewer';
 import type { ChatAttachmentView } from '@/features/chat/chat.type';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageAttachmentsProps {
     attachments: ChatAttachmentView[];
-    /** Chỉ cho bấm mở ảnh khi tin đã gửi xong */
+    /** Chỉ cho bấm xem ảnh khi tin đã gửi xong */
     isLinkable: boolean;
 }
 
-/** Lưới ảnh trong tin nhắn, bấm để mở ảnh gốc ở tab mới */
+/** Lưới ảnh trong tin nhắn, bấm để xem trong popup */
 export function ChatMessageAttachments({
     attachments,
     isLinkable,
 }: ChatMessageAttachmentsProps) {
+    const [viewerIndex, setViewerIndex] = useState<number | null>(null);
     const isSingle = attachments.length === 1;
 
     return (
-        <ul
-            aria-label="Ảnh đính kèm"
-            className={cn(
-                'grid gap-1',
-                isSingle ? 'grid-cols-1' : 'grid-cols-2',
-                attachments.length > 4 && 'sm:grid-cols-3'
+        <>
+            <ul
+                aria-label="Ảnh đính kèm"
+                className={cn(
+                    'grid gap-1',
+                    isSingle ? 'grid-cols-1' : 'grid-cols-2',
+                    attachments.length > 4 && 'sm:grid-cols-3'
+                )}
+            >
+                {attachments.map((attachment, index) => (
+                    <li key={attachment.key}>
+                        <ChatAttachmentImage
+                            attachment={attachment}
+                            isSingle={isSingle}
+                            onOpen={
+                                isLinkable
+                                    ? () => setViewerIndex(index)
+                                    : undefined
+                            }
+                        />
+                    </li>
+                ))}
+            </ul>
+
+            {viewerIndex !== null && (
+                <ChatImageViewer
+                    images={attachments}
+                    onClose={() => setViewerIndex(null)}
+                    startIndex={viewerIndex}
+                />
             )}
-        >
-            {attachments.map((attachment) => (
-                <li key={attachment.key}>
-                    <ChatAttachmentImage
-                        attachment={attachment}
-                        isLinkable={isLinkable}
-                        isSingle={isSingle}
-                    />
-                </li>
-            ))}
-        </ul>
+        </>
     );
 }
 
 interface ChatAttachmentImageProps {
     attachment: ChatAttachmentView;
-    isLinkable: boolean;
     isSingle: boolean;
+    /** Không truyền khi tin đang gửi */
+    onOpen?: () => void;
 }
 
 /** Một ảnh; lỗi tải (link hết hạn) thì hiện ô báo lỗi */
 function ChatAttachmentImage({
     attachment,
-    isLinkable,
     isSingle,
+    onOpen,
 }: ChatAttachmentImageProps) {
     const [failedUrl, setFailedUrl] = useState<string | null>(null);
     const url = attachment.url;
@@ -87,17 +104,16 @@ function ChatAttachmentImage({
         />
     );
 
-    if (!isLinkable) return image;
+    if (!onOpen) return image;
 
     return (
-        <a
-            aria-label={`Mở ảnh ${attachment.fileName}`}
-            className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-            href={url}
-            rel="noopener noreferrer"
-            target="_blank"
+        <button
+            aria-label={`Xem ảnh ${attachment.fileName}`}
+            className="block cursor-zoom-in rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            onClick={onOpen}
+            type="button"
         >
             {image}
-        </a>
+        </button>
     );
 }

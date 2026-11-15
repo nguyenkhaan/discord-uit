@@ -9,12 +9,16 @@ interface ServerMemberItemProps {
     isCurrentUser: boolean;
     /** Hiện menu quản lý thành viên */
     canManage: boolean;
+    onPromote: (member: ServerMemberResponse) => void;
+    onKick: (member: ServerMemberResponse) => void;
 }
 
 export function ServerMemberItem({
     member,
     isCurrentUser,
     canManage,
+    onPromote,
+    onKick,
 }: ServerMemberItemProps) {
     const name = member.fullName || 'Chưa đặt tên';
     const showMenu = canManage && !isCurrentUser && !member.isOwner;
@@ -47,12 +51,14 @@ export function ServerMemberItem({
                             key: 'promote',
                             label: 'Nâng làm chủ server',
                             icon: Crown,
+                            onSelect: () => onPromote(member),
                         },
                         {
                             key: 'kick',
                             label: 'Mời ra khỏi server',
                             icon: UserMinus,
                             tone: 'danger',
+                            onSelect: () => onKick(member),
                         },
                     ]}
                     label={`Quản lý thành viên ${name}`}
