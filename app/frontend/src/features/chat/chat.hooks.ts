@@ -169,11 +169,14 @@ export function useServerChat(
         let isActive = true;
         hasConnectedRef.current = false;
 
-        async function joinRoom() {
+        async function joinRoom(shouldRefetch: boolean) {
             const result = await joinServerRoom(socket, { serverId });
             if (!isActive) return;
             if (result.ok) {
                 setConnectionStatus('joined');
+                // Phải vào room thì mới fetch lịch sử
+                // tin gửi sau thời điểm này chắc chắn đến qua socket
+                if (shouldRefetch) void refetchHistory();
             } else {
                 setConnectionStatus(
                     result.error.code === 'NOT_A_MEMBER'
@@ -186,9 +189,8 @@ export function useServerChat(
         function handleConnect() {
             // Vào lại room mỗi lần kết nối
             setConnectionStatus('connecting');
-            void joinRoom();
-            // Kết nối lại: tải lại lịch sử để lấy tin bị lỡ
-            if (hasConnectedRef.current) void refetchHistory();
+            // Lần đầu không refetch (query tự tải), các lần sau thì có
+            void joinRoom(hasConnectedRef.current);
             hasConnectedRef.current = true;
         }
 
@@ -219,7 +221,7 @@ export function useServerChat(
 
         if (socket.connected) {
             hasConnectedRef.current = true;
-            void joinRoom();
+            void joinRoom(false);
         } else {
             socket.connect();
         }
