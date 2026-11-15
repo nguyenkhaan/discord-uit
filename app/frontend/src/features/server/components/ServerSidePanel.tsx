@@ -75,6 +75,7 @@ export function ServerSidePanel({
                                     isLoading={isMembersLoading}
                                     members={members}
                                     onRetry={onRetryMembers}
+                                    serverId={server.id ?? ''}
                                 />
                             ),
                         },
