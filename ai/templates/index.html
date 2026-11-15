@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atlas — Document classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <a class="brand" href="/" aria-label="Atlas classifier home">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>Atlas</span>
+        </a>
+        <p class="eyebrow">Document classifier</p>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="kicker">Find the right home</p>
+        <h1 id="page-title">Turn a document into a useful starting point.</h1>
+        <p class="lede">Upload a school, work, or research document. Atlas suggests the most relevant tags and collections from your catalogue.</p>
+      </section>
+
+      <section class="workspace" aria-label="Document analysis">
+        <form class="upload-panel" action="/analyze" method="post" enctype="multipart/form-data">
+          <div>
+            <h2>Upload a document</h2>
+            <p>Supported formats: TXT, Markdown, PDF, and DOCX. Your original file is not stored.</p>
+          </div>
+          <label class="file-field" for="document">
+            <span class="file-field-title">Choose a file</span>
+            <span class="file-field-hint">Up to your configured upload limit</span>
+            <input id="document" name="document" type="file" accept=".txt,.md,.pdf,.docx">
+          </label>
+          {% if error %}
+          <p class="notice notice-error" role="alert">{{ error }}</p>
+          {% endif %}
+          <button class="submit-button" type="submit" data-default-label="Analyse document">Analyse document</button>
+        </form>
+
+        {% if result %}
+        <section class="result-panel" aria-live="polite" aria-labelledby="results-title">
+          <div class="result-heading">
+            <div>
+              <p class="kicker">Analysis complete</p>
+              <h2 id="results-title">Suggestions for {{ filename }}</h2>
+            </div>
+            {% if was_truncated %}<p class="subtle-note">Only the first sections were analysed.</p>{% endif %}
+          </div>
+
+          <div class="result-columns">
+            <section aria-labelledby="tags-title">
+              <h3 id="tags-title">Recommended tags</h3>
+              <div class="suggestion-list">
+                {% for item in result.tags %}
+                <article class="suggestion-card">
+                  <div class="suggestion-topline"><span class="confidence">{{ (item.confidence * 100)|round|int }}%</span></div>
+                  <h4>{{ entries.get(item.id, {}).get('name', item.id) }}</h4>
+                  <p class="entry-slug">{{ entries.get(item.id, {}).get('slug', item.id) }}</p>
+                  <p>{{ item.reason }}</p>
+                </article>
+                {% else %}
+                <p class="empty-state">No existing tag reached a useful confidence level.</p>
+                {% endfor %}
+              </div>
+            </section>
+            <section aria-labelledby="collections-title">
+              <h3 id="collections-title">Recommended collections</h3>
+              <div class="suggestion-list">
+                {% for item in result.collections %}
+                <article class="suggestion-card">
+                  <div class="suggestion-topline"><span class="confidence">{{ (item.confidence * 100)|round|int }}%</span></div>
+                  <h4>{{ entries.get(item.id, {}).get('name', item.id) }}</h4>
+                  <p class="entry-slug">{{ entries.get(item.id, {}).get('slug', item.id) }}</p>
+                  <p>{{ item.reason }}</p>
+                </article>
+                {% else %}
+                <p class="empty-state">No existing collection reached a useful confidence level.</p>
+                {% endfor %}
+              </div>
+            </section>
+          </div>
+
+          {% if result.new_tags or result.new_collections %}
+          <section class="new-suggestions" aria-labelledby="new-title">
+            <p class="kicker">Catalogue gap</p>
+            <h3 id="new-title">Possible additions to review</h3>
+            <div class="result-columns">
+              {% for item in result.new_tags %}
+              <article class="suggestion-card suggestion-card-new"><span class="kind">New tag</span><h4>{{ item.name }}</h4><p>{{ item.reason }}</p></article>
+              {% endfor %}
+              {% for item in result.new_collections %}
+              <article class="suggestion-card suggestion-card-new"><span class="kind">New collection</span><h4>{{ item.name }}</h4><p>{{ item.reason }}</p></article>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+        </section>
+        {% else %}
+        <aside class="guidance" aria-label="How results work">
+          <p class="kicker">What you will receive</p>
+          <ul>
+            <li>Up to three tags and two collections</li>
+            <li>A confidence score and one-line rationale for each</li>
+            <li>A new-catalogue suggestion only when existing entries do not fit</li>
+          </ul>
+        </aside>
+        {% endif %}
+      </section>
+    </main>
+    <script src="{{ url_for('static', path='app.js') }}" defer></script>
+  </body>
+</html>
