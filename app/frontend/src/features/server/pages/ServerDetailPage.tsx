@@ -5,7 +5,10 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '@/context/useAuth';
 import { ChatPanel } from '@/features/chat/components/ChatPanel';
 import { useServerChat } from '@/features/chat/chat.hooks';
-import { extractSharedLinks } from '@/features/chat/chat.utils';
+import {
+    extractSharedImages,
+    extractSharedLinks,
+} from '@/features/chat/chat.utils';
 import { InviteStatusMessage } from '@/features/server/components/InviteStatusMessage';
 import { ServerDetailHeader } from '@/features/server/components/ServerDetailHeader';
 import { ServerSidePanel } from '@/features/server/components/ServerSidePanel';
@@ -49,6 +52,10 @@ export default function ServerDetailPage() {
 
     const sharedLinks = useMemo(
         () => extractSharedLinks(chat.messages),
+        [chat.messages]
+    );
+    const sharedImages = useMemo(
+        () => extractSharedImages(chat.messages),
         [chat.messages]
     );
 
@@ -117,6 +124,7 @@ export default function ServerDetailPage() {
                         onClose={() => setIsPanelOpen(false)}
                         onRetryMembers={() => void membersQuery.refetch()}
                         server={server}
+                        sharedImages={sharedImages}
                         sharedLinks={sharedLinks}
                     />
                 </div>
