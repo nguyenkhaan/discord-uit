@@ -4,7 +4,6 @@ import {
     useQuery,
     useQueryClient,
 } from '@tanstack/react-query';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import {
     useCallback,
     useEffect,
@@ -53,7 +52,7 @@ import {
     chatReducer,
     getChatEditErrorMessage,
     getChatErrorMessage,
-    getChatRecallErrorMessage, 
+    getChatRecallErrorMessage,
     getChatUploadErrorMessage,
     MAX_CHAT_MESSAGE_LENGTH,
     mergeChatMessages,
@@ -129,7 +128,6 @@ export function useServerChat(
     >({});
     const historyQuery = useChatHistory(serverId);
     const { refetch: refetchHistory } = historyQuery;
-    const queryClient = useQueryClient();
     const hasConnectedRef = useRef(false);
     const messages = useMemo(
         () =>
@@ -422,7 +420,10 @@ export function useServerChat(
                 }));
             } catch (error) {
                 throw new Error(
-                    getChatEditErrorMessage(getApiErrorStatus(error))
+                    getChatEditErrorMessage(getApiErrorStatus(error)),
+                    {
+                        cause: error,
+                    }
                 );
             }
         },
@@ -444,7 +445,10 @@ export function useServerChat(
                 }));
             } catch (error) {
                 throw new Error(
-                    getChatRecallErrorMessage(getApiErrorStatus(error))
+                    getChatRecallErrorMessage(getApiErrorStatus(error)),
+                    {
+                        cause: error,
+                    }
                 );
             }
         },

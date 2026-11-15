@@ -64,10 +64,10 @@ export function ChatReactionPicker({
                 aria-expanded={isOpen}
                 aria-label="Thả cảm xúc"
                 className={cn(
-                    'size-8 min-h-8 shrink-0 focus-visible:opacity-100',
+                    'size-8 min-h-8 cursor-pointer shrink-0 focus-visible:opacity-100',
                     isOpen
                         ? 'opacity-100'
-                        : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
+                        : 'opacity-100 sm:opacity-0 cursor-pointer sm:group-hover:opacity-100'
                 )}
                 disabled={disabled}
                 onClick={() => setIsOpen((open) => !open)}

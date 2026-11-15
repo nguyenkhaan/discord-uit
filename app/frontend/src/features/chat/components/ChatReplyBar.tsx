@@ -20,7 +20,7 @@ export function ChatReplyBar({
         <div className="mb-2 flex items-center gap-2 rounded-lg border-l-2 border-brand bg-brand-subtle px-3 py-1.5">
             <CornerUpLeft
                 aria-hidden="true"
-                className="size-4 shrink-0 text-brand"
+                className="size-4 cursor-pointer shrink-0 text-brand"
             />
             <div className="min-w-0 flex-1 text-caption">
                 <p className="text-muted">
@@ -35,7 +35,7 @@ export function ChatReplyBar({
             </div>
             <Button
                 aria-label="Huỷ trả lời"
-                className="size-7 min-h-7 shrink-0"
+                className="size-7 min-h-7 cursor-pointer shrink-0"
                 onClick={onCancel}
                 size="icon"
                 variant="ghost"

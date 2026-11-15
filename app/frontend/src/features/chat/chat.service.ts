@@ -21,6 +21,7 @@ export async function getChatHistory(
         `/servers/${serverId}/messages`,
         { params: { before, limit } }
     );
+
     return response.data;
 }
 
@@ -31,12 +32,13 @@ export async function uploadChatAttachment(
 ): Promise<ChatAttachmentDto> {
     const formData = new FormData();
     formData.append('file', file);
-    // Trình duyệt tự gắn boundary cho multipart
+
+    // Để Axios tự thiết lập multipart boundary
     const response = await privateClient.post<ChatAttachmentDto>(
         `/servers/${serverId}/attachments`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        formData
     );
+
     return response.data;
 }
 
@@ -44,7 +46,7 @@ function reactionsUrl(serverId: string, messageId: string): string {
     return `/servers/${serverId}/messages/${messageId}/reactions`;
 }
 
-/** Reaction của một tin */
+/** Lấy danh sách reaction của một tin nhắn */
 export async function getMessageReactions(
     serverId: string,
     messageId: string
@@ -52,6 +54,7 @@ export async function getMessageReactions(
     const response = await privateClient.get<MessageReactionList>(
         reactionsUrl(serverId, messageId)
     );
+
     return response.data;
 }
 
@@ -62,8 +65,15 @@ export async function addMessageReaction(
     iconId: string
 ): Promise<MessageReactionList> {
     const body: AddMessageReactionRequest = { iconId };
+
     const response = await privateClient.post<MessageReactionList>(
         reactionsUrl(serverId, messageId),
+        body
+    );
+
+    return response.data;
+}
+
 /** Sửa nội dung một tin nhắn */
 export async function editChatMessage(
     serverId: string,
@@ -71,10 +81,12 @@ export async function editChatMessage(
     contentText: string
 ): Promise<ChatMessageResponse> {
     const body: EditChatMessageRequest = { contentText };
+
     const response = await privateClient.patch<ChatMessageResponse>(
         `/servers/${serverId}/messages/${messageId}`,
         body
     );
+
     return response.data;
 }
 
@@ -85,6 +97,11 @@ export async function removeMessageReaction(
 ): Promise<MessageReactionList> {
     const response = await privateClient.delete<MessageReactionList>(
         reactionsUrl(serverId, messageId)
+    );
+
+    return response.data;
+}
+
 /** Thu hồi (xoá mềm) một tin nhắn; owner gỡ tin người khác phải kèm lý do */
 export async function deleteChatMessage(
     serverId: string,
@@ -94,10 +111,12 @@ export async function deleteChatMessage(
     const body: DeleteChatMessageRequest | undefined = reason
         ? { reason }
         : undefined;
-    // axios: body của DELETE phải đặt trong `data`
+
+    // Axios: body của DELETE phải đặt trong `data`
     const response = await privateClient.delete<ChatMessageResponse>(
         `/servers/${serverId}/messages/${messageId}`,
         { data: body }
     );
+
     return response.data;
 }
