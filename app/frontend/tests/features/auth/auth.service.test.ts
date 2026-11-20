@@ -6,6 +6,7 @@ import {
     changeEmail,
     changePassword,
     login,
+    logout,
 } from '@/features/auth/auth.service';
 
 const credentials = {
@@ -76,6 +77,17 @@ describe('login', () => {
 });
 
 describe('account security routes', () => {
+    it('posts logout to the current-session endpoint', async () => {
+        const post = mockPrivatePost();
+
+        try {
+            await logout();
+            assert.deepEqual(post.calls, [['/auth/logout']]);
+        } finally {
+            post.restore();
+        }
+    });
+
     it('posts password changes to the current-user endpoint', async () => {
         const request = {
             currentPassword: 'current-password',

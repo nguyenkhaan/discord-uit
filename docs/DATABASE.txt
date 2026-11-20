@@ -319,15 +319,14 @@ table call_event {
 }
 
 // Documents
-// A tag is a free-form user keyword, a category is a reusable classification label,
-// and a collection is an administrator-curated grouping of documents.
+// Tags are normalized reusable labels, and collections are administrator-curated
+// groupings of documents.
 table document {
   id uuid PK
   uploaded_by_user_id uuid
   media_id uuid
   title string
   description string
-  tags string[]
   slug string unique
   visibility_status DocumentVisibilityStatus
   created_at datetime
@@ -360,29 +359,31 @@ table agent_classification {
   created_at datetime
 }
 
-table category {
-  id uuid PK
-  name string unique
-  created_at datetime
-  updated_at datetime
-}
-
 table collection {
   id uuid PK
   name string unique
   description string
   slug string unique
+  keywords string[]
   created_at datetime
   updated_at datetime
 }
 
-table document_category {
+table tag {
+  id uuid PK
+  name string
+  slug string unique
+  description string
+}
+
+table document_tag {
+  id uuid PK
   document_id uuid
-  category_id uuid
+  tag_id uuid
   created_at datetime
 
   indexes {
-    (document_id, category_id) [pk]
+    (document_id, tag_id) [unique]
   }
 }
 
@@ -396,16 +397,6 @@ table document_collection {
   }
 }
 
-table collection_category {
-  collection_id uuid
-  category_id uuid
-  created_at datetime
-
-  indexes {
-    (collection_id, category_id) [pk]
-  }
-}
-
 table agent_classification_collection {
   agent_classification_id uuid
   collection_id uuid
@@ -414,17 +405,6 @@ table agent_classification_collection {
 
   indexes {
     (agent_classification_id, collection_id) [pk]
-  }
-}
-
-table agent_classification_category {
-  agent_classification_id uuid
-  category_id uuid
-  confidence float
-  created_at datetime
-
-  indexes {
-    (agent_classification_id, category_id) [pk]
   }
 }
 
@@ -618,16 +598,12 @@ Ref: document_submission.document_id > document.id
 Ref: document_submission.submitted_by_user_id > user_account.id
 Ref: document_submission.reviewed_by_user_id > user_account.id
 Ref: agent_classification.document_submission_id > document_submission.id
-Ref: document_category.document_id > document.id
-Ref: document_category.category_id > category.id
+Ref: document_tag.document_id > document.id
+Ref: document_tag.tag_id > tag.id
 Ref: document_collection.document_id > document.id
 Ref: document_collection.collection_id > collection.id
-Ref: collection_category.collection_id > collection.id
-Ref: collection_category.category_id > category.id
 Ref: agent_classification_collection.agent_classification_id > agent_classification.id
 Ref: agent_classification_collection.collection_id > collection.id
-Ref: agent_classification_category.agent_classification_id > agent_classification.id
-Ref: agent_classification_category.category_id > category.id
 
 Ref: forum_post.author_user_id > user_account.id
 Ref: forum_post.moderated_by_user_id > user_account.id
