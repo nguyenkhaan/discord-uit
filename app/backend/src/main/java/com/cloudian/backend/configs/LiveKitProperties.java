@@ -14,6 +14,7 @@ import lombok.Setter;
 public class LiveKitProperties {
 
     private String url;
+    private String websocketUrl;
     private String apiKey;
     private String apiSecret;
 

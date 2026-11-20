@@ -2,6 +2,7 @@
 package com.cloudian.backend.modules.call;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class CallSessionService {
-        private static final int MAX_PARTICIPANTS = 30;
+        public static final int MAX_PARTICIPANTS = 30;
 
         private final CallSessionRepository callSessionRepository;
         private final CallParticipationRepository callParticipationRepository;
@@ -96,6 +97,27 @@ public class CallSessionService {
 
                 // 6. The user who starts the call is also its first participant.
                 return savedSession;
+        }
+
+        /**
+         * Returns the active call of a server (if any) for an active member.
+         * Read-only: does not lock the server.
+         */
+        @Transactional(readOnly = true)
+        public Optional<CallSession> findActiveCallForMember(
+                        UUID serverId,
+                        UUID userId) {
+
+                serverRepository
+                                .findByIdAndDeletedAtIsNull(serverId)
+                                .orElseThrow(CallSessionService::serverNotFound);
+
+                serverMembershipRepository
+                                .findActiveRole(serverId, userId)
+                                .orElseThrow(CallSessionService::serverNotFound);
+
+                return callSessionRepository
+                                .findByServer_IdAndStatus(serverId, CallStatus.ACTIVE);
         }
 
         private static ApiException serverNotFound() {

@@ -13,6 +13,7 @@ import TestMainLayout from '@/pages/TestMainLayout';
 import ServerListPage from '@/features/server/pages/ServerListPage';
 import InviteJoinPage from '@/features/server/pages/InviteJoinPage';
 import ServerDetailPage from '@/features/server/pages/ServerDetailPage';
+import CallRoomPage from '@/features/call/pages/CallRoomPage';
 import AuthGuard from '@/components/AuthGuard';
 import { Header } from '@/components/Header/Header';
 import { AuthGuardLayout } from '@/components/layout/AuthGuardLayout';
@@ -57,6 +58,15 @@ export default function AppRoutes() {
                         }
                     />
 
+                    <Route
+                        path="/servers/:serverId/call"
+                        element={
+                            <AuthGuard>
+                                <CallRoomPage />
+                            </AuthGuard>
+                        }
+                    />
+
                     {/* ===== Các trang NẰM TRONG MainLayout =====
                         Route cha không có path, chỉ có element là layout.
                         Mỗi route con sẽ được render vào chỗ <Outlet /> trong MainLayout.
@@ -70,7 +80,7 @@ export default function AppRoutes() {
                     >
                         <Route path="/home" element={<HomePage />} />
                         <Route path="/servers" element={<ServerListPage />} />
-                        
+
                         <Route
                             path="/servers/:serverId"
                             element={<ServerDetailPage />}

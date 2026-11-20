@@ -2,6 +2,7 @@
 package com.cloudian.backend.modules.call;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.cloudian.backend.exceptions.ApiException;
 
 import io.livekit.server.RoomServiceClient;
+import livekit.LivekitModels.ParticipantInfo;
 import livekit.LivekitModels.Room;
 import retrofit2.Response;
 
@@ -99,6 +101,33 @@ public class LiveKitRoomService {
             throw new ApiException(
                     HttpStatus.BAD_GATEWAY,
                     "Unable to connect to LiveKit when removing participant.");
+        }
+    }
+
+    /**
+     * Lists the participants currently connected to a LiveKit room.
+     */
+    public List<ParticipantInfo> listParticipants(String roomName) {
+
+        try {
+            Response<List<ParticipantInfo>> response = roomServiceClient
+                    .listParticipants(roomName)
+                    .execute();
+
+            if (!response.isSuccessful()) {
+                throw new ApiException(
+                        HttpStatus.BAD_GATEWAY,
+                        "Failed to list LiveKit participants. HTTP status: "
+                                + response.code());
+            }
+
+            List<ParticipantInfo> participants = response.body();
+            return participants != null ? participants : List.of();
+
+        } catch (IOException e) {
+            throw new ApiException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Unable to connect to LiveKit when listing participants.");
         }
     }
 }

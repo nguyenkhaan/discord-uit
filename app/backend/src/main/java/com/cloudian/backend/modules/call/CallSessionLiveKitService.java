@@ -1,6 +1,11 @@
 
 package com.cloudian.backend.modules.call;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -11,7 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.cloudian.backend.configs.LiveKitProperties;
 import com.cloudian.backend.models.CallParticipation;
 import com.cloudian.backend.models.CallSession;
+import com.cloudian.backend.models.UserAccount;
+import com.cloudian.backend.modules.call.dto.ActiveCallResponse;
 import com.cloudian.backend.modules.call.dto.LiveKitJoinResponse;
+import com.cloudian.backend.repositories.CallParticipationRepository;
+import com.cloudian.backend.repositories.UserAccountRepository;
+
+import livekit.LivekitModels.ParticipantInfo;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +36,8 @@ public class CallSessionLiveKitService {
     private final LiveKitRoomService liveKitRoomService;
     private final LiveKitTokenService liveKitTokenService;
     private final LiveKitProperties liveKitProperties;
+    private final CallParticipationRepository callParticipationRepository;
+    private final UserAccountRepository userAccountRepository;
 
     /**
      * Creates a LiveKit room and starts a call session.
@@ -84,7 +97,7 @@ public class CallSessionLiveKitService {
         return new LiveKitJoinResponse(
                 callSession.getId(),
                 roomName,
-                liveKitProperties.getUrl(),
+                liveKitProperties.getWebsocketUrl(),
                 token);
     }
 
@@ -117,5 +130,81 @@ public class CallSessionLiveKitService {
         liveKitRoomService.removeParticipant(
                 roomName,
                 userId.toString());
+    }
+
+    /**
+     * Returns the active call of a server for the pre-join screen,
+     * or empty when the server has no active call.
+     * Participants are read from LiveKit (source of truth); if LiveKit
+     * is unreachable we fall back to the participation records in the DB.
+     */
+    @Transactional(readOnly = true)
+    public Optional<ActiveCallResponse> getActiveCall(UUID serverId, UUID userId) {
+
+        Optional<CallSession> activeCall = callSessionService
+                .findActiveCallForMember(serverId, userId);
+
+        if (activeCall.isEmpty()) {
+            return Optional.empty();
+        }
+
+        CallSession callSession = activeCall.get();
+
+        // userId -> display name (null when unknown), keeps join order.
+        Map<UUID, String> participants = new LinkedHashMap<>();
+
+        try {
+            for (ParticipantInfo info : liveKitRoomService
+                    .listParticipants(callSession.getLivekitRoomName())) {
+                try {
+                    UUID participantId = UUID.fromString(info.getIdentity());
+                    String name = info.getName();
+                    participants.put(
+                            participantId,
+                            name != null && !name.isBlank() ? name : null);
+                } catch (IllegalArgumentException ignored) {
+                    // Identity is not a user id (e.g. an agent/bot); skip it.
+                }
+            }
+        } catch (RuntimeException liveKitError) {
+            log.warn(
+                    "Could not list LiveKit participants for room {}, using DB records.",
+                    callSession.getLivekitRoomName(),
+                    liveKitError);
+
+            callParticipationRepository
+                    .findAllByCallSession_IdAndLeftAtIsNullOrderByJoinedAtAsc(
+                            callSession.getId())
+                    .forEach(participation -> participants.put(
+                            participation.getUser().getId(),
+                            null));
+        }
+
+        // Resolve missing names from user accounts in one query.
+        List<UUID> unnamed = participants.entrySet().stream()
+                .filter(entry -> entry.getValue() == null)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        if (!unnamed.isEmpty()) {
+            for (UserAccount user : userAccountRepository.findAllById(unnamed)) {
+                participants.put(user.getId(), user.getFullName());
+            }
+        }
+
+        List<ActiveCallResponse.Participant> participantList = new ArrayList<>();
+        participants.forEach((id, name) -> participantList.add(
+                new ActiveCallResponse.Participant(id, name)));
+
+        UserAccount coordinator = callSession.getCoordinator();
+
+        return Optional.of(new ActiveCallResponse(
+                callSession.getId(),
+                callSession.getStartedAt(),
+                coordinator.getId(),
+                coordinator.getFullName(),
+                participantList.size(),
+                CallSessionService.MAX_PARTICIPANTS,
+                participantList));
     }
 }
