@@ -1,20 +1,24 @@
-import { ArrowLeft, PanelRight, Users } from 'lucide-react';
+import { ArrowLeft, PanelRight, Users, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
+import { buttonVariants } from '@/components/common/buttonVariants';
 import { ServerAvatar } from '@/features/server/components/ServerAvatar';
 import { ServerStatusBadge } from '@/features/server/components/ServerStatusBadge';
 import { getServerStatus } from '@/features/server/server.status';
+import { cn } from '@/lib/utils';
 import type { ServerResponse } from '@/features/server/server.type';
 
 interface ServerDetailHeaderProps {
     server: ServerResponse;
+    serverId: string;
     isPanelOpen: boolean;
     onTogglePanel: () => void;
 }
 
 export function ServerDetailHeader({
     server,
+    serverId,
     isPanelOpen,
     onTogglePanel,
 }: ServerDetailHeaderProps) {
@@ -27,22 +31,59 @@ export function ServerDetailHeader({
             >
                 <ArrowLeft aria-hidden="true" className="size-5" />
             </Link>
+
             <ServerAvatar imageUrl={server.groupImageUrl} name={server.name} />
+
             <div className="min-w-0 flex-1">
                 <h1 className="truncate text-base font-bold text-heading sm:text-lg">
                     {server.name || 'Server chưa đặt tên'}
                 </h1>
+
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
                     <span className="inline-flex items-center gap-1 whitespace-nowrap">
                         <Users aria-hidden="true" className="size-3.5" />
                         {server.memberCount ?? 0} thành viên
                     </span>
+
                     <ServerStatusBadge
                         className="px-1.5 py-0.5"
                         status={getServerStatus(server)}
                     />
                 </p>
             </div>
+
+            {getServerStatus(server) === 'ACTIVE' ? (
+                <Link
+                    aria-label="Vào phòng gọi"
+                    className={cn(
+                        buttonVariants({
+                            variant: 'secondary',
+                            size: 'compact',
+                        }),
+                        'min-h-9 shrink-0 px-3 text-sm'
+                    )}
+                    rel="noopener"
+                    target="_blank"
+                    title="Mở phòng gọi trong tab mới"
+                    to={`/servers/${serverId}/call`}
+                >
+                    <Video aria-hidden="true" className="size-4" />
+                    <span className="hidden sm:inline">Vào phòng gọi</span>
+                    <span className="sm:hidden">Gọi</span>
+                </Link>
+            ) : (
+                <Button
+                    className="min-h-9 shrink-0 px-3 text-sm"
+                    disabled
+                    size="compact"
+                    variant="secondary"
+                >
+                    <Video aria-hidden="true" className="size-4" />
+                    <span className="hidden sm:inline">Vào phòng gọi</span>
+                    <span className="sm:hidden">Gọi</span>
+                </Button>
+            )}
+
             <Button
                 aria-expanded={isPanelOpen}
                 aria-label="Mở bảng thành viên và thông tin"
