@@ -10,13 +10,19 @@ import com.cloudian.backend.commons.enums.CallStatus;
 import com.cloudian.backend.models.CallSession;
 
 public interface CallSessionRepository
-        extends JpaRepository<CallSession, UUID> {
+                extends JpaRepository<CallSession, UUID> {
 
-    Optional<CallSession> findByServer_IdAndStatus(
-            UUID serverId,
-            CallStatus status);
+        Optional<CallSession> findByServer_IdAndStatus(
+                        UUID serverId,
+                        CallStatus status);
 
-    boolean existsByServer_IdAndStatus(
-            UUID serverId,
-            CallStatus status);
+        boolean existsByServer_IdAndStatus(
+                        UUID serverId,
+                        CallStatus status);
+
+        Optional<CallSession> findByLivekitRoomName(String roomName);
+
+        Optional<CallSession> findByLivekitRoomNameAndStatus(
+                        String roomName,
+                        CallStatus status);
 }
