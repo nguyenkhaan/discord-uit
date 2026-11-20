@@ -67,4 +67,7 @@ public class Collection {
 
     @OneToMany(mappedBy = "collection", fetch = FetchType.LAZY)
     private Set<DocumentCollection> documentCollections = new HashSet<>();
+
+    @OneToMany(mappedBy = "collection", fetch = FetchType.LAZY)
+    private Set<AgentClassificationCollection> agentClassificationCollections = new HashSet<>();
 }

@@ -42,4 +42,7 @@ public class Tag {
 
     @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
     private Set<DocumentTag> documentTags = new HashSet<>();
+
+    @OneToMany(mappedBy = "tag", fetch = FetchType.LAZY)
+    private Set<AgentClassificationTag> agentClassificationTags = new HashSet<>();
 }

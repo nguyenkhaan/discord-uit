@@ -7,7 +7,15 @@ authors = [
     { name = "cloudian", email = "nguyenkhaan2006@gmail.com" }
 ]
 requires-python = ">=3.12.15"
-dependencies = []
+dependencies = [
+    "alembic>=1.20.1",
+    "asyncpg>=0.32.0",
+    "fastapi[standard]>=0.165.0",
+    "google-genai>=3.6.1",
+    "python-dotenv>=1.2.4",
+    "sqlalchemy[asyncio]>=2.1.9",
+    "uvicorn>=0.54.0",
+]
 
 [project.scripts]
 ai = "ai:main"

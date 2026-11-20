@@ -408,6 +408,17 @@ table agent_classification_collection {
   }
 }
 
+table agent_classification_tag {
+  agent_classification_id uuid
+  tag_id uuid
+  confidence float
+  created_at datetime
+
+  indexes {
+    (agent_classification_id, tag_id) [pk]
+  }
+}
+
 // Forum topics are free-form search terms, not administrator-managed categories.
 table forum_post {
   id uuid PK
@@ -604,6 +615,8 @@ Ref: document_collection.document_id > document.id
 Ref: document_collection.collection_id > collection.id
 Ref: agent_classification_collection.agent_classification_id > agent_classification.id
 Ref: agent_classification_collection.collection_id > collection.id
+Ref: agent_classification_tag.agent_classification_id > agent_classification.id
+Ref: agent_classification_tag.tag_id > tag.id
 
 Ref: forum_post.author_user_id > user_account.id
 Ref: forum_post.moderated_by_user_id > user_account.id

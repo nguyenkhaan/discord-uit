@@ -83,4 +83,7 @@ public class Document {
 
     @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
     private Set<DocumentCollection> documentCollections = new HashSet<>();
+
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    private Set<DocumentSubmission> submissions = new HashSet<>();
 }
