@@ -19,11 +19,11 @@ import {
     ADMIN_TH_CLASS,
 } from '@/features/admin/components/adminVariants';
 import { formatAdminDate, paginate } from '@/features/admin/admin.utils';
-import {
-    mockTaxonomyCollections,
-    mockTaxonomyTags,
-} from '@/features/taxonomy/taxonomy.mock';
 import type { AdminTone, AdminSelectOption } from '@/features/admin/admin.type';
+import {
+    useAdminCollectionsQuery,
+    useAdminTagsQuery,
+} from '@/features/taxonomy/taxonomy.hooks';
 import { mockAdminDocuments } from '@/features/documents/admin-document.mock';
 import type { AdminDocumentStatus } from '@/features/documents/admin-document.type';
 import {
@@ -53,14 +53,8 @@ function getStatusTone(status: AdminDocumentStatus): AdminTone {
 }
 
 function getInitialFilters(collectionSlug: string | null): AdminDocumentFilter {
-    const hasCollection = mockTaxonomyCollections.some(
-        (collection) => collection.slug === collectionSlug
-    );
-
     return {
-        collectionSlug: hasCollection
-            ? (collectionSlug ?? ALL_DOCUMENT_FILTER)
-            : ALL_DOCUMENT_FILTER,
+        collectionSlug: collectionSlug ?? ALL_DOCUMENT_FILTER,
         tagSlug: ALL_DOCUMENT_FILTER,
         status: ALL_DOCUMENT_FILTER,
         search: '',
@@ -68,41 +62,59 @@ function getInitialFilters(collectionSlug: string | null): AdminDocumentFilter {
 }
 
 export default function AdminDocumentListPage() {
+    const collectionsQuery = useAdminCollectionsQuery();
+    const tagsQuery = useAdminTagsQuery();
+    const collections = useMemo(
+        () => collectionsQuery.data?.items ?? [],
+        [collectionsQuery.data?.items]
+    );
+    const tags = useMemo(
+        () => tagsQuery.data?.items ?? [],
+        [tagsQuery.data?.items]
+    );
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const [filters, setFilters] = useState<AdminDocumentFilter>(() =>
         getInitialFilters(searchParams.get('collection'))
     );
     const [currentPage, setCurrentPage] = useState(1);
-    const [isLoading, setIsLoading] = useState(true);
-    const [hasLoadError, setHasLoadError] = useState(false);
+    const [isDocumentLoading, setIsDocumentLoading] = useState(true);
 
     useEffect(() => {
-        const timeoutId = window.setTimeout(() => setIsLoading(false), 260);
+        const timeoutId = window.setTimeout(
+            () => setIsDocumentLoading(false),
+            260
+        );
         return () => window.clearTimeout(timeoutId);
     }, []);
+
+    const isLoading =
+        isDocumentLoading ||
+        collectionsQuery.isLoading ||
+        tagsQuery.isLoading;
+    const hasLoadError = collectionsQuery.isError || tagsQuery.isError;
 
     const collectionOptions = useMemo(
         () =>
             [
                 { value: ALL_DOCUMENT_FILTER, label: 'Tất cả collections' },
-                ...mockTaxonomyCollections.map((collection) => ({
+                ...collections.map((collection) => ({
                     value: collection.slug,
                     label: collection.name,
                 })),
             ] as const,
-        []
+        [collections]
     );
     const tagOptions = useMemo(
         () =>
             [
                 { value: ALL_DOCUMENT_FILTER, label: 'Tất cả tags' },
-                ...mockTaxonomyTags.map((tag) => ({
+                ...tags.map((tag) => ({
                     value: tag.slug,
                     label: tag.name,
                 })),
             ] as const,
-        []
+        [tags]
     );
 
     const filteredDocuments = useMemo(
@@ -116,12 +128,12 @@ export default function AdminDocumentListPage() {
         filters.tagSlug !== ALL_DOCUMENT_FILTER ||
         filters.status !== ALL_DOCUMENT_FILTER;
     const collectionBySlug = useMemo(
-        () => new Map(mockTaxonomyCollections.map((item) => [item.slug, item])),
-        []
+        () => new Map(collections.map((item) => [item.slug, item])),
+        [collections]
     );
     const tagBySlug = useMemo(
-        () => new Map(mockTaxonomyTags.map((item) => [item.slug, item])),
-        []
+        () => new Map(tags.map((item) => [item.slug, item])),
+        [tags]
     );
 
     function updateFilter<Key extends keyof AdminDocumentFilter>(
@@ -142,9 +154,11 @@ export default function AdminDocumentListPage() {
     }
 
     function retryMockLoad() {
-        setHasLoadError(false);
-        setIsLoading(true);
-        window.setTimeout(() => setIsLoading(false), 260);
+        setIsDocumentLoading(true);
+        void Promise.all([
+            collectionsQuery.refetch(),
+            tagsQuery.refetch(),
+        ]).finally(() => setIsDocumentLoading(false));
     }
 
     return (

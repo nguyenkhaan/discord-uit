@@ -1,21 +1,40 @@
-import { ArrowRight, FolderOpen, Hash, Search, Sparkles } from 'lucide-react';
+import {
+    AlertTriangle,
+    ArrowRight,
+    FolderOpen,
+    Hash,
+    LoaderCircle,
+    RotateCcw,
+    Search,
+    Sparkles,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import {
-    mockTaxonomyCollections,
-    mockTaxonomyTags,
-} from '@/features/taxonomy/taxonomy.mock';
+    usePublicCollectionsQuery,
+    usePublicTagsQuery,
+} from '@/features/taxonomy/taxonomy.hooks';
 import { cn } from '@/lib/utils';
 
 export default function DocumentsPage() {
+    const collectionsQuery = usePublicCollectionsQuery();
+    const tagsQuery = usePublicTagsQuery();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTag, setActiveTag] = useState<string | null>(null);
-
+    const collections = useMemo(
+        () => collectionsQuery.data?.items ?? [],
+        [collectionsQuery.data?.items]
+    );
+    const tags = useMemo(
+        () => tagsQuery.data?.items ?? [],
+        [tagsQuery.data?.items]
+    );
     const visibleCollections = useMemo(() => {
         const query = searchTerm.trim().toLowerCase();
-        return mockTaxonomyCollections.filter((collection) => {
+        return collections.filter((collection) => {
             const matchesTag =
                 !activeTag || collection.tagSlugs.includes(activeTag);
             const matchesQuery =
@@ -31,7 +50,59 @@ export default function DocumentsPage() {
                     .includes(query);
             return matchesTag && matchesQuery;
         });
-    }, [activeTag, searchTerm]);
+    }, [activeTag, collections, searchTerm]);
+
+    if (collectionsQuery.isLoading || tagsQuery.isLoading) {
+        return (
+            <section
+                aria-label="Đang tải thư viện tài liệu"
+                className="rounded-2xl border border-line-subtle bg-surface p-12 text-center shadow-soft"
+            >
+                <LoaderCircle
+                    aria-hidden="true"
+                    className="mx-auto size-8 animate-spin text-brand motion-reduce:animate-none"
+                />
+                <p className="mt-3 text-sm font-medium text-foreground">
+                    Đang tải taxonomy public...
+                </p>
+            </section>
+        );
+    }
+
+    if (collectionsQuery.isError || tagsQuery.isError) {
+        return (
+            <section
+                aria-live="assertive"
+                className="rounded-2xl border border-danger-border bg-danger-subtle p-12 text-center"
+                role="alert"
+            >
+                <AlertTriangle
+                    aria-hidden="true"
+                    className="mx-auto size-8 text-feedback-danger"
+                />
+                <h1 className="mt-4 text-xl font-bold text-heading">
+                    Không tải được thư viện
+                </h1>
+                <p className="mt-2 text-sm text-foreground-secondary">
+                    Vui lòng thử lại sau.
+                </p>
+                <Button
+                    className="mt-5"
+                    onClick={() => {
+                        void Promise.all([
+                            collectionsQuery.refetch(),
+                            tagsQuery.refetch(),
+                        ]);
+                    }}
+                    size="compact"
+                    variant="secondary"
+                >
+                    <RotateCcw aria-hidden="true" className="size-4" />
+                    Thử lại
+                </Button>
+            </section>
+        );
+    }
 
     return (
         <div className="space-y-8 pb-10">
@@ -101,7 +172,7 @@ export default function DocumentsPage() {
                     >
                         Tất cả
                     </button>
-                    {mockTaxonomyTags.map((tag) => (
+                    {tags.map((tag) => (
                         <button
                             aria-pressed={activeTag === tag.slug}
                             className={cn(

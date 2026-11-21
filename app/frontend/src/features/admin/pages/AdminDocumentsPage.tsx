@@ -6,7 +6,7 @@ import {
     LoaderCircle,
     RotateCcw,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
@@ -16,16 +16,22 @@ import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader';
 import { AdminTaxonomyFormModal } from '@/features/admin/components/AdminTaxonomyFormModal';
 import { AdminTaxonomyTable } from '@/features/admin/components/AdminTaxonomyTable';
 import {
-    mockTaxonomyCollections,
-    mockTaxonomyTags,
-} from '@/features/taxonomy/taxonomy.mock';
+    useAdminCollectionsQuery,
+    useAdminTagsQuery,
+    useCreateCollectionMutation,
+    useCreateTagMutation,
+    useDeleteCollectionMutation,
+    useDeleteTagMutation,
+    useUpdateCollectionMutation,
+    useUpdateTagMutation,
+} from '@/features/taxonomy/taxonomy.hooks';
 import type {
     TaxonomyCollection,
     TaxonomyFormValues,
     TaxonomyItem,
     TaxonomyKind,
-    TaxonomyTag,
 } from '@/features/taxonomy/taxonomy.type';
+import { getTaxonomyErrorMessage } from '@/features/taxonomy/taxonomy.utils';
 import { showToast } from '@/lib/toast';
 
 function isCollection(item: TaxonomyItem): item is TaxonomyCollection {
@@ -33,20 +39,31 @@ function isCollection(item: TaxonomyItem): item is TaxonomyCollection {
 }
 
 export default function AdminDocumentsPage() {
-    const [collections, setCollections] = useState(mockTaxonomyCollections);
-    const [tags, setTags] = useState(mockTaxonomyTags);
+    const collectionsQuery = useAdminCollectionsQuery();
+    const tagsQuery = useAdminTagsQuery();
+    const createCollectionMutation = useCreateCollectionMutation();
+    const updateCollectionMutation = useUpdateCollectionMutation();
+    const deleteCollectionMutation = useDeleteCollectionMutation();
+    const createTagMutation = useCreateTagMutation();
+    const updateTagMutation = useUpdateTagMutation();
+    const deleteTagMutation = useDeleteTagMutation();
+    const collections = useMemo(
+        () => collectionsQuery.data?.items ?? [],
+        [collectionsQuery.data?.items]
+    );
+    const tags = useMemo(
+        () => tagsQuery.data?.items ?? [],
+        [tagsQuery.data?.items]
+    );
     const [activeTab, setActiveTab] = useState<TaxonomyKind>('collection');
-    const [isLoading, setIsLoading] = useState(true);
-    const [hasLoadError, setHasLoadError] = useState(false);
     const [modalKind, setModalKind] = useState<TaxonomyKind>('collection');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<TaxonomyItem | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<TaxonomyItem | null>(null);
+    const [deleteError, setDeleteError] = useState<string>();
 
-    useEffect(() => {
-        const timeoutId = window.setTimeout(() => setIsLoading(false), 320);
-        return () => window.clearTimeout(timeoutId);
-    }, []);
+    const isLoading = collectionsQuery.isLoading || tagsQuery.isLoading;
+    const hasLoadError = collectionsQuery.isError || tagsQuery.isError;
 
     const referencedCount = useMemo(
         () =>
@@ -73,59 +90,31 @@ export default function AdminDocumentsPage() {
         setEditingItem(null);
     }
 
-    function saveTaxonomy(values: TaxonomyFormValues): string | undefined {
-        const currentItems = modalKind === 'collection' ? collections : tags;
-        const normalizedName = values.name.toLocaleLowerCase();
-        const conflict = currentItems.some(
-            (item) =>
-                item.id !== editingItem?.id &&
-                (item.name.toLocaleLowerCase() === normalizedName ||
-                    item.slug === values.slug)
-        );
-        if (conflict) {
-            return 'Tên hoặc slug đã tồn tại. Hãy chọn giá trị khác.';
-        }
-
-        const updatedAt = new Date().toISOString();
-        if (modalKind === 'collection') {
-            const current =
-                editingItem && isCollection(editingItem) ? editingItem : null;
-            const next: TaxonomyCollection = {
-                id: current?.id ?? `collection-${Date.now()}`,
-                name: values.name,
-                slug: values.slug,
-                description: values.description,
-                keywords: values.keywords,
-                documentCount: current?.documentCount ?? 0,
-                classificationCount: current?.classificationCount ?? 0,
-                tagSlugs: current?.tagSlugs ?? [],
-                updatedAt,
-            };
-            setCollections((items) =>
-                current
-                    ? items.map((item) =>
-                          item.id === current.id ? next : item
-                      )
-                    : [next, ...items]
-            );
-        } else {
-            const current =
-                editingItem && !isCollection(editingItem) ? editingItem : null;
-            const next: TaxonomyTag = {
-                id: current?.id ?? `tag-${Date.now()}`,
-                name: values.name,
-                slug: values.slug,
-                description: values.description,
-                documentCount: current?.documentCount ?? 0,
-                classificationCount: current?.classificationCount ?? 0,
-                updatedAt,
-            };
-            setTags((items) =>
-                current
-                    ? items.map((item) =>
-                          item.id === current.id ? next : item
-                      )
-                    : [next, ...items]
+    async function saveTaxonomy(
+        values: TaxonomyFormValues
+    ): Promise<string | undefined> {
+        try {
+            if (modalKind === 'collection') {
+                if (editingItem && isCollection(editingItem)) {
+                    await updateCollectionMutation.mutateAsync({
+                        id: editingItem.id,
+                        values,
+                    });
+                } else {
+                    await createCollectionMutation.mutateAsync(values);
+                }
+            } else if (editingItem && !isCollection(editingItem)) {
+                await updateTagMutation.mutateAsync({
+                    id: editingItem.id,
+                    values,
+                });
+            } else {
+                await createTagMutation.mutateAsync(values);
+            }
+        } catch (error) {
+            return getTaxonomyErrorMessage(
+                error,
+                'Không thể lưu taxonomy. Vui lòng thử lại.'
             );
         }
 
@@ -137,30 +126,41 @@ export default function AdminDocumentsPage() {
     }
 
     function requestDelete(item: TaxonomyItem) {
+        setDeleteError(undefined);
         setDeleteTarget(item);
     }
 
-    function confirmDelete() {
+    async function confirmDelete() {
         if (!deleteTarget) return;
         const isReferenced =
             deleteTarget.documentCount > 0 ||
             deleteTarget.classificationCount > 0;
-        if (isReferenced) {
-            showToast(
-                `Không thể xóa ${isCollection(deleteTarget) ? 'collection' : 'tag'} đang được tài liệu hoặc AI sử dụng.`
-            );
-            setDeleteTarget(null);
+        if (isReferenced || deleteError) {
+            if (!deleteError) {
+                setDeleteError(
+                    `Không thể xóa ${isCollection(deleteTarget) ? 'collection' : 'tag'} đang được tài liệu hoặc AI sử dụng.`
+                );
+            } else {
+                setDeleteTarget(null);
+                setDeleteError(undefined);
+            }
             return;
         }
 
-        if (isCollection(deleteTarget)) {
-            setCollections((items) =>
-                items.filter((item) => item.id !== deleteTarget.id)
+        try {
+            if (isCollection(deleteTarget)) {
+                await deleteCollectionMutation.mutateAsync(deleteTarget.id);
+            } else {
+                await deleteTagMutation.mutateAsync(deleteTarget.id);
+            }
+        } catch (error) {
+            setDeleteError(
+                getTaxonomyErrorMessage(
+                    error,
+                    `Không thể xóa ${isCollection(deleteTarget) ? 'collection' : 'tag'}.`
+                )
             );
-        } else {
-            setTags((items) =>
-                items.filter((item) => item.id !== deleteTarget.id)
-            );
+            return;
         }
         showToast(
             `${isCollection(deleteTarget) ? 'Collection' : 'Tag'} đã được xóa.`
@@ -168,16 +168,15 @@ export default function AdminDocumentsPage() {
         setDeleteTarget(null);
     }
 
-    function retryMockLoad() {
-        setHasLoadError(false);
-        setIsLoading(true);
-        window.setTimeout(() => setIsLoading(false), 320);
+    function retryLoad() {
+        void Promise.all([collectionsQuery.refetch(), tagsQuery.refetch()]);
     }
 
     const deleteIsBlocked =
         deleteTarget !== null &&
         (deleteTarget.documentCount > 0 ||
-            deleteTarget.classificationCount > 0);
+            deleteTarget.classificationCount > 0 ||
+            Boolean(deleteError));
     const deleteLabel = deleteTarget
         ? isCollection(deleteTarget)
             ? 'collection'
@@ -297,7 +296,7 @@ export default function AdminDocumentsPage() {
                     </p>
                     <Button
                         className="mt-4"
-                        onClick={retryMockLoad}
+                        onClick={retryLoad}
                         size="compact"
                         variant="secondary"
                     >
@@ -329,10 +328,15 @@ export default function AdminDocumentsPage() {
                 }
                 description={
                     deleteIsBlocked
-                        ? `Không thể xóa ${deleteLabel} "${deleteTarget?.name}" vì đang được document hoặc AI classification sử dụng.`
+                        ? deleteError ??
+                          `Không thể xóa ${deleteLabel} "${deleteTarget?.name}" vì đang được document hoặc AI classification sử dụng.`
                         : `Bạn chắc chắn muốn xóa ${deleteLabel} "${deleteTarget?.name}"? Thao tác này không thể hoàn tác.`
                 }
                 isOpen={deleteTarget !== null}
+                isPending={
+                    deleteCollectionMutation.isPending ||
+                    deleteTagMutation.isPending
+                }
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={confirmDelete}
                 title={

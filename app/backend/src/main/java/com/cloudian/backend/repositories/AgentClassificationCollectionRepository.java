@@ -11,4 +11,6 @@ public interface AgentClassificationCollectionRepository
         extends JpaRepository<AgentClassificationCollection, AgentClassificationCollectionId> {
 
     boolean existsByCollection_Id(UUID collectionId);
+
+    long countByCollection_Id(UUID collectionId);
 }

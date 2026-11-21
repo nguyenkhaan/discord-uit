@@ -18,7 +18,9 @@ interface AdminTaxonomyFormModalProps {
     item: TaxonomyItem | null;
     submitError?: string;
     onClose: () => void;
-    onSave: (values: TaxonomyFormValues) => string | undefined;
+    onSave: (
+        values: TaxonomyFormValues
+    ) => string | undefined | Promise<string | undefined>;
 }
 
 type FieldErrors = Partial<Record<keyof TaxonomyFormValues, string>>;
@@ -61,6 +63,7 @@ export function AdminTaxonomyFormModal({
     );
     const [errors, setErrors] = useState<FieldErrors>({});
     const [formError, setFormError] = useState<string>();
+    const [isSaving, setIsSaving] = useState(false);
     const isEditing = item !== null;
     const isCollection = kind === 'collection';
     const label = isCollection ? 'collection' : 'tag';
@@ -90,7 +93,7 @@ export function AdminTaxonomyFormModal({
         return nextErrors;
     }
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const nextErrors = validate();
         if (Object.keys(nextErrors).length > 0) {
@@ -99,17 +102,22 @@ export function AdminTaxonomyFormModal({
             return;
         }
 
-        const error = onSave({
-            name: values.name.trim(),
-            slug: values.slug.trim(),
-            description: values.description.trim(),
-            keywords: isCollection
-                ? values.keywords
-                      .map((keyword) => keyword.trim())
-                      .filter(Boolean)
-                : [],
-        });
-        if (error) setFormError(error);
+        setIsSaving(true);
+        try {
+            const error = await onSave({
+                name: values.name.trim(),
+                slug: values.slug.trim(),
+                description: values.description.trim(),
+                keywords: isCollection
+                    ? values.keywords
+                          .map((keyword) => keyword.trim())
+                          .filter(Boolean)
+                    : [],
+            });
+            if (error) setFormError(error);
+        } finally {
+            setIsSaving(false);
+        }
     }
 
     return (
@@ -118,18 +126,29 @@ export function AdminTaxonomyFormModal({
             footer={
                 <>
                     <Button
+                        disabled={isSaving}
                         onClick={onClose}
                         size="compact"
                         variant="secondary"
                     >
                         Hủy
                     </Button>
-                    <Button form={formId} size="compact" type="submit">
-                        {isEditing ? 'Lưu thay đổi' : `Tạo ${label}`}
+                    <Button
+                        disabled={isSaving}
+                        form={formId}
+                        size="compact"
+                        type="submit"
+                    >
+                        {isSaving
+                            ? 'Đang lưu...'
+                            : isEditing
+                              ? 'Lưu thay đổi'
+                              : `Tạo ${label}`}
                     </Button>
                 </>
             }
             isOpen={isOpen}
+            isCloseDisabled={isSaving}
             onClose={onClose}
             size="md"
             title={`${isEditing ? 'Chỉnh sửa' : 'Tạo'} ${label}`}

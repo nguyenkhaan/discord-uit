@@ -5,6 +5,7 @@ import {
     FileCode2,
     FileText,
     Hash,
+    LoaderCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -14,9 +15,9 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { AdminBadge } from '@/features/admin/components/AdminBadge';
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader';
 import {
-    mockTaxonomyCollections,
-    mockTaxonomyTags,
-} from '@/features/taxonomy/taxonomy.mock';
+    useAdminCollectionsQuery,
+    useAdminTagsQuery,
+} from '@/features/taxonomy/taxonomy.hooks';
 import { mockAdminDocuments } from '@/features/documents/admin-document.mock';
 import type {
     AdminDocument,
@@ -134,6 +135,8 @@ function PreviewPane({ document }: { document: AdminDocument }) {
 export default function AdminDocumentDetailPage() {
     const { documentId } = useParams<{ documentId: string }>();
     const document = mockAdminDocuments.find((item) => item.id === documentId);
+    const collectionsQuery = useAdminCollectionsQuery();
+    const tagsQuery = useAdminTagsQuery();
     const [statusOverride, setStatusOverride] =
         useState<AdminDocumentStatus | null>(null);
     const [selectedDecision, setSelectedDecision] = useState<
@@ -143,14 +146,35 @@ export default function AdminDocumentDetailPage() {
 
     if (!document) return <DocumentNotFound />;
 
+    if (collectionsQuery.isLoading || tagsQuery.isLoading) {
+        return (
+            <section
+                aria-label="Đang tải taxonomy tài liệu"
+                className="rounded-2xl border border-line-subtle bg-surface p-12 text-center shadow-soft"
+            >
+                <LoaderCircle
+                    aria-hidden="true"
+                    className="mx-auto size-8 animate-spin text-brand motion-reduce:animate-none"
+                />
+                <p className="mt-3 text-sm font-medium text-foreground">
+                    Đang tải taxonomy tài liệu...
+                </p>
+            </section>
+        );
+    }
+
     const status = statusOverride ?? document.status;
+    const collectionsBySlug = new Map(
+        (collectionsQuery.data?.items ?? []).map((item) => [item.slug, item])
+    );
+    const tagsBySlug = new Map(
+        (tagsQuery.data?.items ?? []).map((item) => [item.slug, item])
+    );
     const collections = document.collectionSlugs
-        .map((slug) =>
-            mockTaxonomyCollections.find((item) => item.slug === slug)
-        )
+        .map((slug) => collectionsBySlug.get(slug))
         .filter((item) => item !== undefined);
     const tags = document.tagSlugs
-        .map((slug) => mockTaxonomyTags.find((item) => item.slug === slug))
+        .map((slug) => tagsBySlug.get(slug))
         .filter((item) => item !== undefined);
     const hasUnsavedDecision =
         selectedDecision !== '' && selectedDecision !== status;

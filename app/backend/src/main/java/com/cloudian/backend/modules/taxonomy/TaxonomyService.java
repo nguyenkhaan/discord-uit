@@ -67,21 +67,21 @@ public class TaxonomyService {
                 ? collectionRepository.findAll(pageable)
                 : collectionRepository.findByNameContainingIgnoreCaseOrSlugContainingIgnoreCase(
                         normalizedQuery, normalizedQuery, pageable);
-        return toPageResponse(collections, CollectionResponse::from);
+        return toPageResponse(collections, this::toCollectionResponse);
     }
 
     @Transactional(readOnly = true)
     public CollectionResponse getCollection(String slug) {
         String normalizedSlug = normalizeSlug(slug);
         return collectionRepository.findBySlug(normalizedSlug)
-                .map(CollectionResponse::from)
+                .map(this::toCollectionResponse)
                 .orElseThrow(() -> notFound("Collection not found."));
     }
 
     @Transactional(readOnly = true)
     public CollectionResponse getCollectionById(UUID id) {
         return collectionRepository.findById(id)
-                .map(CollectionResponse::from)
+                .map(this::toCollectionResponse)
                 .orElseThrow(() -> notFound("Collection not found."));
     }
 
@@ -95,7 +95,7 @@ public class TaxonomyService {
         applyCollection(collection, name, normalizeOptionalText(request.description()), slug,
                 normalizeKeywords(request.keywords()));
         try {
-            return CollectionResponse.from(collectionRepository.saveAndFlush(collection));
+            return toCollectionResponse(collectionRepository.saveAndFlush(collection));
         } catch (DataIntegrityViolationException exception) {
             throw collectionConflict();
         }
@@ -111,7 +111,7 @@ public class TaxonomyService {
         applyCollection(collection, name, normalizeOptionalText(request.description()), slug,
                 normalizeKeywords(request.keywords()));
         try {
-            return CollectionResponse.from(collectionRepository.saveAndFlush(collection));
+            return toCollectionResponse(collectionRepository.saveAndFlush(collection));
         } catch (DataIntegrityViolationException exception) {
             throw collectionConflict();
         }
@@ -137,21 +137,21 @@ public class TaxonomyService {
                 ? tagRepository.findAll(pageable)
                 : tagRepository.findByNameContainingIgnoreCaseOrSlugContainingIgnoreCase(
                         normalizedQuery, normalizedQuery, pageable);
-        return toPageResponse(tags, TagResponse::from);
+        return toPageResponse(tags, this::toTagResponse);
     }
 
     @Transactional(readOnly = true)
     public TagResponse getTag(String slug) {
         String normalizedSlug = normalizeSlug(slug);
         return tagRepository.findBySlug(normalizedSlug)
-                .map(TagResponse::from)
+                .map(this::toTagResponse)
                 .orElseThrow(() -> notFound("Tag not found."));
     }
 
     @Transactional(readOnly = true)
     public TagResponse getTagById(UUID id) {
         return tagRepository.findById(id)
-                .map(TagResponse::from)
+                .map(this::toTagResponse)
                 .orElseThrow(() -> notFound("Tag not found."));
     }
 
@@ -164,7 +164,7 @@ public class TaxonomyService {
         Tag tag = new Tag();
         applyTag(tag, name, slug, requiredText(request.description(), "Tag description"));
         try {
-            return TagResponse.from(tagRepository.saveAndFlush(tag));
+            return toTagResponse(tagRepository.saveAndFlush(tag));
         } catch (DataIntegrityViolationException exception) {
             throw tagConflict();
         }
@@ -179,7 +179,7 @@ public class TaxonomyService {
         ensureTagAvailable(name, slug, id);
         applyTag(tag, name, slug, requiredText(request.description(), "Tag description"));
         try {
-            return TagResponse.from(tagRepository.saveAndFlush(tag));
+            return toTagResponse(tagRepository.saveAndFlush(tag));
         } catch (DataIntegrityViolationException exception) {
             throw tagConflict();
         }
@@ -302,5 +302,22 @@ public class TaxonomyService {
 
     private static ApiException tagConflict() {
         return new ApiException(HttpStatus.CONFLICT, "Tag name or slug already exists.");
+    }
+
+    private CollectionResponse toCollectionResponse(Collection collection) {
+        UUID id = collection.getId();
+        return CollectionResponse.from(
+                collection,
+                documentCollectionRepository.countByCollection_Id(id),
+                agentClassificationCollectionRepository.countByCollection_Id(id),
+                collectionRepository.findTagSlugsByCollectionId(id));
+    }
+
+    private TagResponse toTagResponse(Tag tag) {
+        UUID id = tag.getId();
+        return TagResponse.from(
+                tag,
+                documentTagRepository.countByTag_Id(id),
+                agentClassificationTagRepository.countByTag_Id(id));
     }
 }

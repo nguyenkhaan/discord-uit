@@ -9,4 +9,6 @@ import com.cloudian.backend.models.DocumentTag;
 public interface DocumentTagRepository extends JpaRepository<DocumentTag, UUID> {
 
     boolean existsByTag_Id(UUID tagId);
+
+    long countByTag_Id(UUID tagId);
 }

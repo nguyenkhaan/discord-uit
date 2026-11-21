@@ -10,4 +10,6 @@ import com.cloudian.backend.models.ids.DocumentCollectionId;
 public interface DocumentCollectionRepository extends JpaRepository<DocumentCollection, DocumentCollectionId> {
 
     boolean existsByCollection_Id(UUID collectionId);
+
+    long countByCollection_Id(UUID collectionId);
 }

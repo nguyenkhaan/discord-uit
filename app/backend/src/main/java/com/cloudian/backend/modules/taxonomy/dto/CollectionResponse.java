@@ -13,14 +13,22 @@ public record CollectionResponse(
         String slug,
         List<String> keywords,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        long documentCount,
+        long classificationCount,
+        List<String> tagSlugs
 ) {
 
     public CollectionResponse {
         keywords = List.copyOf(keywords);
+        tagSlugs = List.copyOf(tagSlugs);
     }
 
-    public static CollectionResponse from(Collection collection) {
+    public static CollectionResponse from(
+            Collection collection,
+            long documentCount,
+            long classificationCount,
+            List<String> tagSlugs) {
         return new CollectionResponse(
                 collection.getId(),
                 collection.getName(),
@@ -28,6 +36,9 @@ public record CollectionResponse(
                 collection.getSlug(),
                 collection.getKeywords() == null ? List.of() : collection.getKeywords(),
                 collection.getCreatedAt(),
-                collection.getUpdatedAt());
+                collection.getUpdatedAt(),
+                documentCount,
+                classificationCount,
+                tagSlugs);
     }
 }

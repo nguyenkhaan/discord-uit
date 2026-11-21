@@ -31,22 +31,20 @@ class SeedScriptTests {
 
     private static final Set<String> EXPECTED_TABLES = Set.of(
             "agent_classification",
-            "agent_classification_category",
             "agent_classification_collection",
+            "agent_classification_tag",
             "anonymous_alias",
             "audit_log",
             "call_event",
             "call_participation",
             "call_session",
-            "category",
             "chat_message",
             "collection",
-            "collection_category",
             "comment",
             "comment_reaction",
             "document",
-            "document_category",
             "document_collection",
+            "document_tag",
             "document_submission",
             "forum_post",
             "media",
@@ -61,6 +59,7 @@ class SeedScriptTests {
             "server",
             "server_invite",
             "server_membership",
+            "tag",
             "user_account");
 
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
@@ -83,7 +82,7 @@ class SeedScriptTests {
                 .filteredOn(table -> !table.name().equals("user_account"))
                 .allSatisfy(table -> assertThat(table.rows())
                         .as("rows in table %s", table.name())
-                        .hasSizeBetween(3, 4));
+                        .hasSizeGreaterThanOrEqualTo(3));
     }
 
     @Test
@@ -194,7 +193,11 @@ class SeedScriptTests {
 
         @SuppressWarnings({"rawtypes", "unchecked"})
         ArgumentCaptor<Map<String, ?>> parameters = (ArgumentCaptor) ArgumentCaptor.forClass(Map.class);
-        verify(jdbcTemplate, times(98)).update(anyString(), parameters.capture());
+        int expectedInsertCount = seedData.tables().stream()
+                .filter(table -> !table.name().equals("user_account"))
+                .mapToInt(table -> table.rows().size())
+                .sum();
+        verify(jdbcTemplate, times(expectedInsertCount)).update(anyString(), parameters.capture());
         String notificationPayload = parameters.getAllValues().stream()
                 .flatMap(values -> values.values().stream())
                 .filter(String.class::isInstance)

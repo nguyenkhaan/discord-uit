@@ -315,9 +315,11 @@ export function AdminTaxonomyTable({
                                                     dateTime={item.updatedAt}
                                                 >
                                                     Cập nhật{' '}
-                                                    {formatAdminDate(
-                                                        item.updatedAt
-                                                    )}
+                                                    {item.updatedAt
+                                                        ? formatAdminDate(
+                                                              item.updatedAt
+                                                          )
+                                                        : '—'}
                                                 </time>
                                             </div>
                                         </td>

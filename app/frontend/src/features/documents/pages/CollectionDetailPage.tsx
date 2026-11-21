@@ -1,16 +1,61 @@
-import { ArrowLeft, FolderOpen, Hash, Library } from 'lucide-react';
+import {
+    AlertTriangle,
+    ArrowLeft,
+    FolderOpen,
+    Hash,
+    Library,
+    LoaderCircle,
+} from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
 import {
-    mockTaxonomyCollections,
-    mockTaxonomyTags,
-} from '@/features/taxonomy/taxonomy.mock';
+    usePublicCollectionQuery,
+    usePublicTagsQuery,
+} from '@/features/taxonomy/taxonomy.hooks';
 
 export default function CollectionDetailPage() {
     const { slug } = useParams<{ slug: string }>();
-    const collection = mockTaxonomyCollections.find(
-        (item) => item.slug === slug
-    );
+    const collectionQuery = usePublicCollectionQuery(slug);
+    const tagsQuery = usePublicTagsQuery();
+    const collection = collectionQuery.data;
+
+    if (collectionQuery.isLoading || tagsQuery.isLoading) {
+        return (
+            <section
+                aria-label="Đang tải collection"
+                className="rounded-2xl border border-line-subtle bg-surface p-12 text-center shadow-soft"
+            >
+                <LoaderCircle
+                    aria-hidden="true"
+                    className="mx-auto size-8 animate-spin text-brand motion-reduce:animate-none"
+                />
+                <p className="mt-3 text-sm font-medium text-foreground">
+                    Đang tải thông tin collection...
+                </p>
+            </section>
+        );
+    }
+
+    if (collectionQuery.isError || tagsQuery.isError) {
+        return (
+            <div
+                aria-live="assertive"
+                className="rounded-2xl border border-danger-border bg-danger-subtle p-12 text-center"
+                role="alert"
+            >
+                <AlertTriangle
+                    aria-hidden="true"
+                    className="mx-auto size-10 text-feedback-danger"
+                />
+                <h1 className="mt-4 text-2xl font-bold text-heading">
+                    Không tải được collection
+                </h1>
+                <p className="mt-2 text-sm text-foreground-secondary">
+                    Vui lòng thử lại sau.
+                </p>
+            </div>
+        );
+    }
 
     if (!collection) {
         return (
@@ -37,7 +82,7 @@ export default function CollectionDetailPage() {
         );
     }
 
-    const tags = mockTaxonomyTags.filter((tag) =>
+    const tags = (tagsQuery.data?.items ?? []).filter((tag) =>
         collection.tagSlugs.includes(tag.slug)
     );
 

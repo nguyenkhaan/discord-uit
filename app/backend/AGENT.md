@@ -137,6 +137,10 @@ reflection parameter names or the `-parameters` compiler flag; IDE and
 alternative builds may omit that metadata and cause a runtime 500 such as
 `Name for argument ... not specified`.
 
+For Spring Data repository queries, declare every named parameter explicitly
+with `@Param("...")`. The `-parameters` compiler flag is only a convenience;
+it must not be the sole protection against runtime argument-binding failures.
+
 ---
 
 ---

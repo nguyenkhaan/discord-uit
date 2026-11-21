@@ -10,9 +10,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.PageImpl;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -116,6 +118,25 @@ class TaxonomyServiceTests {
                         assertThat(exception.getStatus().value()).isEqualTo(409));
 
         verify(tagRepository, never()).delete(any(Tag.class));
+    }
+
+    @Test
+    void includesCollectionUsageCountsInListResponse() {
+        Collection collection = collection();
+        when(collectionRepository.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(collection)));
+        when(collectionRepository.findTagSlugsByCollectionId(collection.getId()))
+                .thenReturn(List.of("ai", "research"));
+        when(documentCollectionRepository.countByCollection_Id(collection.getId())).thenReturn(3L);
+        when(agentClassificationCollectionRepository.countByCollection_Id(collection.getId())).thenReturn(2L);
+
+        var response = taxonomyService().listCollections(0, 20, null);
+
+        assertThat(response.items()).singleElement().satisfies(item -> {
+            assertThat(item.documentCount()).isEqualTo(3L);
+            assertThat(item.classificationCount()).isEqualTo(2L);
+            assertThat(item.tagSlugs()).containsExactly("ai", "research");
+        });
     }
 
     private TaxonomyService taxonomyService() {
