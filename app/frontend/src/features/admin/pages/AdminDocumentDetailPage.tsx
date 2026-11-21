@@ -182,58 +182,57 @@ export default function AdminDocumentDetailPage() {
             </Link>
 
             <AdminPageHeader
-                description="Kiểm tra metadata, xem trước nội dung và đưa ra quyết định phát hành tài liệu."
+                action={
+                    <div className="w-full shrink-0 sm:w-48">
+                        <label
+                            className="mb-1 block text-xs font-medium text-foreground-secondary"
+                            htmlFor="document-decision"
+                        >
+                            Trạng thái tài liệu
+                        </label>
+                        <select
+                            className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-line bg-surface px-3 text-sm text-foreground transition-colors hover:border-line-brand-hover focus-visible:border-brand focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus/20"
+                            id="document-decision"
+                            onChange={(event) =>
+                                setSelectedDecision(
+                                    event.target.value as
+                                        AdminDocumentDecision | ''
+                                )
+                            }
+                            value={selectedDecision}
+                        >
+                            <option value="">Chọn trạng thái</option>
+                            <option value="APPROVED">Đồng ý</option>
+                            <option value="REJECTED">Từ chối</option>
+                        </select>
+                    </div>
+                }
                 title="Chi tiết tài liệu"
             />
 
             <div className="grid gap-6 xl:grid-cols-[minmax(19rem,0.72fr)_minmax(0,1.28fr)]">
                 <aside className="space-y-5">
                     <section className="rounded-2xl bg-surface p-5 shadow-soft">
-                        <div className="flex flex-wrap items-start justify-between gap-5">
-                            <div className="flex min-w-0 items-start gap-3">
-                                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-subtle text-brand">
-                                    <FileText
-                                        aria-hidden="true"
-                                        className="size-6"
-                                    />
-                                </span>
-                                <div className="min-w-0">
-                                    <AdminBadge
-                                        tone={getStatusTone(status)}
-                                        withDot
-                                    >
-                                        {formatDocumentStatus(status)}
-                                    </AdminBadge>
-                                    <h2 className="mt-3 text-lg font-bold text-heading">
-                                        {document.title}
-                                    </h2>
-                                    <p className="mt-1 break-all text-xs text-muted">
-                                        {document.slug}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="w-full shrink-0 sm:w-48">
-                                <label
-                                    className="mb-1 block text-xs font-medium text-foreground-secondary"
-                                    htmlFor="document-decision"
+                        <div className="flex items-start gap-3">
+                            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-subtle text-brand">
+                                <FileText
+                                    aria-hidden="true"
+                                    className="size-6"
+                                />
+                            </span>
+                            <div className="min-w-0">
+                                <AdminBadge
+                                    tone={getStatusTone(status)}
+                                    withDot
                                 >
-                                    Trạng thái tài liệu
-                                </label>
-                                <select
-                                    className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-line bg-surface px-3 text-sm text-foreground transition-colors hover:border-line-brand-hover focus-visible:border-brand focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus/20"
-                                    id="document-decision"
-                                    onChange={(event) =>
-                                        setSelectedDecision(
-                                            event.target.value as
-                                                AdminDocumentDecision | ''
-                                        )
-                                    }
-                                    value={selectedDecision}
-                                >
-                                    <option value="">Chọn trạng thái</option>
-                                    <option value="APPROVED">Đồng ý</option>
-                                    <option value="REJECTED">Từ chối</option>
-                                </select>
+                                    {formatDocumentStatus(status)}
+                                </AdminBadge>
+                                <h2 className="mt-3 text-lg font-bold text-heading">
+                                    {document.title}
+                                </h2>
+                                <p className="mt-1 break-all text-xs text-muted">
+                                    {document.slug}
+                                </p>
                             </div>
                         </div>
                         <p className="mt-5 text-sm leading-6 text-foreground-secondary">

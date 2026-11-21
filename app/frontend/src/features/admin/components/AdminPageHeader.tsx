@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 interface AdminPageHeaderProps {
     title: string;
-    description: string;
+    description?: string;
     action?: ReactNode;
 }
 
@@ -17,9 +17,11 @@ export function AdminPageHeader({
                 <h1 className="text-2xl font-bold text-heading sm:text-3xl">
                     {title}
                 </h1>
-                <p className="mt-1 text-sm text-foreground-secondary sm:text-base">
-                    {description}
-                </p>
+                {description && (
+                    <p className="mt-1 text-sm text-foreground-secondary sm:text-base">
+                        {description}
+                    </p>
+                )}
             </div>
             {action}
         </div>
