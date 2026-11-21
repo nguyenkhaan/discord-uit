@@ -1,6 +1,8 @@
 package com.cloudian.backend.models;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -13,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,4 +53,10 @@ public class AgentClassification {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "agentClassification", fetch = FetchType.LAZY)
+    private Set<AgentClassificationCollection> collectionSuggestions = new HashSet<>();
+
+    @OneToMany(mappedBy = "agentClassification", fetch = FetchType.LAZY)
+    private Set<AgentClassificationTag> tagSuggestions = new HashSet<>();
 }

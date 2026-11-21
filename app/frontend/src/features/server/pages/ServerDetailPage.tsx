@@ -100,6 +100,7 @@ export default function ServerDetailPage() {
         <div className="flex h-[calc(100svh-4rem)] flex-col overflow-hidden bg-surface">
             <ServerDetailHeader
                 isPanelOpen={isPanelOpen}
+                serverId={serverId}
                 onTogglePanel={() => setIsPanelOpen((open) => !open)}
                 server={server}
             />

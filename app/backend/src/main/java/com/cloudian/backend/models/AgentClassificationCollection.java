@@ -10,6 +10,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -31,12 +32,22 @@ public class AgentClassificationCollection {
 
     @MapsId("agentClassificationId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "agent_classification_id", nullable = false, updatable = false)
+    @JoinColumn(
+            name = "agent_classification_id",
+            nullable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_agent_classification_collection_classification")
+    )
     private AgentClassification agentClassification;
 
     @MapsId("collectionId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "collection_id", nullable = false, updatable = false)
+    @JoinColumn(
+            name = "collection_id",
+            nullable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_agent_classification_collection_collection")
+    )
     private Collection collection;
 
     @Column(name = "confidence", nullable = false, updatable = false)

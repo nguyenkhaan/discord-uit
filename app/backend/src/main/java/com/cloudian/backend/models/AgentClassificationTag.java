@@ -4,12 +4,13 @@ import java.time.Instant;
 
 import org.springframework.data.annotation.CreatedDate;
 
-import com.cloudian.backend.models.ids.AgentClassificationCategoryId;
+import com.cloudian.backend.models.ids.AgentClassificationTagId;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -18,26 +19,36 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Confidence must be between 0 and 1 inclusive. */
+/** AI-suggested tag for a classification run; not an official document tag. */
 @Entity
-@Table(name = "agent_classification_category")
+@Table(name = "agent_classification_tag")
 @Getter
 @Setter
 @NoArgsConstructor
-public class AgentClassificationCategory {
+public class AgentClassificationTag {
 
     @EmbeddedId
-    private AgentClassificationCategoryId id = new AgentClassificationCategoryId();
+    private AgentClassificationTagId id = new AgentClassificationTagId();
 
     @MapsId("agentClassificationId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "agent_classification_id", nullable = false, updatable = false)
+    @JoinColumn(
+            name = "agent_classification_id",
+            nullable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_agent_classification_tag_classification")
+    )
     private AgentClassification agentClassification;
 
-    @MapsId("categoryId")
+    @MapsId("tagId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false, updatable = false)
-    private Category category;
+    @JoinColumn(
+            name = "tag_id",
+            nullable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_agent_classification_tag_tag")
+    )
+    private Tag tag;
 
     @Column(name = "confidence", nullable = false, updatable = false)
     private Double confidence;

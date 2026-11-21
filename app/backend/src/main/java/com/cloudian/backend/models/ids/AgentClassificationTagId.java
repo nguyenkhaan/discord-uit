@@ -18,7 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class AgentClassificationCategoryId implements Serializable {
+public class AgentClassificationTagId implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -26,6 +26,6 @@ public class AgentClassificationCategoryId implements Serializable {
     @Column(name = "agent_classification_id", nullable = false, updatable = false)
     private UUID agentClassificationId;
 
-    @Column(name = "category_id", nullable = false, updatable = false)
-    private UUID categoryId;
+    @Column(name = "tag_id", nullable = false, updatable = false)
+    private UUID tagId;
 }

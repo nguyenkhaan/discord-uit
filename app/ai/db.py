@@ -1,0 +1,1 @@
+# Tien hanh ket noi va lay du lieu tu database xuong de su dung 

@@ -5,12 +5,26 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 
 import { Sidebar } from '@/components/layout/Sidebar';
+import { AuthContext, type AuthContextValue } from '@/context/auth-context';
+
+const authContextValue: AuthContextValue = {
+    user: null,
+    isAuthenticated: false,
+    isInitializing: false,
+    isLoggingIn: false,
+    login: async () => undefined,
+    logout: async () => undefined,
+    logoutAll: async () => undefined,
+    refreshUser: async () => undefined,
+};
 
 function renderSidebar(path: string, isOpen = false) {
     return renderToStaticMarkup(
-        <MemoryRouter initialEntries={[path]}>
-            <Sidebar isOpen={isOpen} onClose={() => undefined} />
-        </MemoryRouter>
+        <AuthContext.Provider value={authContextValue}>
+            <MemoryRouter initialEntries={[path]}>
+                <Sidebar isOpen={isOpen} onClose={() => undefined} />
+            </MemoryRouter>
+        </AuthContext.Provider>
     );
 }
 
@@ -41,12 +55,12 @@ describe('Sidebar', () => {
         assert.doesNotMatch(markup, /overflow-x-auto/);
     });
 
-    it('centers the Cloudian identity in a footer at the bottom', () => {
+    it('renders the Cloudian identity in the account footer', () => {
         const markup = renderSidebar('/home', true);
 
         assert.match(
             markup,
-            /class="[^"]*mt-auto[^"]*justify-center[^"]*border-t[^"]*"/
+            /class="[^"]*w-full[^"]*flex[^"]*items-center[^"]*justify-between[^"]*border-t[^"]*"/
         );
         assert.match(markup, /aria-label="Ảnh đại diện Cloudian"/);
         assert.match(markup, />Cloudian</);

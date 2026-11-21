@@ -24,87 +24,94 @@ import com.cloudian.backend.services.CustomUserDetailsService;
 @Configuration
 public class SecurityConfig {
 
-    private final CustomUserDetailsService customUserDetailsService;
-    private final JwtRequestFilter jwtRequestFilter;
-    private final GatewayServiceAuthenticationFilter gatewayServiceAuthenticationFilter;
-    private final ErrorResponseWriter errorResponseWriter;
-    private final RateLimitFilter rateLimitFilter;
+        private final CustomUserDetailsService customUserDetailsService;
+        private final JwtRequestFilter jwtRequestFilter;
+        private final GatewayServiceAuthenticationFilter gatewayServiceAuthenticationFilter;
+        private final ErrorResponseWriter errorResponseWriter;
+        private final RateLimitFilter rateLimitFilter;
 
-    public SecurityConfig(
-            CustomUserDetailsService customUserDetailsService,
-            JwtRequestFilter jwtRequestFilter,
-            ErrorResponseWriter errorResponseWriter,
-            GatewayServiceAuthenticationFilter gatewayServiceAuthenticationFilter,
-            RateLimitFilter rateLimitFilter) {
-        this.customUserDetailsService = customUserDetailsService;
-        this.jwtRequestFilter = jwtRequestFilter;
-        this.errorResponseWriter = errorResponseWriter;
-        this.rateLimitFilter = rateLimitFilter;
-        this.gatewayServiceAuthenticationFilter = gatewayServiceAuthenticationFilter;
-    }
+        public SecurityConfig(
+                        CustomUserDetailsService customUserDetailsService,
+                        JwtRequestFilter jwtRequestFilter,
+                        ErrorResponseWriter errorResponseWriter,
+                        GatewayServiceAuthenticationFilter gatewayServiceAuthenticationFilter,
+                        RateLimitFilter rateLimitFilter) {
+                this.customUserDetailsService = customUserDetailsService;
+                this.jwtRequestFilter = jwtRequestFilter;
+                this.errorResponseWriter = errorResponseWriter;
+                this.rateLimitFilter = rateLimitFilter;
+                this.gatewayServiceAuthenticationFilter = gatewayServiceAuthenticationFilter;
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
 
-        provider.setPasswordEncoder(passwordEncoder());
+                provider.setPasswordEncoder(passwordEncoder());
 
-        return provider;
-    }
+                return provider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-        http
-                .cors(cors -> {
-                })
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email", "/auth/refresh",
-                                "/auth/confirm-email-change", "/auth/forgot-password",
-                                "/auth/reset-password")
-                        .permitAll()
-                        .requestMatchers("/health/**").permitAll()
-                        .requestMatchers("/.well-known/jwks.json").permitAll()
-                        .requestMatchers("/internal/realtime/health").permitAll()
-                        .requestMatchers("/docs/**", "/openapi.json/**" , "/swagger-ui/**").permitAll()
-                        .anyRequest().authenticated())
+                http
+                                .cors(cors -> {
+                                })
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email",
+                                                                "/auth/refresh",
+                                                                "/auth/confirm-email-change", "/auth/forgot-password",
+                                                                "/auth/reset-password")
+                                                .permitAll()
+                                                .requestMatchers("/health/**").permitAll()
+                                                .requestMatchers("/.well-known/jwks.json").permitAll()
+                                                .requestMatchers("/internal/realtime/health").permitAll()
+                                                .requestMatchers("/docs/**", "/openapi.json/**", "/swagger-ui/**")
+                                                .permitAll()
+                                                .requestMatchers("/webhooks/livekit").permitAll()
+                                                .anyRequest().authenticated())
 
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, exception) -> errorResponseWriter.write(
-                                response,
-                                HttpStatus.UNAUTHORIZED,
-                                ErrorResponse.defaultMessage(HttpStatus.UNAUTHORIZED)))
-                        .accessDeniedHandler((request, response, exception) -> errorResponseWriter.write(
-                                response,
-                                HttpStatus.FORBIDDEN,
-                                ErrorResponse.defaultMessage(HttpStatus.FORBIDDEN))))
+                                .exceptionHandling(exceptions -> exceptions
+                                                .authenticationEntryPoint((request, response,
+                                                                exception) -> errorResponseWriter.write(
+                                                                                response,
+                                                                                HttpStatus.UNAUTHORIZED,
+                                                                                ErrorResponse.defaultMessage(
+                                                                                                HttpStatus.UNAUTHORIZED)))
+                                                .accessDeniedHandler((request, response,
+                                                                exception) -> errorResponseWriter.write(
+                                                                                response,
+                                                                                HttpStatus.FORBIDDEN,
+                                                                                ErrorResponse.defaultMessage(
+                                                                                                HttpStatus.FORBIDDEN))))
 
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(
-                        gatewayServiceAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(
-                        rateLimitFilter,
-                        UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(
-                        jwtRequestFilter,
-                        UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+                                .authenticationProvider(authenticationProvider())
+                                .addFilterBefore(
+                                                gatewayServiceAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .addFilterBefore(
+                                                rateLimitFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .addFilterBefore(
+                                                jwtRequestFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 }

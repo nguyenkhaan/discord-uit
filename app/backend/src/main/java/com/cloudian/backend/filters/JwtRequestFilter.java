@@ -32,8 +32,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private static final String INVALID_ACCESS_TOKEN_MESSAGE = "The access token is invalid or expired.";
     private static final String BEARER_PREFIX = "Bearer ";
-    public static final String AUTHENTICATED_SESSION_ID_ATTRIBUTE =
-        "realtime.authenticatedSessionId";
+    public static final String AUTHENTICATED_SESSION_ID_ATTRIBUTE = "realtime.authenticatedSessionId";
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final ErrorResponseWriter errorResponseWriter = new ErrorResponseWriter();
@@ -139,9 +138,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return false;
         }
         request.setAttribute(
-            AUTHENTICATED_SESSION_ID_ATTRIBUTE,
-            sessionId
-        );
+                AUTHENTICATED_SESSION_ID_ATTRIBUTE,
+                sessionId);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
@@ -156,6 +154,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private void writeInvalidAccessToken(HttpServletResponse response) throws IOException {
         errorResponseWriter.write(response, HttpStatus.UNAUTHORIZED, INVALID_ACCESS_TOKEN_MESSAGE);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "/webhooks/livekit".equals(request.getServletPath());
     }
 
 }

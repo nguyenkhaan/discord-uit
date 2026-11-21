@@ -1,12 +1,10 @@
 package com.cloudian.backend.models;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -22,12 +20,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** A tag is a free-form user keyword stored in the tags array. */
+/** A document can be assigned to multiple collections and tags. */
 @Entity
 @Table(name = "document")
 @Getter
@@ -54,10 +53,6 @@ public class Document {
     @Column(name = "description")
     private String description;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "tags", columnDefinition = "text[]")
-    private List<String> tags = new ArrayList<>();
-
     @Column(name = "slug", nullable = false, unique = true)
     private String slug;
 
@@ -82,4 +77,13 @@ public class Document {
 
     @Column(name = "removal_reason")
     private String removalReason;
+
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    private Set<DocumentTag> documentTags = new HashSet<>();
+
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    private Set<DocumentCollection> documentCollections = new HashSet<>();
+
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY)
+    private Set<DocumentSubmission> submissions = new HashSet<>();
 }
