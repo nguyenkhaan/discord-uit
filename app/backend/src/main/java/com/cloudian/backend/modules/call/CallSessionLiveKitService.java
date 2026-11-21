@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 
 import com.cloudian.backend.configs.LiveKitProperties;
 import com.cloudian.backend.models.CallParticipation;
@@ -21,10 +22,14 @@ import com.cloudian.backend.modules.call.dto.ActiveCallResponse;
 import com.cloudian.backend.modules.call.dto.LiveKitJoinResponse;
 import com.cloudian.backend.repositories.CallParticipationRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
+import com.cloudian.backend.exceptions.ApiException;
 
 import livekit.LivekitModels.ParticipantInfo;
+import livekit.LivekitModels.TrackSource;
 
 import lombok.RequiredArgsConstructor;
+
+
 
 @RequiredArgsConstructor
 @Service
@@ -98,7 +103,9 @@ public class CallSessionLiveKitService {
                 callSession.getId(),
                 roomName,
                 liveKitProperties.getWebsocketUrl(),
-                token);
+                token,
+                callSession.getCoordinator().getId());
+
     }
 
     @Transactional
@@ -197,6 +204,7 @@ public class CallSessionLiveKitService {
                 new ActiveCallResponse.Participant(id, name)));
 
         UserAccount coordinator = callSession.getCoordinator();
+        UserAccount activeSharer = callSession.getActiveScreenSharer();
 
         return Optional.of(new ActiveCallResponse(
                 callSession.getId(),
@@ -205,6 +213,96 @@ public class CallSessionLiveKitService {
                 coordinator.getFullName(),
                 participantList.size(),
                 CallSessionService.MAX_PARTICIPANTS,
-                participantList));
+                participantList,
+                activeSharer != null ? activeSharer.getId() : null));
+    }
+
+    /**
+     * Reserves the slot, then lets this participant publish a screen track.
+     * A LiveKit failure rolls the reservation back.
+     */
+    @Transactional
+    public void startScreenShare(UUID serverId, UUID userId) {
+
+        CallSession callSession = callSessionService
+                .startScreenShare(serverId, userId);
+
+        liveKitRoomService.setScreenShareAllowed(
+                callSession.getLivekitRoomName(),
+                userId.toString(),
+                true);
+    }
+
+    /**
+     * Releases the caller's slot (idempotent) and revokes the permission.
+     */
+    @Transactional
+    public void stopScreenShare(UUID serverId, UUID userId) {
+
+        String roomName = callSessionService
+                .stopScreenShare(serverId, userId);
+
+        liveKitRoomService.setScreenShareAllowed(
+                roomName,
+                userId.toString(),
+                false);
+    }
+
+    /**
+     * Coordinator mutes a participant's microphone.
+     * Authorization happens before any LiveKit call.
+     */
+    @Transactional
+    public void forceMute(UUID serverId, UUID actorUserId, UUID targetUserId) {
+
+        // 1. Lock + authorize.
+        CallSession callSession = callSessionService
+                .authorizeForceMute(serverId, actorUserId, targetUserId);
+
+        String roomName = callSession.getLivekitRoomName();
+        String identity = targetUserId.toString();
+
+        // 2. Find the target's live microphone track.
+        String trackSid = liveKitRoomService
+                .findPublishedTrackSid(roomName, identity, TrackSource.MICROPHONE)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.CONFLICT,
+                        "This participant's microphone is already off."));
+
+        // 3. Mute on LiveKit, then record the successful control.
+        liveKitRoomService.muteTrack(roomName, identity, trackSid);
+        callSessionService.completeForceMute(callSession, actorUserId, targetUserId);
+    }
+
+    /**
+     * Coordinator stops the current screen share.
+     */
+    @Transactional
+    public void forceStopScreenShare(
+            UUID serverId,
+            UUID actorUserId,
+            UUID targetUserId) {
+
+        // 1. Lock + authorize (target must be the current sharer).
+        CallSession callSession = callSessionService
+                .authorizeForceStopScreenShare(serverId, actorUserId, targetUserId);
+
+        String roomName = callSession.getLivekitRoomName();
+        String identity = targetUserId.toString();
+
+        // 2. Mute first so viewers stop seeing the screen immediately.
+        liveKitRoomService
+                .findPublishedTrackSid(roomName, identity, TrackSource.SCREEN_SHARE)
+                .ifPresent(sid -> liveKitRoomService.muteTrack(roomName, identity, sid));
+        liveKitRoomService
+                .findPublishedTrackSid(roomName, identity, TrackSource.SCREEN_SHARE_AUDIO)
+                .ifPresent(sid -> liveKitRoomService.muteTrack(roomName, identity, sid));
+
+        // 3. Revoke so the target cannot publish it again.
+        liveKitRoomService.setScreenShareAllowed(roomName, identity, false);
+
+        // 4. Clear the slot and record the event.
+        callSessionService.completeForceStopScreenShare(
+                callSession, actorUserId, targetUserId);
     }
 }

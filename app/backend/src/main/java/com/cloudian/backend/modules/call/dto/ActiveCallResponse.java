@@ -14,7 +14,8 @@ public record ActiveCallResponse(
         String coordinatorFullName,
         int participantCount,
         int maxParticipants,
-        List<Participant> participants) {
+        List<Participant> participants,
+        UUID activeScreenSharerUserId) {
 
     public record Participant(UUID userId, String fullName) {
     }
