@@ -172,8 +172,8 @@ export default function AdminDocumentListPage() {
                     </p>
                     <p className="mt-1 text-xs text-muted">Tất cả trạng thái</p>
                 </div>
-                <div className="rounded-xl bg-warning-subtle p-4 shadow-soft">
-                    <p className="text-sm text-feedback-warning">Chờ duyệt</p>
+                <div className="rounded-xl bg-surface p-4 shadow-soft">
+                    <p className="text-sm text-muted">Chờ duyệt</p>
                     <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
                         {
                             mockAdminDocuments.filter(
@@ -181,18 +181,14 @@ export default function AdminDocumentListPage() {
                             ).length
                         }
                     </p>
-                    <p className="mt-1 text-xs text-feedback-warning">
-                        Cần admin xử lý
-                    </p>
+                    <p className="mt-1 text-xs text-muted">Cần admin xử lý</p>
                 </div>
-                <div className="rounded-xl bg-success-subtle p-4 shadow-soft">
-                    <p className="text-sm text-feedback-success">
-                        Kết quả hiện tại
-                    </p>
+                <div className="rounded-xl bg-surface p-4 shadow-soft">
+                    <p className="text-sm text-muted">Kết quả hiện tại</p>
                     <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
                         {filteredDocuments.length}
                     </p>
-                    <p className="mt-1 text-xs text-feedback-success">
+                    <p className="mt-1 text-xs text-muted">
                         Theo bộ lọc đang chọn
                     </p>
                 </div>

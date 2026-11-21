@@ -134,7 +134,7 @@ export default function AdminDocumentDetailPage() {
     const document = mockAdminDocuments.find((item) => item.id === documentId);
     const [statusOverride, setStatusOverride] =
         useState<AdminDocumentStatus | null>(null);
-    const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
     if (!document) return <DocumentNotFound />;
 
@@ -149,15 +149,15 @@ export default function AdminDocumentDetailPage() {
         .filter((item) => item !== undefined);
     const canDecide = status === 'PENDING';
 
-    function approveDocument() {
+    function acceptDocument() {
         setStatusOverride('APPROVED');
-        showToast('Tài liệu đã được Approve và lưu chính thức.');
+        showToast('Tài liệu đã được đồng ý và lưu chính thức.');
     }
 
-    function declineDocument() {
+    function rejectDocument() {
         setStatusOverride('REJECTED');
-        setIsDeclineDialogOpen(false);
-        showToast('Tài liệu đã được Decline.');
+        setIsRejectDialogOpen(false);
+        showToast('Tài liệu đã bị từ chối.');
     }
 
     return (
@@ -290,27 +290,23 @@ export default function AdminDocumentDetailPage() {
                                 <h2 className="font-bold text-heading">
                                     Quyết định duyệt
                                 </h2>
-                                <p className="mt-1 text-sm leading-6 text-foreground-secondary">
-                                    Approve để lưu tài liệu chính thức. Decline
-                                    để từ chối tài liệu đang chờ xử lý.
-                                </p>
                             </div>
                         </div>
                         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                             <Button
                                 disabled={!canDecide}
-                                onClick={approveDocument}
+                                onClick={acceptDocument}
                                 size="compact"
                             >
                                 <CheckCircle2
                                     aria-hidden="true"
                                     className="size-4"
                                 />
-                                Approve
+                                Đồng ý
                             </Button>
                             <Button
                                 disabled={!canDecide}
-                                onClick={() => setIsDeclineDialogOpen(true)}
+                                onClick={() => setIsRejectDialogOpen(true)}
                                 size="compact"
                                 variant="danger"
                             >
@@ -318,7 +314,7 @@ export default function AdminDocumentDetailPage() {
                                     aria-hidden="true"
                                     className="size-4"
                                 />
-                                Decline
+                                Từ chối
                             </Button>
                         </div>
                         {!canDecide && (
@@ -334,12 +330,12 @@ export default function AdminDocumentDetailPage() {
             </div>
 
             <ConfirmDialog
-                confirmLabel="Decline tài liệu"
+                confirmLabel="Từ chối tài liệu"
                 description="Tài liệu sẽ được đánh dấu từ chối và không được lưu vào danh sách tài liệu chính thức."
-                isOpen={isDeclineDialogOpen}
-                onClose={() => setIsDeclineDialogOpen(false)}
-                onConfirm={declineDocument}
-                title="Xác nhận Decline tài liệu?"
+                isOpen={isRejectDialogOpen}
+                onClose={() => setIsRejectDialogOpen(false)}
+                onConfirm={rejectDocument}
+                title="Xác nhận từ chối tài liệu?"
                 tone="danger"
             />
         </div>
