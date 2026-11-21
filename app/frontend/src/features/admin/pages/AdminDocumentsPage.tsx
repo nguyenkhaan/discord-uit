@@ -227,7 +227,7 @@ export default function AdminDocumentsPage() {
                         to="/admin/documents/list"
                     >
                         <FileText aria-hidden="true" className="size-4" />
-                        Tất cả tài liệu
+                        Danh mục tài liệu
                     </Link>
                 }
                 description="Quản lý collections và tags dùng để phân loại, duyệt và khám phá tài liệu trên UIT Connect."

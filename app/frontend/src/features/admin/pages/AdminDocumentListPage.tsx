@@ -1,6 +1,5 @@
 import {
     ArrowLeft,
-    CheckCircle2,
     FileText,
     LoaderCircle,
     RotateCcw,
@@ -150,25 +149,13 @@ export default function AdminDocumentListPage() {
 
     return (
         <div className="space-y-6 pb-10">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
                 <Link
                     className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand hover:text-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
                     to="/admin/documents"
                 >
                     <ArrowLeft aria-hidden="true" className="size-4" />
                     Quay lại quản lý taxonomy
-                </Link>
-                <Link
-                    className={cn(
-                        'inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus',
-                        filters.collectionSlug === ALL_DOCUMENT_FILTER
-                            ? 'border-brand bg-brand text-on-brand'
-                            : 'border-line-brand bg-surface text-brand hover:bg-brand-subtle'
-                    )}
-                    to="/admin/documents/list"
-                >
-                    <FileText aria-hidden="true" className="size-4" />
-                    Tất cả tài liệu
                 </Link>
             </div>
 
@@ -178,14 +165,14 @@ export default function AdminDocumentListPage() {
             />
 
             <section className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
+                <div className="rounded-xl bg-surface p-4 shadow-soft">
                     <p className="text-sm text-muted">Tổng tài liệu</p>
                     <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
                         {mockAdminDocuments.length}
                     </p>
                     <p className="mt-1 text-xs text-muted">Tất cả trạng thái</p>
                 </div>
-                <div className="rounded-xl border border-warning-border bg-warning-subtle p-4 shadow-soft">
+                <div className="rounded-xl bg-warning-subtle p-4 shadow-soft">
                     <p className="text-sm text-feedback-warning">Chờ duyệt</p>
                     <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
                         {
@@ -198,7 +185,7 @@ export default function AdminDocumentListPage() {
                         Cần admin xử lý
                     </p>
                 </div>
-                <div className="rounded-xl border border-success-border bg-success-subtle p-4 shadow-soft">
+                <div className="rounded-xl bg-success-subtle p-4 shadow-soft">
                     <p className="text-sm text-feedback-success">
                         Kết quả hiện tại
                     </p>
@@ -252,20 +239,8 @@ export default function AdminDocumentListPage() {
                     </button>
                 </section>
             ) : (
-                <section className="overflow-hidden rounded-xl border border-line-subtle bg-surface shadow-soft">
+                <section className="overflow-hidden rounded-xl bg-surface shadow-soft">
                     <AdminTableToolbar
-                        action={
-                            <Link
-                                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand px-3 text-sm font-bold text-on-brand transition-colors hover:bg-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus sm:w-auto"
-                                to="/admin/documents/list"
-                            >
-                                <CheckCircle2
-                                    aria-hidden="true"
-                                    className="size-4"
-                                />
-                                Xem tất cả
-                            </Link>
-                        }
                         filters={
                             <>
                                 <AdminFilterSelect
