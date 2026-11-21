@@ -42,22 +42,20 @@ public class SeedScript {
 
     private static final Set<String> MODELED_TABLES = Set.of(
             "agent_classification",
-            "agent_classification_category",
             "agent_classification_collection",
+            "agent_classification_tag",
             "anonymous_alias",
             "audit_log",
             "call_event",
             "call_participation",
             "call_session",
-            "category",
             "chat_message",
             "collection",
-            "collection_category",
             "comment",
             "comment_reaction",
             "document",
-            "document_category",
             "document_collection",
+            "document_tag",
             "document_submission",
             "forum_post",
             "media",
@@ -72,6 +70,7 @@ public class SeedScript {
             "server",
             "server_invite",
             "server_membership",
+            "tag",
             "user_account");
 
     private final NamedParameterJdbcTemplate jdbcTemplate;

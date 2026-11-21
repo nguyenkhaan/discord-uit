@@ -244,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["upload_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/verify-email": {
         parameters: {
             query?: never;
@@ -388,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTags"];
+        put?: never;
+        post: operations["createTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/notifications/messages": {
         parameters: {
             query?: never;
@@ -398,6 +430,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCollections"];
+        put?: never;
+        post: operations["createCollection"];
         delete?: never;
         options?: never;
         head?: never;
@@ -468,6 +516,38 @@ export interface paths {
         patch: operations["updateMe"];
         trace?: never;
     };
+    "/admin/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTag"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteTag"];
+        options?: never;
+        head?: never;
+        patch: operations["updateTag"];
+        trace?: never;
+    };
+    "/admin/collections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCollection"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteCollection"];
+        options?: never;
+        head?: never;
+        patch: operations["updateCollection"];
+        trace?: never;
+    };
     "/users/me/invites": {
         parameters: {
             query?: never;
@@ -492,6 +572,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["lookupByEmail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTags_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tags/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTag_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -700,6 +812,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["TestingHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCollections_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collections/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCollection_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -973,6 +1117,36 @@ export interface components {
             /** @enum {string} */
             role?: "OWNER" | "MEMBER";
         };
+        UploadDocumentRequest: {
+            title: string;
+            description?: string;
+            slug?: string;
+            /** Format: binary */
+            file: string;
+        };
+        DocumentUploadResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            /** Format: uuid */
+            mediaId?: string;
+            title?: string;
+            slug?: string;
+            description?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+            /** @enum {string} */
+            visibilityStatus?: "HIDDEN" | "PUBLIC" | "REMOVED";
+            /** @enum {string} */
+            mediaStatus?: "QUARANTINED" | "SCANNING" | "READY" | "REJECTED" | "DELETED";
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
         VerifyEmailRequest: {
             token: string;
         };
@@ -1015,6 +1189,22 @@ export interface components {
         ConfirmEmailChangeRequest: {
             token: string;
         };
+        TagRequest: {
+            name: string;
+            slug: string;
+            description: string;
+        };
+        TagResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            slug?: string;
+            description?: string;
+            /** Format: int64 */
+            documentCount?: number;
+            /** Format: int64 */
+            classificationCount?: number;
+        };
         SendAdminMessageRequest: {
             /** Format: uuid */
             recipientUserId: string;
@@ -1035,6 +1225,29 @@ export interface components {
             readAt?: string;
             /** Format: date-time */
             createdAt?: string;
+        };
+        CollectionRequest: {
+            name: string;
+            description?: string;
+            slug: string;
+            keywords: string[];
+        };
+        CollectionResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string;
+            slug?: string;
+            keywords?: string[];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            documentCount?: number;
+            /** Format: int64 */
+            classificationCount?: number;
+            tagSlugs?: string[];
         };
         UpdateServerStatusRequest: {
             /** @enum {string} */
@@ -1098,6 +1311,17 @@ export interface components {
             userId?: string;
             fullName?: string;
             email?: string;
+        };
+        TaxonomyListResponseTagResponse: {
+            items?: components["schemas"]["TagResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
         };
         ChatMessageHistoryItem: {
             /** Format: uuid */
@@ -1183,6 +1407,17 @@ export interface components {
         };
         HealthResponse: {
             message?: string;
+        };
+        TaxonomyListResponseCollectionResponse: {
+            items?: components["schemas"]["CollectionResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
         };
         JsonWebKey: {
             kty?: string;
@@ -1651,6 +1886,30 @@ export interface operations {
             };
         };
     };
+    upload_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["UploadDocumentRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadResponse"];
+                };
+            };
+        };
+    };
     verifyEmail: {
         parameters: {
             query?: never;
@@ -1867,6 +2126,54 @@ export interface operations {
             };
         };
     };
+    listTags: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TaxonomyListResponseTagResponse"];
+                };
+            };
+        };
+    };
+    createTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TagResponse"];
+                };
+            };
+        };
+    };
     sendMessage: {
         parameters: {
             query?: never;
@@ -1887,6 +2194,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["NotificationResponse"];
+                };
+            };
+        };
+    };
+    listCollections: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TaxonomyListResponseCollectionResponse"];
+                };
+            };
+        };
+    };
+    createCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionResponse"];
                 };
             };
         };
@@ -2035,6 +2390,142 @@ export interface operations {
             };
         };
     };
+    getTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TagResponse"];
+                };
+            };
+        };
+    };
+    deleteTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TagResponse"];
+                };
+            };
+        };
+    };
+    getCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionResponse"];
+                };
+            };
+        };
+    };
+    deleteCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionResponse"];
+                };
+            };
+        };
+    };
     getMyInvites: {
         parameters: {
             query?: never;
@@ -2073,6 +2564,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["UserLookupResponse"];
+                };
+            };
+        };
+    };
+    listTags_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TaxonomyListResponseTagResponse"];
+                };
+            };
+        };
+    };
+    getTag_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TagResponse"];
                 };
             };
         };
@@ -2372,6 +2909,52 @@ export interface operations {
                     "*/*": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    listCollections_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TaxonomyListResponseCollectionResponse"];
+                };
+            };
+        };
+    };
+    getCollection_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionResponse"];
                 };
             };
         };

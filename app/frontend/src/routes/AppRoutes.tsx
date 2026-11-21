@@ -19,11 +19,15 @@ import { Header } from '@/components/Header/Header';
 import { AuthGuardLayout } from '@/components/layout/AuthGuardLayout';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AdminNotificationForm } from '@/features/admin/components/AdminNotificationForm';
-import { AdminGuard } from '@/features/admin/components/AdminGuard';
 import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import AdminAccountsPage from '@/features/admin/pages/AdminAccountsPage';
 import AdminReportsPage from '@/features/admin/pages/AdminReportsPage';
 import AdminServersPage from '@/features/admin/pages/AdminServersPage';
+import AdminDocumentsPage from '@/features/admin/pages/AdminDocumentsPage';
+import AdminDocumentDetailPage from '@/features/admin/pages/AdminDocumentDetailPage';
+import AdminDocumentListPage from '@/features/admin/pages/AdminDocumentListPage';
+import CollectionDetailPage from '@/features/documents/pages/CollectionDetailPage';
+import DocumentsPage from '@/features/documents/pages/DocumentsPage';
 import AdminComingSoonPage from '@/pages/AdminComingSoonPage';
 
 export default function AppRoutes() {
@@ -85,9 +89,10 @@ export default function AppRoutes() {
                             path="/servers/:serverId"
                             element={<ServerDetailPage />}
                         />
+                        <Route path="/documents" element={<DocumentsPage />} />
                         <Route
-                            path="/documents"
-                            element={<ComingSoonPage title="Tài liệu" />}
+                            path="/documents/collections/:slug"
+                            element={<CollectionDetailPage />}
                         />
                         <Route
                             path="/forum"
@@ -115,9 +120,7 @@ export default function AppRoutes() {
                         path="/admin"
                         element={
                             <AuthGuard>
-                                <AdminGuard>
-                                    <AdminLayout />
-                                </AdminGuard>
+                                <AdminLayout />
                             </AuthGuard>
                         }
                     >
@@ -132,9 +135,15 @@ export default function AppRoutes() {
                         <Route path="servers" element={<AdminServersPage />} />
                         <Route
                             path="documents"
-                            element={
-                                <AdminComingSoonPage title="Quản lý tài liệu" />
-                            }
+                            element={<AdminDocumentsPage />}
+                        />
+                        <Route
+                            path="documents/list"
+                            element={<AdminDocumentListPage />}
+                        />
+                        <Route
+                            path="documents/:documentId"
+                            element={<AdminDocumentDetailPage />}
                         />
                         <Route
                             path="forum"

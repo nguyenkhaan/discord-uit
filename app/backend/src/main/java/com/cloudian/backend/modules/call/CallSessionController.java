@@ -34,7 +34,7 @@ public class CallSessionController {
      */
     @GetMapping("/active")
     public ResponseEntity<ActiveCallResponse> getActiveCall(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
         return callSessionLiveKitService
@@ -49,7 +49,7 @@ public class CallSessionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CallSessionStartResponse startCall(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
         CallSession session = callSessionLiveKitService.startCall(
@@ -68,7 +68,7 @@ public class CallSessionController {
      */
     @PostMapping("/join")
     public LiveKitJoinResponse joinCall(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
         return callSessionLiveKitService.joinCall(
@@ -83,7 +83,7 @@ public class CallSessionController {
     @PostMapping("/end")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void endCall(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @AuthenticationPrincipal CustomUserDetails principal) {
 
         callSessionLiveKitService.endCall(

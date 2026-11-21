@@ -67,23 +67,22 @@ public class SecurityConfig {
         public SecurityFilterChain securityFilterChain(
                         HttpSecurity http) throws Exception {
 
-                http
-                                .cors(cors -> {
-                                })
-                                .csrf(csrf -> csrf.disable())
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email",
-                                                                "/auth/refresh",
-                                                                "/auth/confirm-email-change", "/auth/forgot-password",
-                                                                "/auth/reset-password")
-                                                .permitAll()
-                                                .requestMatchers("/health/**").permitAll()
-                                                .requestMatchers("/.well-known/jwks.json").permitAll()
-                                                .requestMatchers("/internal/realtime/health").permitAll()
-                                                .requestMatchers("/docs/**", "/openapi.json/**", "/swagger-ui/**")
-                                                .permitAll()
-                                                .requestMatchers("/webhooks/livekit").permitAll()
-                                                .anyRequest().authenticated())
+        http
+                .cors(cors -> {
+                })
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/verify-email", "/auth/refresh",
+                                "/auth/confirm-email-change", "/auth/forgot-password",
+                                "/auth/reset-password")
+                        .permitAll()
+                        .requestMatchers("/health/**").permitAll()
+                        .requestMatchers("/collections/**", "/tags/**").permitAll()
+                        .requestMatchers("/.well-known/jwks.json").permitAll()
+                        .requestMatchers("/internal/realtime/health").permitAll()
+                        .requestMatchers("/docs/**", "/openapi.json/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/webhooks/livekit").permitAll()
+                        .anyRequest().authenticated())
 
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

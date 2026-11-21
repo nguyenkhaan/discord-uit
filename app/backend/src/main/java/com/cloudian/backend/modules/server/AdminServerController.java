@@ -42,7 +42,7 @@ public class AdminServerController {
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteServer(
-            @PathVariable UUID serverId,
+            @PathVariable("serverId") UUID serverId,
             @Valid @RequestBody DeleteServerRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
         serverService.adminDeleteServer(
