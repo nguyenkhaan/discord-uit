@@ -14,6 +14,9 @@ import ServerListPage from '@/features/server/pages/ServerListPage';
 import InviteJoinPage from '@/features/server/pages/InviteJoinPage';
 import ServerDetailPage from '@/features/server/pages/ServerDetailPage';
 import CallRoomPage from '@/features/call/pages/CallRoomPage';
+import ForumFeedPage from '@/features/forum/pages/ForumFeedPage';
+import ForumPostPage from '@/features/forum/pages/ForumPostPage';
+import ForumPostEditorPage from '@/features/forum/pages/ForumPostEditorPage';
 import AuthGuard from '@/components/AuthGuard';
 import { Header } from '@/components/Header/Header';
 import { AuthGuardLayout } from '@/components/layout/AuthGuardLayout';
@@ -94,9 +97,18 @@ export default function AppRoutes() {
                             path="/documents/collections/:slug"
                             element={<CollectionDetailPage />}
                         />
+                        <Route path="/forum" element={<ForumFeedPage />} />
                         <Route
-                            path="/forum"
-                            element={<ComingSoonPage title="Diễn đàn" />}
+                            path="/forum/new"
+                            element={<ForumPostEditorPage />}
+                        />
+                        <Route
+                            path="/forum/:postId"
+                            element={<ForumPostPage />}
+                        />
+                        <Route
+                            path="/forum/:postId/edit"
+                            element={<ForumPostEditorPage />}
                         />
                         <Route
                             path="/notifications"
