@@ -77,7 +77,7 @@ function PreviewPane({ document }: { document: AdminDocument }) {
             : `${document.previewKind} preview`;
 
     return (
-        <section className="overflow-hidden rounded-2xl border border-line-subtle bg-surface shadow-soft">
+        <section className="overflow-hidden rounded-2xl bg-surface shadow-soft">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-subtle px-5 py-4">
                 <div className="flex items-center gap-3">
                     <span className="grid size-10 place-items-center rounded-xl bg-brand-subtle text-brand">
@@ -177,7 +177,7 @@ export default function AdminDocumentDetailPage() {
 
             <div className="grid gap-6 xl:grid-cols-[minmax(19rem,0.72fr)_minmax(0,1.28fr)]">
                 <aside className="space-y-5">
-                    <section className="rounded-2xl border border-line-subtle bg-surface p-5 shadow-soft">
+                    <section className="rounded-2xl bg-surface p-5 shadow-soft">
                         <div className="flex items-start gap-3">
                             <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-subtle text-brand">
                                 <FileText
@@ -205,7 +205,7 @@ export default function AdminDocumentDetailPage() {
                         </p>
                     </section>
 
-                    <section className="rounded-2xl border border-line-subtle bg-surface p-5 shadow-soft">
+                    <section className="rounded-2xl bg-surface p-5 shadow-soft">
                         <h2 className="font-bold text-heading">Metadata</h2>
                         <dl className="mt-2">
                             <MetadataRow
@@ -239,7 +239,7 @@ export default function AdminDocumentDetailPage() {
                         </dl>
                     </section>
 
-                    <section className="rounded-2xl border border-line-subtle bg-surface p-5 shadow-soft">
+                    <section className="rounded-2xl bg-surface p-5 shadow-soft">
                         <h2 className="font-bold text-heading">Taxonomy</h2>
                         <div className="mt-4 space-y-4">
                             <div>
@@ -280,11 +280,11 @@ export default function AdminDocumentDetailPage() {
                         </div>
                     </section>
 
-                    <section className="rounded-2xl border border-warning-border bg-warning-subtle p-5">
+                    <section className="rounded-2xl bg-surface p-5 shadow-soft">
                         <div className="flex items-start gap-3">
                             <Clock3
                                 aria-hidden="true"
-                                className="mt-0.5 size-5 shrink-0 text-feedback-warning"
+                                className="mt-0.5 size-5 shrink-0 text-brand"
                             />
                             <div>
                                 <h2 className="font-bold text-heading">
