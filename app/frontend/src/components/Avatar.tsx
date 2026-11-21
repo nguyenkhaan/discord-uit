@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, UserRound } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +17,7 @@ export default function Avatar() {
 
     const displayName = user?.fullName?.trim() || 'Cloudian';
     const initial = displayName.charAt(0).toUpperCase();
+    const isAdmin = user?.systemRole === 'ADMIN';
 
     useEffect(() => {
         if (!isOpen) return;
@@ -80,7 +81,7 @@ export default function Avatar() {
                         {displayName}
                     </span>
                     <span className="hidden text-xs font-semibold text-gray-400 lg:block">
-                        Student
+                        {isAdmin ? 'Admin' : 'Student'}
                     </span>
                 </span>
                 <ChevronDown
@@ -107,6 +108,23 @@ export default function Avatar() {
                     <UserRound aria-hidden="true" className="size-4" />
                     Profile
                 </button>
+                {isAdmin && (
+                    <button
+                        className="flex w-full cursor-pointer items-center gap-2.5 border-t border-line-subtle px-3.5 py-2 text-left text-sm font-semibold text-brand transition-colors hover:bg-brand-subtle focus-visible:bg-brand-subtle focus-visible:outline-none"
+                        onClick={() => {
+                            setIsOpen(false);
+                            navigate('/admin');
+                        }}
+                        role="menuitem"
+                        type="button"
+                    >
+                        <LayoutDashboard
+                            aria-hidden="true"
+                            className="size-4"
+                        />
+                        Admin Dashboard
+                    </button>
+                )}
                 <button
                     className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2 text-left text-sm text-feedback-danger transition-colors hover:bg-danger-subtle focus-visible:bg-danger-subtle focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60"
                     disabled={isLoggingOut}

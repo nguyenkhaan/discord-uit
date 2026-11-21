@@ -128,6 +128,19 @@ public class UserDTO {
 }
 ```
 
+### Explicit Spring MVC Parameter Names
+
+Always declare the name of every request-bound parameter explicitly. This
+includes `@RequestParam(name = "...")`, `@PathVariable("...")`,
+`@RequestHeader("...")`, and `@CookieValue("...")`. Do not rely on Java
+reflection parameter names or the `-parameters` compiler flag; IDE and
+alternative builds may omit that metadata and cause a runtime 500 such as
+`Name for argument ... not specified`.
+
+For Spring Data repository queries, declare every named parameter explicitly
+with `@Param("...")`. The `-parameters` compiler flag is only a convenience;
+it must not be the sole protection against runtime argument-binding failures.
+
 ---
 
 ---

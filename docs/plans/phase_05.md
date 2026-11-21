@@ -1,10 +1,10 @@
 ## Phase 5 — Document library, classification, and moderation
 
-### Feature 5.1 — Admin-managed categories and collections
+### Feature 5.1 — Admin-managed collections and tags
 
 **User story:** DOC-05.
 
-**Database:** `category(id, name, created_at, updated_at)`, `collection(id, name, description, slug, created_at, updated_at)` và `collection_category(collection_id, category_id, created_at)`.
+**Database:** `collection(id, name, description, slug, keywords, created_at, updated_at)`, `tag(id, name, slug, description)`, `document_collection(document_id, collection_id)` và `document_tag(document_id, tag_id)`.
 
 #### Step 5.1.1 — BE
 
@@ -12,18 +12,18 @@
 
 #### Step 5.1.2 — FE
 
-- Xây dựng admin category/collection list, create/edit form, slug validation và category assignment; thêm các primitive để browse public collection.
+- Xây dựng admin collection/tag list, create/edit form, slug validation; thêm các primitive để browse public collection và tag.
 
 #### Step 5.1.3 — Integration
 
-- Kết nối CRUD và assignment cùng conflict handling.
+- Kết nối CRUD và taxonomy assignment cùng conflict handling; không cascade delete taxonomy đang được document hoặc agent classification sử dụng.
 - Acceptance: chỉ `system_role = ADMIN` có thể mutate taxonomy, public user có thể read và duplicate name/slug thất bại theo cách có thể dự đoán.
 
 ### Feature 5.2 — Private upload, quarantine, scanning, and submission
 
 **User story:** DOC-03.
 
-**Database:** `media(id, uploaded_by_user_id, file_name, mime_type, size_bytes, object_key, status, scan_completed_at, created_at)`, `document(id, uploaded_by_user_id, media_id, title, description, tags, slug, visibility_status, created_at, updated_at, removed_by_user_id, removed_at, removal_reason)` và `document_submission(id, document_id, submitted_by_user_id, status, submitted_at, reviewed_by_user_id, reviewed_at, rejection_reason, purge_at)`.
+**Database:** `media(id, uploaded_by_user_id, file_name, mime_type, size_bytes, object_key, status, scan_completed_at, created_at)`, `document(id, uploaded_by_user_id, media_id, title, description, slug, visibility_status, created_at, updated_at, removed_by_user_id, removed_at, removal_reason)`, `document_collection(document_id, collection_id)`, `document_tag(document_id, tag_id)` và `document_submission(id, document_id, submitted_by_user_id, media_id, status, submitted_at, reviewed_by_user_id, reviewed_at, rejection_reason, purge_at)`.
 
 #### Step 5.2.1 — BE/workers
 
@@ -46,17 +46,17 @@
 
 **User story:** DOC-11.
 
-**Database:** `agent_classification(id, document_submission_id, model_id, classification_run_id, ocr_text, created_at)`, `agent_classification_collection(agent_classification_id, collection_id, confidence, created_at)` và `agent_classification_category(agent_classification_id, category_id, confidence, created_at)`.
+**Database:** `agent_classification(id, document_submission_id, model_id, classification_run_id, ocr_text, created_at)`, `agent_classification_collection(agent_classification_id, collection_id, confidence, created_at)` và `agent_classification_tag(agent_classification_id, tag_id, confidence, created_at)`.
 
 #### Step 5.3.1 — BE/workers
 
 - Chỉ chạy OCR cho `media.status = READY`; tạo một idempotent run theo key `classification_run_id` unique.
-- Lưu OCR output trong `agent_classification.ocr_text`, model provenance trong `model_id` và các collection/category hiện có được đề xuất với `confidence` bị giới hạn trong `[0,1]`.
+- Lưu OCR output trong `agent_classification.ocr_text`, model provenance trong `model_id` và các collection/tag hiện có được đề xuất với `confidence` bị giới hạn trong `[0,1]`.
 - Xem worker output là untrusted. Output có thể chuyển `document_submission.status` từ `PENDING_PROCESSING` sang `PENDING_REVIEW`, nhưng không được set `APPROVED`, đổi `document.visibility_status` thành `PUBLIC` hoặc tạo taxonomy.
 
 #### Step 5.3.2 — FE
 
-- Xây dựng admin review panel cho OCR text, collection/category được đề xuất, confidence, processing failure/retry và file preview qua authorized signed URL.
+- Xây dựng admin review panel cho OCR text, collection/tag được đề xuất, confidence, processing failure/retry và file preview qua authorized signed URL.
 
 #### Step 5.3.3 — Integration
 
@@ -67,18 +67,18 @@
 
 **User stories:** DOC-06, DOC-07, DOC-08, DOC-09, DOC-10.
 
-**Database:** các review field trên `document_submission`; `document.visibility_status`, `tags`, các removal field; `document_collection`, `document_category`; `notification` với các kind `DOCUMENT_REJECTED` và `DOCUMENT_REPORTED`; `audit_log` khi có sensitive access; `outbox_event`.
+**Database:** các review field trên `document_submission`; `document.visibility_status`, `document_tag`, các removal field; `document_collection`; `notification` với các kind `DOCUMENT_REJECTED` và `DOCUMENT_REPORTED`; `audit_log` khi có sensitive access; `outbox_event`.
 
 #### Step 5.4.1 — BE
 
 - Thêm admin queue theo `document_submission.status` và quyết định approve/reject theo transaction.
-- Approval yêu cầu final `document_collection` assignment, các row `document_category` optional, `document.tags` đã normalize, `reviewed_by_user_id` và `reviewed_at`; set submission thành `APPROVED` và document thành `PUBLIC`.
+- Approval yêu cầu final `document_collection` assignment, `document_tag` đã normalize, `reviewed_by_user_id` và `reviewed_at`; set submission thành `APPROVED` và document thành `PUBLIC`.
 - Rejection yêu cầu `rejection_reason`, set `status = REJECTED`, `reviewed_by_user_id`, `reviewed_at`, `purge_at <= reviewed_at + 90 days` và tạo notification `DOCUMENT_REJECTED`.
 - Removal set `document.visibility_status = REMOVED`, `removed_by_user_id`, `removed_at` và `removal_reason` bắt buộc; `report_evidence` đã preserve không thay đổi.
 
 #### Step 5.4.2 — FE
 
-- Xây dựng moderation queue có status filter, control để so sánh agent suggestion, chỉnh sửa final collection/category/tag, approve/reject với reason bắt buộc và remove confirmation.
+- Xây dựng moderation queue có status filter, control để so sánh agent suggestion, chỉnh sửa final collection/tag, approve/reject với reason bắt buộc và remove confirmation.
 - Update contributor submission view và notification link.
 
 #### Step 5.4.3 — Integration
@@ -90,7 +90,7 @@
 
 **User stories:** DOC-01, DOC-02, DOC-04.
 
-**Database:** public filter trên `document.visibility_status = PUBLIC`, `document_submission.status = APPROVED` mới nhất đã approve, `document.title`, `tags`, `document_collection`, `collection.slug` và `agent_classification.ocr_text` đã approve.
+**Database:** public filter trên `document.visibility_status = PUBLIC`, `document_submission.status = APPROVED` mới nhất đã approve, `document.title`, `document_tag`, `document_collection`, `collection.slug` và `agent_classification.ocr_text` đã approve.
 
 #### Step 5.5.1 — BE
 

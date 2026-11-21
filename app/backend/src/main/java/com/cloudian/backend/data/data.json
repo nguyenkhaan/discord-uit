@@ -35,34 +35,6 @@
       ]
     },
     {
-      "name": "category",
-      "keyColumns": ["name"],
-      "referenceColumn": "id",
-      "rows": [
-        {
-          "_ref": "category-cloud",
-          "id": { "$uuid": "00000000-0000-0000-0000-000000001001" },
-          "name": "Cloud Computing",
-          "created_at": { "$instant": "2026-01-02T00:00:00Z" },
-          "updated_at": { "$instant": "2026-01-02T00:00:00Z" }
-        },
-        {
-          "_ref": "category-ai",
-          "id": { "$uuid": "00000000-0000-0000-0000-000000001002" },
-          "name": "Artificial Intelligence",
-          "created_at": { "$instant": "2026-01-02T00:00:00Z" },
-          "updated_at": { "$instant": "2026-01-02T00:00:00Z" }
-        },
-        {
-          "_ref": "category-se",
-          "id": { "$uuid": "00000000-0000-0000-0000-000000001003" },
-          "name": "Software Engineering",
-          "created_at": { "$instant": "2026-01-02T00:00:00Z" },
-          "updated_at": { "$instant": "2026-01-02T00:00:00Z" }
-        }
-      ]
-    },
-    {
       "name": "collection",
       "keyColumns": ["slug"],
       "referenceColumn": "id",
@@ -93,6 +65,34 @@
           "slug": "community-picks",
           "created_at": { "$instant": "2026-01-02T01:00:00Z" },
           "updated_at": { "$instant": "2026-01-02T01:00:00Z" }
+        }
+      ]
+    },
+    {
+      "name": "tag",
+      "keyColumns": ["slug"],
+      "referenceColumn": "id",
+      "rows": [
+        {
+          "_ref": "tag-cloud",
+          "id": { "$uuid": "00000000-0000-0000-0000-000000001401" },
+          "name": "Cloud",
+          "slug": "cloud",
+          "description": "Cloud computing resources"
+        },
+        {
+          "_ref": "tag-machine-learning",
+          "id": { "$uuid": "00000000-0000-0000-0000-000000001402" },
+          "name": "Machine Learning",
+          "slug": "machine-learning",
+          "description": "Machine learning and artificial intelligence resources"
+        },
+        {
+          "_ref": "tag-engineering",
+          "id": { "$uuid": "00000000-0000-0000-0000-000000001403" },
+          "name": "Engineering",
+          "slug": "engineering",
+          "description": "Software engineering resources"
         }
       ]
     },
@@ -311,7 +311,6 @@
           "media_id": { "$ref": "media-cloud" },
           "title": "Cloud Computing Fundamentals",
           "description": "An introduction to cloud service models",
-          "tags": { "$textArray": ["cloud", "iaas", "paas"] },
           "slug": "cloud-computing-fundamentals",
           "visibility_status": "PUBLIC",
           "created_at": { "$instant": "2026-01-06T00:00:00Z" },
@@ -324,7 +323,6 @@
           "media_id": { "$ref": "media-ai" },
           "title": "Artificial Intelligence Overview",
           "description": "A survey of modern AI techniques",
-          "tags": { "$textArray": ["ai", "machine-learning"] },
           "slug": "artificial-intelligence-overview",
           "visibility_status": "PUBLIC",
           "created_at": { "$instant": "2026-01-06T01:00:00Z" },
@@ -337,7 +335,6 @@
           "media_id": { "$ref": "media-se" },
           "title": "Clean Code Notes",
           "description": "Practical software engineering notes",
-          "tags": { "$textArray": ["clean-code", "engineering"] },
           "slug": "clean-code-notes",
           "visibility_status": "HIDDEN",
           "created_at": { "$instant": "2026-01-06T02:00:00Z" },
@@ -1025,48 +1022,6 @@
       ]
     },
     {
-      "name": "collection_category",
-      "keyColumns": ["collection_id", "category_id"],
-      "rows": [
-        {
-          "collection_id": { "$ref": "collection-foundations" },
-          "category_id": { "$ref": "category-cloud" },
-          "created_at": { "$instant": "2026-01-16T00:00:00Z" }
-        },
-        {
-          "collection_id": { "$ref": "collection-ai" },
-          "category_id": { "$ref": "category-ai" },
-          "created_at": { "$instant": "2026-01-16T00:01:00Z" }
-        },
-        {
-          "collection_id": { "$ref": "collection-community" },
-          "category_id": { "$ref": "category-se" },
-          "created_at": { "$instant": "2026-01-16T00:02:00Z" }
-        }
-      ]
-    },
-    {
-      "name": "document_category",
-      "keyColumns": ["document_id", "category_id"],
-      "rows": [
-        {
-          "document_id": { "$ref": "document-cloud" },
-          "category_id": { "$ref": "category-cloud" },
-          "created_at": { "$instant": "2026-01-16T01:00:00Z" }
-        },
-        {
-          "document_id": { "$ref": "document-ai" },
-          "category_id": { "$ref": "category-ai" },
-          "created_at": { "$instant": "2026-01-16T01:01:00Z" }
-        },
-        {
-          "document_id": { "$ref": "document-se" },
-          "category_id": { "$ref": "category-se" },
-          "created_at": { "$instant": "2026-01-16T01:02:00Z" }
-        }
-      ]
-    },
-    {
       "name": "document_collection",
       "keyColumns": ["document_id", "collection_id"],
       "rows": [
@@ -1088,25 +1043,22 @@
       ]
     },
     {
-      "name": "agent_classification_category",
-      "keyColumns": ["agent_classification_id", "category_id"],
+      "name": "document_tag",
+      "keyColumns": ["document_id", "tag_id"],
       "rows": [
         {
-          "agent_classification_id": { "$ref": "classification-cloud" },
-          "category_id": { "$ref": "category-cloud" },
-          "confidence": 0.97,
+          "document_id": { "$ref": "document-cloud" },
+          "tag_id": { "$ref": "tag-cloud" },
           "created_at": { "$instant": "2026-01-16T03:00:00Z" }
         },
         {
-          "agent_classification_id": { "$ref": "classification-ai" },
-          "category_id": { "$ref": "category-ai" },
-          "confidence": 0.99,
+          "document_id": { "$ref": "document-ai" },
+          "tag_id": { "$ref": "tag-machine-learning" },
           "created_at": { "$instant": "2026-01-16T03:01:00Z" }
         },
         {
-          "agent_classification_id": { "$ref": "classification-se" },
-          "category_id": { "$ref": "category-se" },
-          "confidence": 0.94,
+          "document_id": { "$ref": "document-se" },
+          "tag_id": { "$ref": "tag-engineering" },
           "created_at": { "$instant": "2026-01-16T03:02:00Z" }
         }
       ]
@@ -1132,6 +1084,30 @@
           "collection_id": { "$ref": "collection-community" },
           "confidence": 0.88,
           "created_at": { "$instant": "2026-01-16T04:02:00Z" }
+        }
+      ]
+    },
+    {
+      "name": "agent_classification_tag",
+      "keyColumns": ["agent_classification_id", "tag_id"],
+      "rows": [
+        {
+          "agent_classification_id": { "$ref": "classification-cloud" },
+          "tag_id": { "$ref": "tag-cloud" },
+          "confidence": 0.97,
+          "created_at": { "$instant": "2026-01-16T05:00:00Z" }
+        },
+        {
+          "agent_classification_id": { "$ref": "classification-ai" },
+          "tag_id": { "$ref": "tag-machine-learning" },
+          "confidence": 0.99,
+          "created_at": { "$instant": "2026-01-16T05:01:00Z" }
+        },
+        {
+          "agent_classification_id": { "$ref": "classification-se" },
+          "tag_id": { "$ref": "tag-engineering" },
+          "confidence": 0.94,
+          "created_at": { "$instant": "2026-01-16T05:02:00Z" }
         }
       ]
     },

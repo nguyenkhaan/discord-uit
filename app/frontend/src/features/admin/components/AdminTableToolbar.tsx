@@ -11,7 +11,7 @@ interface AdminTableToolbarProps {
     /** Các AdminFilterSelect */
     filters: ReactNode;
     /** Nút thao tác chính bên phải: Xuất danh sách, Thêm server... */
-    action: ReactNode;
+    action?: ReactNode;
 }
 
 export function AdminTableToolbar({
@@ -50,7 +50,9 @@ export function AdminTableToolbar({
             </div>
             <div className="flex flex-1 flex-wrap items-end gap-3">
                 {filters}
-                <div className="w-full sm:ml-auto sm:w-auto">{action}</div>
+                {action && (
+                    <div className="w-full sm:ml-auto sm:w-auto">{action}</div>
+                )}
             </div>
         </div>
     );
