@@ -34,9 +34,9 @@ public class AdminTaxonomyController {
 
     @GetMapping("/collections")
     public TaxonomyListResponse<CollectionResponse> listCollections(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String query) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "query", required = false) String query) {
         return taxonomyService.listCollections(page, size, query);
     }
 
@@ -66,9 +66,9 @@ public class AdminTaxonomyController {
 
     @GetMapping("/tags")
     public TaxonomyListResponse<TagResponse> listTags(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String query) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "query", required = false) String query) {
         return taxonomyService.listTags(page, size, query);
     }
 
