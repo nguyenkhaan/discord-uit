@@ -14,6 +14,14 @@ export interface AdminDocumentFilter {
     search: string;
 }
 
+export type AdminDocumentDecision = Exclude<AdminDocumentStatus, 'PENDING'>;
+
+export function getInitialDocumentDecision(
+    status: AdminDocumentStatus
+): AdminDocumentDecision | '' {
+    return status === 'PENDING' ? '' : status;
+}
+
 export function filterAdminDocuments(
     documents: AdminDocument[],
     filters: AdminDocumentFilter

@@ -1,12 +1,10 @@
 import {
     ArrowLeft,
-    CheckCircle2,
     Clock3,
     Download,
     FileCode2,
     FileText,
     Hash,
-    XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -24,7 +22,11 @@ import type {
     AdminDocument,
     AdminDocumentStatus,
 } from '@/features/documents/admin-document.type';
-import { formatDocumentStatus } from '@/features/documents/admin-document.utils';
+import {
+    formatDocumentStatus,
+    getInitialDocumentDecision,
+    type AdminDocumentDecision,
+} from '@/features/documents/admin-document.utils';
 import { formatAdminDate, formatAdminTime } from '@/features/admin/admin.utils';
 import type { AdminTone } from '@/features/admin/admin.type';
 import { showToast } from '@/lib/toast';
@@ -134,7 +136,10 @@ export default function AdminDocumentDetailPage() {
     const document = mockAdminDocuments.find((item) => item.id === documentId);
     const [statusOverride, setStatusOverride] =
         useState<AdminDocumentStatus | null>(null);
-    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+    const [selectedDecision, setSelectedDecision] = useState<
+        AdminDocumentDecision | ''
+    >(() => getInitialDocumentDecision(document?.status ?? 'PENDING'));
+    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
     if (!document) return <DocumentNotFound />;
 
@@ -147,17 +152,23 @@ export default function AdminDocumentDetailPage() {
     const tags = document.tagSlugs
         .map((slug) => mockTaxonomyTags.find((item) => item.slug === slug))
         .filter((item) => item !== undefined);
-    const canDecide = status === 'PENDING';
+    const hasUnsavedDecision =
+        selectedDecision !== '' && selectedDecision !== status;
 
-    function acceptDocument() {
-        setStatusOverride('APPROVED');
-        showToast('Tài liệu đã được đồng ý và lưu chính thức.');
+    function saveDocumentStatus() {
+        if (!hasUnsavedDecision) return;
+        setIsSaveDialogOpen(true);
     }
 
-    function rejectDocument() {
-        setStatusOverride('REJECTED');
-        setIsRejectDialogOpen(false);
-        showToast('Tài liệu đã bị từ chối.');
+    function confirmSaveDocumentStatus() {
+        if (!selectedDecision) return;
+        setStatusOverride(selectedDecision);
+        setIsSaveDialogOpen(false);
+        showToast(
+            selectedDecision === 'APPROVED'
+                ? 'Tài liệu đã được đồng ý và lưu chính thức.'
+                : 'Tài liệu đã bị từ chối.'
+        );
     }
 
     return (
@@ -178,26 +189,51 @@ export default function AdminDocumentDetailPage() {
             <div className="grid gap-6 xl:grid-cols-[minmax(19rem,0.72fr)_minmax(0,1.28fr)]">
                 <aside className="space-y-5">
                     <section className="rounded-2xl bg-surface p-5 shadow-soft">
-                        <div className="flex items-start gap-3">
-                            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-subtle text-brand">
-                                <FileText
-                                    aria-hidden="true"
-                                    className="size-6"
-                                />
-                            </span>
-                            <div className="min-w-0">
-                                <AdminBadge
-                                    tone={getStatusTone(status)}
-                                    withDot
+                        <div className="flex flex-wrap items-start justify-between gap-5">
+                            <div className="flex min-w-0 items-start gap-3">
+                                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-subtle text-brand">
+                                    <FileText
+                                        aria-hidden="true"
+                                        className="size-6"
+                                    />
+                                </span>
+                                <div className="min-w-0">
+                                    <AdminBadge
+                                        tone={getStatusTone(status)}
+                                        withDot
+                                    >
+                                        {formatDocumentStatus(status)}
+                                    </AdminBadge>
+                                    <h2 className="mt-3 text-lg font-bold text-heading">
+                                        {document.title}
+                                    </h2>
+                                    <p className="mt-1 break-all text-xs text-muted">
+                                        {document.slug}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="w-full shrink-0 sm:w-48">
+                                <label
+                                    className="mb-1 block text-xs font-medium text-foreground-secondary"
+                                    htmlFor="document-decision"
                                 >
-                                    {formatDocumentStatus(status)}
-                                </AdminBadge>
-                                <h2 className="mt-3 text-lg font-bold text-heading">
-                                    {document.title}
-                                </h2>
-                                <p className="mt-1 break-all text-xs text-muted">
-                                    {document.slug}
-                                </p>
+                                    Trạng thái tài liệu
+                                </label>
+                                <select
+                                    className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-line bg-surface px-3 text-sm text-foreground transition-colors hover:border-line-brand-hover focus-visible:border-brand focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus/20"
+                                    id="document-decision"
+                                    onChange={(event) =>
+                                        setSelectedDecision(
+                                            event.target.value as
+                                                AdminDocumentDecision | ''
+                                        )
+                                    }
+                                    value={selectedDecision}
+                                >
+                                    <option value="">Chọn trạng thái</option>
+                                    <option value="APPROVED">Đồng ý</option>
+                                    <option value="REJECTED">Từ chối</option>
+                                </select>
                             </div>
                         </div>
                         <p className="mt-5 text-sm leading-6 text-foreground-secondary">
@@ -288,38 +324,25 @@ export default function AdminDocumentDetailPage() {
                             />
                             <div>
                                 <h2 className="font-bold text-heading">
-                                    Quyết định duyệt
+                                    Lưu trạng thái
                                 </h2>
+                                <p className="mt-1 text-sm leading-6 text-foreground-secondary">
+                                    Chọn trạng thái ở phía trên rồi bấm Lưu để
+                                    xác nhận thay đổi.
+                                </p>
                             </div>
                         </div>
-                        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                            <Button
-                                disabled={!canDecide}
-                                onClick={acceptDocument}
-                                size="compact"
-                            >
-                                <CheckCircle2
-                                    aria-hidden="true"
-                                    className="size-4"
-                                />
-                                Đồng ý
-                            </Button>
-                            <Button
-                                disabled={!canDecide}
-                                onClick={() => setIsRejectDialogOpen(true)}
-                                size="compact"
-                                variant="danger"
-                            >
-                                <XCircle
-                                    aria-hidden="true"
-                                    className="size-4"
-                                />
-                                Từ chối
-                            </Button>
-                        </div>
-                        {!canDecide && (
+                        <Button
+                            className="mt-4 w-full"
+                            disabled={!hasUnsavedDecision}
+                            onClick={saveDocumentStatus}
+                            size="compact"
+                        >
+                            Lưu
+                        </Button>
+                        {!hasUnsavedDecision && selectedDecision !== '' && (
                             <p className="mt-3 text-xs font-medium text-foreground-secondary">
-                                Tài liệu đã có quyết định:{' '}
+                                Trạng thái hiện tại:{' '}
                                 {formatDocumentStatus(status)}.
                             </p>
                         )}
@@ -330,13 +353,23 @@ export default function AdminDocumentDetailPage() {
             </div>
 
             <ConfirmDialog
-                confirmLabel="Từ chối tài liệu"
-                description="Tài liệu sẽ được đánh dấu từ chối và không được lưu vào danh sách tài liệu chính thức."
-                isOpen={isRejectDialogOpen}
-                onClose={() => setIsRejectDialogOpen(false)}
-                onConfirm={rejectDocument}
-                title="Xác nhận từ chối tài liệu?"
-                tone="danger"
+                confirmLabel={
+                    selectedDecision === 'REJECTED' ? 'Từ chối' : 'Đồng ý'
+                }
+                description={
+                    selectedDecision === 'REJECTED'
+                        ? 'Tài liệu sẽ được đánh dấu từ chối và không được lưu vào danh sách tài liệu chính thức.'
+                        : 'Tài liệu sẽ được đánh dấu đồng ý và lưu vào danh sách tài liệu chính thức.'
+                }
+                isOpen={isSaveDialogOpen}
+                onClose={() => setIsSaveDialogOpen(false)}
+                onConfirm={confirmSaveDocumentStatus}
+                title={
+                    selectedDecision === 'REJECTED'
+                        ? 'Xác nhận từ chối tài liệu?'
+                        : 'Xác nhận đồng ý tài liệu?'
+                }
+                tone={selectedDecision === 'REJECTED' ? 'danger' : 'primary'}
             />
         </div>
     );

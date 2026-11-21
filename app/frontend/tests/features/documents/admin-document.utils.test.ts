@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
     filterAdminDocuments,
+    getInitialDocumentDecision,
     type AdminDocumentFilter,
 } from '@/features/documents/admin-document.utils';
 import type { AdminDocument } from '@/features/documents/admin-document.type';
@@ -76,5 +77,16 @@ describe('admin document filtering', () => {
             result.map((document) => document.id),
             ['doc-1', 'doc-2']
         );
+    });
+});
+
+describe('admin document decision state', () => {
+    it('leaves pending documents without a selected decision', () => {
+        assert.equal(getInitialDocumentDecision('PENDING'), '');
+    });
+
+    it('keeps the current decision for already processed documents', () => {
+        assert.equal(getInitialDocumentDecision('APPROVED'), 'APPROVED');
+        assert.equal(getInitialDocumentDecision('REJECTED'), 'REJECTED');
     });
 });
