@@ -1,11 +1,13 @@
 import {
     AlertTriangle,
+    FileText,
     FolderOpen,
     Hash,
     LoaderCircle,
     RotateCcw,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -194,6 +196,9 @@ export default function AdminDocumentsPage() {
                     onCreate={() => openCreate('collection')}
                     onDelete={requestDelete}
                     onEdit={openEdit}
+                    onViewDocuments={(collection) =>
+                        `/admin/documents/list?collection=${collection.slug}`
+                    }
                 />
             ),
         },
@@ -216,6 +221,15 @@ export default function AdminDocumentsPage() {
     return (
         <>
             <AdminPageHeader
+                action={
+                    <Link
+                        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-brand px-3 text-sm font-bold text-on-brand transition-colors hover:bg-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                        to="/admin/documents/list"
+                    >
+                        <FileText aria-hidden="true" className="size-4" />
+                        Tất cả tài liệu
+                    </Link>
+                }
                 description="Quản lý collections và tags dùng để phân loại, duyệt và khám phá tài liệu trên UIT Connect."
                 title="Quản lý tài liệu"
             />

@@ -1,5 +1,6 @@
 import { FolderOpen, Hash, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { AdminBadge } from '@/features/admin/components/AdminBadge';
@@ -28,6 +29,7 @@ interface AdminTaxonomyTableProps {
     onCreate: () => void;
     onDelete: (item: TaxonomyItem) => void;
     onEdit: (item: TaxonomyItem) => void;
+    onViewDocuments?: (collection: TaxonomyCollection) => string;
 }
 
 const PAGE_SIZE = 6;
@@ -55,6 +57,7 @@ export function AdminTaxonomyTable({
     onCreate,
     onDelete,
     onEdit,
+    onViewDocuments,
 }: AdminTaxonomyTableProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -214,13 +217,36 @@ export function AdminTaxonomyTable({
                                                     )}
                                                 </span>
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-semibold text-foreground">
-                                                        {item.name}
-                                                    </p>
+                                                    {collection &&
+                                                    onViewDocuments ? (
+                                                        <Link
+                                                            className="block truncate text-sm font-semibold text-foreground hover:text-brand focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                                                            to={onViewDocuments(
+                                                                collection
+                                                            )}
+                                                        >
+                                                            {item.name}
+                                                        </Link>
+                                                    ) : (
+                                                        <p className="truncate text-sm font-semibold text-foreground">
+                                                            {item.name}
+                                                        </p>
+                                                    )}
                                                     <p className="truncate text-xs text-muted">
                                                         {item.description ||
                                                             'Chưa có mô tả'}
                                                     </p>
+                                                    {collection &&
+                                                        onViewDocuments && (
+                                                            <Link
+                                                                className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-brand hover:text-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                                                                to={onViewDocuments(
+                                                                    collection
+                                                                )}
+                                                            >
+                                                                Xem tài liệu
+                                                            </Link>
+                                                        )}
                                                 </div>
                                             </div>
                                         </td>
