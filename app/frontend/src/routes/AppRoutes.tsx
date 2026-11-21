@@ -18,7 +18,6 @@ import { Header } from '@/components/Header/Header';
 import { AuthGuardLayout } from '@/components/layout/AuthGuardLayout';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AdminNotificationForm } from '@/features/admin/components/AdminNotificationForm';
-import { AdminGuard } from '@/features/admin/components/AdminGuard';
 import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import AdminAccountsPage from '@/features/admin/pages/AdminAccountsPage';
 import AdminReportsPage from '@/features/admin/pages/AdminReportsPage';
@@ -109,9 +108,7 @@ export default function AppRoutes() {
                         path="/admin"
                         element={
                             <AuthGuard>
-                                <AdminGuard>
-                                    <AdminLayout />
-                                </AdminGuard>
+                                <AdminLayout />
                             </AuthGuard>
                         }
                     >
