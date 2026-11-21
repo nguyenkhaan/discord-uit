@@ -23,6 +23,9 @@ import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import AdminAccountsPage from '@/features/admin/pages/AdminAccountsPage';
 import AdminReportsPage from '@/features/admin/pages/AdminReportsPage';
 import AdminServersPage from '@/features/admin/pages/AdminServersPage';
+import AdminDocumentsPage from '@/features/admin/pages/AdminDocumentsPage';
+import CollectionDetailPage from '@/features/documents/pages/CollectionDetailPage';
+import DocumentsPage from '@/features/documents/pages/DocumentsPage';
 import AdminComingSoonPage from '@/pages/AdminComingSoonPage';
 
 export default function AppRoutes() {
@@ -70,14 +73,15 @@ export default function AppRoutes() {
                     >
                         <Route path="/home" element={<HomePage />} />
                         <Route path="/servers" element={<ServerListPage />} />
-                        
+
                         <Route
                             path="/servers/:serverId"
                             element={<ServerDetailPage />}
                         />
+                        <Route path="/documents" element={<DocumentsPage />} />
                         <Route
-                            path="/documents"
-                            element={<ComingSoonPage title="Tài liệu" />}
+                            path="/documents/collections/:slug"
+                            element={<CollectionDetailPage />}
                         />
                         <Route
                             path="/forum"
@@ -122,9 +126,7 @@ export default function AppRoutes() {
                         <Route path="servers" element={<AdminServersPage />} />
                         <Route
                             path="documents"
-                            element={
-                                <AdminComingSoonPage title="Quản lý tài liệu" />
-                            }
+                            element={<AdminDocumentsPage />}
                         />
                         <Route
                             path="forum"
