@@ -5,13 +5,13 @@ import {
     FileCode2,
     FileText,
     Hash,
-    LoaderCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { Skeleton } from '@/components/common/Skeleton';
 import { AdminBadge } from '@/features/admin/components/AdminBadge';
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader';
 import {
@@ -41,9 +41,12 @@ function getStatusTone(status: AdminDocumentStatus): AdminTone {
 function MetadataRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-line-subtle py-3 last:border-b-0">
-            <dt className="text-sm text-muted">{label}</dt>
-            <dd className="max-w-[65%] text-right text-sm font-medium text-foreground">
-                {value}
+            <dt className="shrink-0 text-sm text-muted">{label}</dt>
+            <dd
+                className="min-w-0 max-w-[65%] flex-1 text-right text-sm font-medium text-foreground"
+                title={value}
+            >
+                <span className="line-clamp-3 break-all">{value}</span>
             </dd>
         </div>
     );
@@ -146,24 +149,8 @@ export default function AdminDocumentDetailPage() {
 
     if (!document) return <DocumentNotFound />;
 
-    if (collectionsQuery.isLoading || tagsQuery.isLoading) {
-        return (
-            <section
-                aria-label="Đang tải taxonomy tài liệu"
-                className="rounded-2xl border border-line-subtle bg-surface p-12 text-center shadow-soft"
-            >
-                <LoaderCircle
-                    aria-hidden="true"
-                    className="mx-auto size-8 animate-spin text-brand motion-reduce:animate-none"
-                />
-                <p className="mt-3 text-sm font-medium text-foreground">
-                    Đang tải taxonomy tài liệu...
-                </p>
-            </section>
-        );
-    }
-
     const status = statusOverride ?? document.status;
+    const isTaxonomyLoading = collectionsQuery.isLoading || tagsQuery.isLoading;
     const collectionsBySlug = new Map(
         (collectionsQuery.data?.items ?? []).map((item) => [item.slug, item])
     );
@@ -251,15 +238,15 @@ export default function AdminDocumentDetailPage() {
                                 >
                                     {formatDocumentStatus(status)}
                                 </AdminBadge>
-                                <h2 className="mt-3 text-lg font-bold text-heading">
+                                <h2 className="mt-3 line-clamp-3 break-words text-lg font-bold text-heading">
                                     {document.title}
                                 </h2>
-                                <p className="mt-1 break-all text-xs text-muted">
+                                <p className="mt-1 line-clamp-3 break-all text-xs text-muted">
                                     {document.slug}
                                 </p>
                             </div>
                         </div>
-                        <p className="mt-5 text-sm leading-6 text-foreground-secondary">
+                        <p className="mt-5 line-clamp-3 break-words text-sm leading-6 text-foreground-secondary">
                             {document.summary}
                         </p>
                     </section>
@@ -300,43 +287,56 @@ export default function AdminDocumentDetailPage() {
 
                     <section className="rounded-2xl bg-surface p-5 shadow-soft">
                         <h2 className="font-bold text-heading">Taxonomy</h2>
-                        <div className="mt-4 space-y-4">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">
-                                    Collections
-                                </p>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {collections.map((collection) => (
-                                        <Link
-                                            className="inline-flex items-center gap-1.5 rounded-full bg-brand-subtle px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand-subtle/70 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
-                                            key={collection.id}
-                                            to={`/admin/documents/list?collection=${collection.slug}`}
-                                        >
-                                            {collection.name}
-                                        </Link>
-                                    ))}
+                        {isTaxonomyLoading ? (
+                            <div
+                                aria-label="Đang tải taxonomy tài liệu"
+                                className="mt-4 space-y-3"
+                                role="status"
+                            >
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-8 w-40 rounded-full" />
+                                <Skeleton className="h-4 w-16" />
+                                <Skeleton className="h-8 w-24 rounded-full" />
+                            </div>
+                        ) : (
+                            <div className="mt-4 space-y-4">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">
+                                        Collections
+                                    </p>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {collections.map((collection) => (
+                                            <Link
+                                                className="inline-flex items-center gap-1.5 rounded-full bg-brand-subtle px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand-subtle/70 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                                                key={collection.id}
+                                                to={`/admin/documents/list?collection=${collection.slug}`}
+                                            >
+                                                {collection.name}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">
+                                        Tags
+                                    </p>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {tags.map((tag) => (
+                                            <span
+                                                className="inline-flex items-center gap-1.5 rounded-full bg-violet-subtle px-3 py-1.5 text-xs font-semibold text-feedback-violet"
+                                                key={tag.id}
+                                            >
+                                                <Hash
+                                                    aria-hidden="true"
+                                                    className="size-3.5"
+                                                />
+                                                {tag.name}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">
-                                    Tags
-                                </p>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {tags.map((tag) => (
-                                        <span
-                                            className="inline-flex items-center gap-1.5 rounded-full bg-violet-subtle px-3 py-1.5 text-xs font-semibold text-feedback-violet"
-                                            key={tag.id}
-                                        >
-                                            <Hash
-                                                aria-hidden="true"
-                                                className="size-3.5"
-                                            />
-                                            {tag.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </section>
 
                     <section className="rounded-2xl bg-surface p-5 shadow-soft">
