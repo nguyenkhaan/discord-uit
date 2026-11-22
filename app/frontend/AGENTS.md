@@ -102,11 +102,20 @@ import type { LoginRequest } from '@/features/auth/auth.service';
 ## Component và accessibility
 
 - Dùng `Button`, `Input` và primitive hiện có trước khi tạo component mới.
+- Khi cần chọn một giá trị, dùng `SelectBox` tại `src/components/common/SelectBox.tsx`.
+- Khi cần chọn nhiều giá trị, dùng `MultiSelectBox` tại `src/components/common/MultiSelectBox.tsx`.
+- Không tạo lại dropdown, checkbox-menu hoặc ô search option riêng trong feature nếu có thể truyền `SelectOption` vào hai component dùng chung.
 - Dùng đúng phần tử HTML semantic.
 - Input phải có label liên kết bằng `htmlFor` và `id`.
 - Control chỉ có icon phải có `aria-label`.
 - Tab phải dùng `tablist`, `tab`, `tabpanel` và hỗ trợ bàn phím.
 - Không bỏ focus outline nếu chưa cung cấp `focus-visible` thay thế.
+
+## Loading dữ liệu
+
+- Khi đang tải danh sách hoặc dữ liệu để render UI, ưu tiên dùng `Skeleton` tại `src/components/common/Skeleton.tsx`.
+- Skeleton nên mô phỏng đúng cấu trúc vùng đang chờ tải (header, card, filter, table/list); tránh thay toàn bộ màn hình bằng một spinner hoặc dòng loading chung.
+- Giữ layout ổn định giữa trạng thái skeleton và dữ liệu thật để hạn chế layout shift.
 
 ## API contract
 

@@ -51,9 +51,12 @@ function formatBytes(value: number): string {
 function MetadataRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-line-subtle py-3 last:border-b-0">
-            <dt className="text-sm text-muted">{label}</dt>
-            <dd className="max-w-[65%] text-right text-sm font-medium text-foreground">
-                {value}
+            <dt className="shrink-0 text-sm text-muted">{label}</dt>
+            <dd
+                className="min-w-0 max-w-[65%] flex-1 text-right text-sm font-medium text-foreground"
+                title={value}
+            >
+                <span className="line-clamp-3 break-all">{value}</span>
             </dd>
         </div>
     );
@@ -84,7 +87,7 @@ function TextPreview({ url }: { url: string }) {
             Không đọc được nội dung TXT.
         </p>
     ) : (
-        <pre className="max-h-[34rem] overflow-auto whitespace-pre-wrap p-6 text-left text-sm leading-6 text-slate-700">
+        <pre className="min-h-full whitespace-pre-wrap p-6 text-left text-sm leading-6 text-slate-700">
             {content}
         </pre>
     );
@@ -124,23 +127,18 @@ function DocumentViewer({ preview }: { preview: DocumentPreview }) {
     if (extension === 'pdf') {
         return (
             <iframe
-                className="h-[34rem] w-full border-0"
+                className="block h-full min-h-[30rem] w-full border-0"
                 src={preview.previewUrl}
                 title={`Xem trước ${preview.fileName}`}
             />
         );
     }
     if (extension === 'docx') {
-        return (
-            <div
-                className="min-h-[34rem] overflow-auto bg-white p-3"
-                ref={containerRef}
-            />
-        );
+        return <div className="min-h-full bg-white p-3" ref={containerRef} />;
     }
     if (extension === 'txt') return <TextPreview url={preview.previewUrl} />;
     return (
-        <div className="grid min-h-[34rem] place-items-center p-8 text-center">
+        <div className="grid h-full min-h-[30rem] place-items-center p-8 text-center">
             <div>
                 <FileText
                     aria-hidden="true"
@@ -179,12 +177,12 @@ function PreviewPane({ preview }: { preview: DocumentPreview | undefined }) {
                     </a>
                 )}
             </div>
-            <div className="min-h-[34rem] bg-[#f8fafc] p-4 sm:p-6">
-                <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-line-subtle bg-white shadow-sm">
+            <div className="h-[clamp(30rem,72vh,52rem)] bg-[#f8fafc] p-4 sm:p-6">
+                <div className="mx-auto h-full min-w-0 max-w-4xl overflow-y-auto overscroll-contain rounded-xl border border-line-subtle bg-white shadow-sm">
                     {preview ? (
                         <DocumentViewer preview={preview} />
                     ) : (
-                        <div className="grid min-h-[34rem] place-items-center text-sm text-muted">
+                        <div className="grid h-full min-h-[30rem] place-items-center text-sm text-muted">
                             Đang tải preview...
                         </div>
                     )}
@@ -243,7 +241,21 @@ export default function AdminDocumentReviewPage() {
     const [rejectionReason, setRejectionReason] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-    if (submissionsQuery.isLoading) return <DetailSkeleton />;
+    if (submissionsQuery.isLoading) {
+        return (
+            <div className="space-y-6 pb-10">
+                <Link
+                    className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand hover:text-brand-active"
+                    to="/admin/documents/list"
+                >
+                    <ArrowLeft aria-hidden="true" className="size-4" />
+                    Quay lại danh sách tài liệu
+                </Link>
+                <AdminPageHeader title="Chi tiết tài liệu" />
+                <DetailSkeleton />
+            </div>
+        );
+    }
     if (submissionsQuery.isError) {
         return (
             <section className="p-10 text-center" role="alert">
@@ -304,51 +316,49 @@ export default function AdminDocumentReviewPage() {
             </Link>
             <AdminPageHeader
                 action={
-                    isPending ? (
-                        <div className="w-full space-y-2 sm:w-auto">
-                            <div className="flex flex-wrap gap-2">
-                                <select
-                                    aria-label="Quyết định duyệt tài liệu"
-                                    className="h-11 rounded-lg border border-line bg-surface px-3 text-sm text-foreground"
-                                    onChange={(event) =>
-                                        setDecision(
-                                            event.target.value as
-                                                'APPROVED' | 'REJECTED' | ''
-                                        )
-                                    }
-                                    value={decision}
-                                >
-                                    <option value="">Chọn quyết định</option>
-                                    <option value="APPROVED">
-                                        Duyệt và public
-                                    </option>
-                                    <option value="REJECTED">Từ chối</option>
-                                </select>
-                                <Button
-                                    disabled={!canConfirm}
-                                    onClick={() => setIsConfirmOpen(true)}
-                                    size="compact"
-                                >
-                                    <CheckCircle2
-                                        aria-hidden="true"
-                                        className="size-4"
-                                    />{' '}
-                                    Lưu quyết định
-                                </Button>
-                            </div>
-                            {decision === 'REJECTED' && (
-                                <textarea
-                                    aria-label="Lý do từ chối"
-                                    className="min-h-20 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm"
-                                    onChange={(event) =>
-                                        setRejectionReason(event.target.value)
-                                    }
-                                    placeholder="Nhập lý do từ chối"
-                                    value={rejectionReason}
-                                />
-                            )}
+                    <div className="w-full space-y-2 sm:w-auto">
+                        <div className="flex flex-wrap gap-2">
+                            <select
+                                aria-label="Quyết định duyệt tài liệu"
+                                className="h-11 rounded-lg border border-line bg-surface px-3 text-sm text-foreground"
+                                onChange={(event) =>
+                                    setDecision(
+                                        event.target.value as
+                                            'APPROVED' | 'REJECTED' | ''
+                                    )
+                                }
+                                value={decision}
+                            >
+                                <option value="">Chọn quyết định</option>
+                                <option value="APPROVED">
+                                    Duyệt và public
+                                </option>
+                                <option value="REJECTED">Từ chối</option>
+                            </select>
+                            <Button
+                                disabled={!canConfirm}
+                                onClick={() => setIsConfirmOpen(true)}
+                                size="compact"
+                            >
+                                <CheckCircle2
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />{' '}
+                                Lưu quyết định
+                            </Button>
                         </div>
-                    ) : undefined
+                        {decision === 'REJECTED' && (
+                            <textarea
+                                aria-label="Lý do từ chối"
+                                className="min-h-20 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm"
+                                onChange={(event) =>
+                                    setRejectionReason(event.target.value)
+                                }
+                                placeholder="Nhập lý do từ chối"
+                                value={rejectionReason}
+                            />
+                        )}
+                    </div>
                 }
                 title="Chi tiết tài liệu"
             />

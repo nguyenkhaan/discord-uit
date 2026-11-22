@@ -4,10 +4,10 @@ import {
     FolderOpen,
     Hash,
     Library,
-    LoaderCircle,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
+import { Skeleton } from '@/components/common/Skeleton';
 import {
     usePublicCollectionQuery,
     usePublicTagsQuery,
@@ -19,20 +19,18 @@ export default function CollectionDetailPage() {
     const tagsQuery = usePublicTagsQuery();
     const collection = collectionQuery.data;
 
-    if (collectionQuery.isLoading || tagsQuery.isLoading) {
+    if (collectionQuery.isLoading) {
         return (
-            <section
-                aria-label="Đang tải collection"
-                className="rounded-2xl border border-line-subtle bg-surface p-12 text-center shadow-soft"
-            >
-                <LoaderCircle
-                    aria-hidden="true"
-                    className="mx-auto size-8 animate-spin text-brand motion-reduce:animate-none"
-                />
-                <p className="mt-3 text-sm font-medium text-foreground">
-                    Đang tải thông tin collection...
-                </p>
-            </section>
+            <div className="space-y-6 p-4 sm:p-6">
+                <Link
+                    className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand"
+                    to="/documents"
+                >
+                    <ArrowLeft aria-hidden="true" className="size-4" />
+                    Quay lại thư viện
+                </Link>
+                <CollectionDetailSkeleton />
+            </div>
         );
     }
 
@@ -133,7 +131,7 @@ export default function CollectionDetailPage() {
                         </span>
                         <div>
                             <h2 className="font-bold text-heading">
-                                Tài liệu trong collection
+                                Tài liệu trong thư mục
                             </h2>
                             <p className="mt-1 text-sm text-muted">
                                 {collection.documentCount} tài liệu đã được phân
@@ -154,24 +152,66 @@ export default function CollectionDetailPage() {
 
                 <aside className="rounded-2xl border border-line-subtle bg-surface p-6 shadow-soft">
                     <h2 className="font-bold text-heading">Tags liên quan</h2>
-                    <div className="mt-4 space-y-2">
-                        {tags.map((tag) => (
-                            <div
-                                className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2.5"
-                                key={tag.id}
-                            >
-                                <Hash
-                                    aria-hidden="true"
-                                    className="size-4 text-brand"
-                                />
-                                <span className="text-sm text-foreground-secondary">
-                                    {tag.name}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                    {tagsQuery.isLoading ? (
+                        <div
+                            aria-label="Đang tải tags liên quan"
+                            className="mt-4 space-y-2"
+                            role="status"
+                        >
+                            <Skeleton className="h-10 w-full rounded-lg" />
+                            <Skeleton className="h-10 w-4/5 rounded-lg" />
+                            <Skeleton className="h-10 w-3/5 rounded-lg" />
+                        </div>
+                    ) : (
+                        <div className="mt-4 space-y-2">
+                            {tags.map((tag) => (
+                                <div
+                                    className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2.5"
+                                    key={tag.id}
+                                >
+                                    <Hash
+                                        aria-hidden="true"
+                                        className="size-4 text-brand"
+                                    />
+                                    <span className="text-sm text-foreground-secondary">
+                                        {tag.name}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </aside>
             </section>
+        </div>
+    );
+}
+
+function CollectionDetailSkeleton() {
+    return (
+        <div
+            aria-label="Đang tải collection"
+            className="space-y-6"
+            role="status"
+        >
+            <section className="rounded-2xl bg-surface p-6 shadow-soft sm:p-8">
+                <div className="flex items-start gap-5">
+                    <Skeleton className="size-14 shrink-0 rounded-2xl" />
+                    <div className="min-w-0 flex-1 space-y-3">
+                        <Skeleton className="h-9 w-64 max-w-full" />
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-5 w-full max-w-2xl" />
+                    </div>
+                </div>
+                <div className="mt-6 flex gap-2">
+                    <Skeleton className="h-8 w-24 rounded-full" />
+                    <Skeleton className="h-8 w-28 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded-full" />
+                </div>
+            </section>
+            <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+                <Skeleton className="h-64 w-full rounded-2xl" />
+                <Skeleton className="h-64 w-full rounded-2xl" />
+            </div>
         </div>
     );
 }

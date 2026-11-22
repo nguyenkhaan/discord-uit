@@ -82,15 +82,18 @@ export function SearchableSelectMenu({
 
     return (
         <div
-            aria-label={`${label} options`}
-            aria-multiselectable={multiple || undefined}
             className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-xl border border-line bg-surface shadow-card"
-            id={id}
-            role="listbox"
+            onBlur={(event) => {
+                const nextTarget = event.relatedTarget;
+                if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
+                    onClose();
+                }
+            }}
         >
             <div className="border-b border-line-subtle p-2">
                 <Input
                     aria-label={searchPlaceholder}
+                    aria-controls={id}
                     autoComplete="off"
                     autoFocus
                     className="h-10 text-sm"
@@ -111,7 +114,13 @@ export function SearchableSelectMenu({
                 />
             </div>
 
-            <div className="max-h-64 overflow-y-auto p-1">
+            <div
+                aria-label={`${label} options`}
+                aria-multiselectable={multiple || undefined}
+                className="max-h-64 overflow-y-auto p-1"
+                id={id}
+                role="listbox"
+            >
                 {filteredOptions.length === 0 ? (
                     <p className="px-3 py-6 text-center text-sm text-muted">
                         {emptyMessage}

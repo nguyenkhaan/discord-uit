@@ -311,6 +311,42 @@ class DocumentServiceTest {
         assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
     }
 
+    @Test
+    void canRejectAnAlreadyApprovedSubmission() {
+        Document document = pendingDocument();
+        document.setVisibilityStatus(DocumentVisibilityStatus.PUBLIC);
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.APPROVED);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(userAccountRepository.getReferenceById(USER_ID)).thenReturn(null);
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentRepository.saveAndFlush(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DocumentUploadResponse response = service().review(USER_ID, SUBMISSION_ID,
+                new DocumentReviewRequest(com.cloudian.backend.modules.document.dto.DocumentReviewDecision.REJECTED, "Cần kiểm tra lại"));
+
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.REJECTED);
+        assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
+    }
+
+    @Test
+    void canApproveAnAlreadyRejectedSubmission() {
+        Document document = pendingDocument();
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.REJECTED);
+        submission.setRejectionReason("Cần bổ sung thông tin");
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(userAccountRepository.getReferenceById(USER_ID)).thenReturn(null);
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentRepository.saveAndFlush(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DocumentUploadResponse response = service().review(USER_ID, SUBMISSION_ID,
+                new DocumentReviewRequest(com.cloudian.backend.modules.document.dto.DocumentReviewDecision.APPROVED, null));
+
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.APPROVED);
+        assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.PUBLIC);
+    }
+
     private Document pendingDocument() {
         Media media = new Media();
         media.setId(MEDIA_ID);

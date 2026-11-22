@@ -116,7 +116,7 @@ export function SelectBox({
                     onSelect={handleSelect}
                     options={options}
                     query={query}
-                    selectedValues={value ? [value] : []}
+                    selectedValues={value !== null ? [value] : []}
                     searchPlaceholder={searchPlaceholder}
                 />
             )}

@@ -210,16 +210,8 @@ public class DocumentService {
         }
         DocumentSubmission submission = findSubmission(submissionId);
         DocumentReviewDecision decision = request.decision();
-        if (submission.getStatus() == DocumentSubmissionStatus.APPROVED
-                && decision == DocumentReviewDecision.APPROVED) {
-            return toUploadResponse(submission);
-        }
-        if (submission.getStatus() == DocumentSubmissionStatus.REJECTED
-                && decision == DocumentReviewDecision.REJECTED) {
-            return toUploadResponse(submission);
-        }
-        if (submission.getStatus() != DocumentSubmissionStatus.PENDING_REVIEW) {
-            throw new ApiException(HttpStatus.CONFLICT, "Only pending documents can be reviewed.");
+        if (submission.getStatus() == DocumentSubmissionStatus.PENDING_PROCESSING) {
+            throw new ApiException(HttpStatus.CONFLICT, "The document is still processing and cannot be reviewed.");
         }
         if (decision == DocumentReviewDecision.REJECTED
                 && (request.rejectionReason() == null || request.rejectionReason().isBlank())) {

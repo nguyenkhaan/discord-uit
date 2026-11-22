@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import { MultiSelectBox } from '@/components/common/MultiSelectBox';
+import { SearchableSelectMenu } from '@/components/common/SearchableSelectMenu';
 import type { SelectOption } from '@/components/common/select.types';
 
 const options: SelectOption[] = [
@@ -42,5 +43,29 @@ describe('MultiSelectBox', () => {
         );
 
         assert.match(markup, /Tất cả tags/);
+    });
+
+    it('keeps the search input outside the listbox semantics', () => {
+        const markup = renderToStaticMarkup(
+            <SearchableSelectMenu
+                emptyMessage="Không tìm thấy tag."
+                id="tag-options"
+                label="Tags"
+                multiple
+                onClose={() => undefined}
+                onQueryChange={() => undefined}
+                onSelect={() => undefined}
+                options={options}
+                query=""
+                selectedValues={[]}
+                searchPlaceholder="Tìm tag..."
+            />
+        );
+        const searchIndex = markup.indexOf('aria-controls="tag-options"');
+        const listboxIndex = markup.indexOf('role="listbox"');
+
+        assert.ok(searchIndex >= 0);
+        assert.ok(listboxIndex > searchIndex);
+        assert.match(markup, /aria-multiselectable="true"/);
     });
 });
