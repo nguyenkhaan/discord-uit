@@ -1,25 +1,25 @@
 import {
     ConnectionState,
-    DisconnectReason, 
+    DisconnectReason,
     Room,
     RoomEvent,
-    Track, 
-    createLocalScreenTracks, 
-    type LocalTrack, 
+    Track,
+    createLocalScreenTracks,
+    type LocalTrack,
     type Participant,
 } from 'livekit-client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
     endCall as endCallRequest,
-    forceMute as forceMuteRequest, 
-    forceStopScreenShare as forceStopScreenShareRequest, 
+    forceMute as forceMuteRequest,
+    forceStopScreenShare as forceStopScreenShareRequest,
     getCallErrorMessage,
-    getControlErrorMessage, 
-    getScreenShareErrorMessage, 
+    getControlErrorMessage,
+    getScreenShareErrorMessage,
     joinOrStartCall,
-    startScreenShare as startScreenShareRequest, 
-    stopScreenShare as stopScreenShareRequest, 
+    startScreenShare as startScreenShareRequest,
+    stopScreenShare as stopScreenShareRequest,
 } from '@/features/call/call.service';
 
 type CallStatus =
@@ -31,27 +31,27 @@ type CallStatus =
     | 'error';
 
 /** How long to wait for LiveKit to deliver the screen_share grant. */
-const SCREEN_SHARE_PERMISSION_TIMEOUT_MS = 5000; 
+const SCREEN_SHARE_PERMISSION_TIMEOUT_MS = 5000;
 
 interface UseLiveKitCallResult {
     room: Room | null;
     participants: Participant[];
     status: CallStatus;
     error: string | null;
-    notice: string | null; 
+    notice: string | null;
     coordinatorUserId: string | null;
     isMicrophoneEnabled: boolean;
     isCameraEnabled: boolean;
     isScreenSharing: boolean;
     isBusy: boolean;
     isScreenShareBusy: boolean;
-    isControlBusy: boolean; 
+    isControlBusy: boolean;
     toggleMicrophone: () => Promise<void>;
     toggleCamera: () => Promise<void>;
-    toggleScreenShare: () => Promise<void>; 
-    forceMute: (targetUserId: string) => Promise<void>; 
-    forceStopScreenShare: (targetUserId: string) => Promise<void>; 
-    clearNotice: () => void; 
+    toggleScreenShare: () => Promise<void>;
+    forceMute: (targetUserId: string) => Promise<void>;
+    forceStopScreenShare: (targetUserId: string) => Promise<void>;
+    clearNotice: () => void;
     leave: () => Promise<void>;
     end: () => Promise<void>;
 }
@@ -139,17 +139,17 @@ export function useLiveKitCall(
         initialDevicesRef.current = { microphone, camera };
     }, [microphone, camera]);
     const selfMicChangeRef = useRef(false);
-    const screenShareBusyRef = useRef(false); 
+    const screenShareBusyRef = useRef(false);
     const [room, setRoom] = useState<Room | null>(null);
     const [status, setStatus] = useState<CallStatus>('idle');
     const [error, setError] = useState<string | null>(null);
-    const [notice, setNotice] = useState<string | null>(null); 
+    const [notice, setNotice] = useState<string | null>(null);
     const [coordinatorUserId, setCoordinatorUserId] = useState<string | null>(
         null
     );
     const [isBusy, setIsBusy] = useState(false);
-    const [isScreenShareBusy, setIsScreenShareBusy] = useState(false); 
-    const [isControlBusy, setIsControlBusy] = useState(false); 
+    const [isScreenShareBusy, setIsScreenShareBusy] = useState(false);
+    const [isControlBusy, setIsControlBusy] = useState(false);
     const [participantRevision, setParticipantRevision] = useState(0);
 
     const refreshParticipants = useCallback(() => {
@@ -177,7 +177,7 @@ export function useLiveKitCall(
                 connectingRoom = nextRoom;
                 roomRef.current = nextRoom;
                 setRoom(nextRoom);
-                setCoordinatorUserId(connection.coordinatorUserId); 
+                setCoordinatorUserId(connection.coordinatorUserId);
 
                 const isLocal = (participant: Participant) =>
                     participant.identity === nextRoom.localParticipant.identity;
@@ -192,8 +192,8 @@ export function useLiveKitCall(
                 );
                 nextRoom.on(RoomEvent.TrackSubscribed, refreshParticipants);
                 nextRoom.on(RoomEvent.TrackUnsubscribed, refreshParticipants);
-                nextRoom.on(RoomEvent.TrackPublished, refreshParticipants); 
-                nextRoom.on(RoomEvent.TrackUnpublished, refreshParticipants); 
+                nextRoom.on(RoomEvent.TrackPublished, refreshParticipants);
+                nextRoom.on(RoomEvent.TrackUnpublished, refreshParticipants);
                 nextRoom.on(RoomEvent.LocalTrackPublished, refreshParticipants);
 
                 nextRoom.on(RoomEvent.LocalTrackUnpublished, (publication) => {
@@ -208,16 +208,21 @@ export function useLiveKitCall(
                     refreshParticipants();
                 });
 
-                nextRoom.on(RoomEvent.TrackMuted, (publication, participant) => {
-                    if (
-                        isLocal(participant) &&
-                        publication.source === Track.Source.Microphone &&
-                        !selfMicChangeRef.current
-                    ) {
-                        setNotice('Người điều phối đã tắt microphone của bạn.');
+                nextRoom.on(
+                    RoomEvent.TrackMuted,
+                    (publication, participant) => {
+                        if (
+                            isLocal(participant) &&
+                            publication.source === Track.Source.Microphone &&
+                            !selfMicChangeRef.current
+                        ) {
+                            setNotice(
+                                'Người điều phối đã tắt microphone của bạn.'
+                            );
+                        }
+                        refreshParticipants();
                     }
-                    refreshParticipants();
-                });
+                );
                 nextRoom.on(RoomEvent.TrackUnmuted, refreshParticipants);
 
                 nextRoom.on(
@@ -266,10 +271,7 @@ export function useLiveKitCall(
                     refreshParticipants();
                 });
 
-                await nextRoom.connect(
-                    connection.serverUrl, 
-                    connection.token 
-                );
+                await nextRoom.connect(connection.serverUrl, connection.token);
 
                 if (cancelled) {
                     await nextRoom.disconnect();

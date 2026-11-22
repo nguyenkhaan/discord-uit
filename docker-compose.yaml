@@ -18,7 +18,7 @@ services:
       - "9001:9001"
     volumes:
       - minio-data:/data
-  kafka: 
+  kafka:
     image: apache/kafka:4.3.1
     ports:
       - 9092:9092
@@ -44,7 +44,7 @@ services:
           --describe \
           --topic notification.events.v1 \
           --bootstrap-server kafka:9092
-  
+
   livekit:
     image: livekit/livekit-server:latest
     # node-ip 127.0.0.1: the browser on this machine connects to localhost.
@@ -52,9 +52,9 @@ services:
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml:ro
     ports:
-      - "7880:7880"       # HTTP API + WebSocket signaling
-      - "7881:7881"       # WebRTC over TCP (fallback)
-      - "7882:7882/udp"   # WebRTC over UDP
+      - "7880:7880" # HTTP API + WebSocket signaling
+      - "7881:7881" # WebRTC over TCP (fallback)
+      - "7882:7882/udp" # WebRTC over UDP
     extra_hosts:
       - "host.docker.internal:host-gateway"
 volumes:

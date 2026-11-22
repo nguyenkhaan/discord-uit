@@ -16,6 +16,14 @@ export interface AdminDocumentFilter {
 
 export type AdminDocumentDecision = Exclude<AdminDocumentStatus, 'PENDING'>;
 
+export function getAdminDocumentStats(documents: AdminDocument[]) {
+    return {
+        total: documents.length,
+        pending: documents.filter((document) => document.status === 'PENDING')
+            .length,
+    };
+}
+
 export function getInitialDocumentDecision(
     status: AdminDocumentStatus
 ): AdminDocumentDecision | '' {

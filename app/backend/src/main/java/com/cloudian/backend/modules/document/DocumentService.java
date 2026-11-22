@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -25,16 +26,35 @@ import com.cloudian.backend.commons.enums.DocumentSubmissionStatus;
 import com.cloudian.backend.commons.enums.DocumentVisibilityStatus;
 import com.cloudian.backend.commons.enums.MediaStatus;
 import com.cloudian.backend.exceptions.ApiException;
+import com.cloudian.backend.exceptions.StorageException;
 import com.cloudian.backend.models.Document;
+import com.cloudian.backend.models.Collection;
+import com.cloudian.backend.models.DocumentCollection;
 import com.cloudian.backend.models.DocumentSubmission;
+import com.cloudian.backend.models.DocumentTag;
 import com.cloudian.backend.models.Media;
+import com.cloudian.backend.models.Tag;
+import com.cloudian.backend.models.ids.DocumentCollectionId;
+import com.cloudian.backend.modules.document.dto.DocumentPreviewResponse;
+import com.cloudian.backend.modules.document.dto.DocumentReviewDecision;
+import com.cloudian.backend.modules.document.dto.DocumentReviewRequest;
+import com.cloudian.backend.modules.document.dto.DocumentSubmissionResponse;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyResponse;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyUpdateRequest;
+import com.cloudian.backend.modules.document.dto.DocumentUploadInitRequest;
+import com.cloudian.backend.modules.document.dto.DocumentUploadInitResponse;
 import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
 import com.cloudian.backend.modules.document.dto.UploadDocumentRequest;
+import com.cloudian.backend.repositories.DocumentTagRepository;
 import com.cloudian.backend.repositories.DocumentRepository;
 import com.cloudian.backend.repositories.DocumentSubmissionRepository;
+import com.cloudian.backend.repositories.CollectionRepository;
+import com.cloudian.backend.repositories.DocumentCollectionRepository;
 import com.cloudian.backend.repositories.MediaRepository;
+import com.cloudian.backend.repositories.TagRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
 import com.cloudian.backend.services.StorageService;
+import com.cloudian.backend.services.StorageService.StorageObjectMetadata;
 
 @Service
 public class DocumentService {
@@ -52,23 +72,395 @@ public class DocumentService {
     private final StorageService storageService;
     private final MediaRepository mediaRepository;
     private final DocumentRepository documentRepository;
+    private final CollectionRepository collectionRepository;
+    private final DocumentCollectionRepository documentCollectionRepository;
     private final DocumentSubmissionRepository submissionRepository;
     private final UserAccountRepository userAccountRepository;
+    private final TagRepository tagRepository;
+    private final DocumentTagRepository documentTagRepository;
     private final Set<String> allowedExtensions;
+    private final long maxUploadSizeBytes;
 
     public DocumentService(
             StorageService storageService,
             MediaRepository mediaRepository,
             DocumentRepository documentRepository,
+            CollectionRepository collectionRepository,
+            DocumentCollectionRepository documentCollectionRepository,
             DocumentSubmissionRepository submissionRepository,
             UserAccountRepository userAccountRepository,
-            @Value("${app.agent.classfication.allowed:pdf,docx,pptx,txt}") String allowedExtensions) {
+            TagRepository tagRepository,
+            DocumentTagRepository documentTagRepository,
+            @Value("${app.agent.classfication.allowed:pdf,docx,pptx,txt}") String allowedExtensions,
+            @Value("${app.storage.max-upload-size-bytes:5242880}") long maxUploadSizeBytes) {
         this.storageService = storageService;
         this.mediaRepository = mediaRepository;
         this.documentRepository = documentRepository;
+        this.collectionRepository = collectionRepository;
+        this.documentCollectionRepository = documentCollectionRepository;
         this.submissionRepository = submissionRepository;
         this.userAccountRepository = userAccountRepository;
+        this.tagRepository = tagRepository;
+        this.documentTagRepository = documentTagRepository;
         this.allowedExtensions = parseAllowedExtensions(allowedExtensions);
+        this.maxUploadSizeBytes = maxUploadSizeBytes;
+    }
+
+    @Transactional
+    public DocumentUploadInitResponse initUpload(UUID uploaderUserId, DocumentUploadInitRequest request) {
+        if (request == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Upload metadata is required.");
+        }
+
+        String title = normalizeTitle(request.title());
+        String description = normalizeDescription(request.description());
+        String fileName = safeFileName(request.fileName());
+        String extension = extensionOf(fileName);
+        validateExtension(extension);
+
+        long sizeBytes = request.sizeBytes() == null ? 0 : request.sizeBytes();
+        if (sizeBytes <= 0 || sizeBytes > maxUploadSizeBytes || sizeBytes > Integer.MAX_VALUE) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "The document size must be between 1 byte and " + maxUploadSizeBytes + " bytes.");
+        }
+
+        String declaredMimeType = normalizeMimeType(request.mimeType());
+        String expectedMimeType = mimeTypeOf(extension);
+        if (!expectedMimeType.equals(declaredMimeType)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The declared MIME type does not match the file extension.");
+        }
+
+        String slug = resolveSlug(title, request.slug());
+        String objectKey = DOCUMENT_FOLDER + "/" + UUID.randomUUID() + "." + extension;
+        var uploader = userAccountRepository.getReferenceById(uploaderUserId);
+
+        Media media = new Media();
+        media.setUploadedBy(uploader);
+        media.setFileName(fileName);
+        media.setMimeType(declaredMimeType);
+        media.setSizeBytes(Math.toIntExact(sizeBytes));
+        media.setObjectKey(objectKey);
+        media.setStatus(MediaStatus.QUARANTINED);
+        Media savedMedia = mediaRepository.saveAndFlush(media);
+
+        Document document = new Document();
+        document.setUploadedBy(uploader);
+        document.setMedia(savedMedia);
+        document.setTitle(title);
+        document.setDescription(description);
+        document.setSlug(slug);
+        document.setVisibilityStatus(DocumentVisibilityStatus.HIDDEN);
+        Document savedDocument;
+        try {
+            savedDocument = documentRepository.saveAndFlush(document);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ApiException(HttpStatus.CONFLICT, DUPLICATE_SLUG_MESSAGE);
+        }
+
+        saveTags(savedDocument, request.tagSlugs());
+
+        DocumentSubmission submission = new DocumentSubmission();
+        submission.setDocument(savedDocument);
+        submission.setSubmittedBy(uploader);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        submission.setSubmittedAt(Instant.now());
+        DocumentSubmission savedSubmission = submissionRepository.saveAndFlush(submission);
+
+        String uploadUrl = storageService.presignedPutUrl(objectKey, declaredMimeType);
+        return new DocumentUploadInitResponse(
+                savedDocument.getId(),
+                savedSubmission.getId(),
+                savedMedia.getId(),
+                uploadUrl,
+                storageService.uploadUrlExpiresAt(),
+                savedMedia.getFileName(),
+                savedMedia.getMimeType(),
+                sizeBytes,
+                savedDocument.getVisibilityStatus(),
+                savedMedia.getStatus(),
+                savedSubmission.getStatus());
+    }
+
+    @Transactional
+    public DocumentUploadResponse completeUpload(UUID uploaderUserId, UUID submissionId) {
+        DocumentSubmission submission = findSubmission(submissionId);
+        if (submission.getSubmittedBy() != null
+                && !submission.getSubmittedBy().getId().equals(uploaderUserId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You cannot complete this document upload.");
+        }
+
+        if (submission.getStatus() != DocumentSubmissionStatus.PENDING_PROCESSING) {
+            return toUploadResponse(submission);
+        }
+
+        Media media = submission.getDocument().getMedia();
+        StorageObjectMetadata metadata;
+        try {
+            metadata = storageService.statObject(media.getObjectKey());
+        } catch (StorageException exception) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The uploaded object was not found in storage.");
+        }
+
+        if (metadata.size() != media.getSizeBytes()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The uploaded object size does not match the declaration.");
+        }
+        if (!media.getMimeType().equalsIgnoreCase(metadata.contentType())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The uploaded object MIME type does not match the declaration.");
+        }
+        validateContentSignature(media.getFileName(), metadata.prefix());
+
+        media.setStatus(MediaStatus.READY);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_REVIEW);
+        mediaRepository.saveAndFlush(media);
+        submissionRepository.saveAndFlush(submission);
+        return toUploadResponse(submission);
+    }
+
+    @Transactional
+    public DocumentTaxonomyResponse updateTaxonomy(
+            UUID documentId,
+            DocumentTaxonomyUpdateRequest request) {
+        if (request == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Document taxonomy is required.");
+        }
+
+        Document document = documentRepository.findByIdForUpdate(documentId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document not found."));
+        List<String> collectionSlugs = normalizeTaxonomySlugs(request.collectionSlugs(), "Collection");
+        List<String> tagSlugs = normalizeTaxonomySlugs(request.tagSlugs(), "Tag");
+        List<Collection> collections = collectionSlugs.stream()
+                .map(slug -> collectionRepository.findBySlug(slug)
+                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Collection not found: " + slug)))
+                .toList();
+        List<Tag> tags = tagSlugs.stream()
+                .map(slug -> tagRepository.findBySlug(slug)
+                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Tag not found: " + slug)))
+                .toList();
+
+        documentCollectionRepository.deleteByDocument_Id(documentId);
+        documentCollectionRepository.flush();
+        documentTagRepository.deleteByDocument_Id(documentId);
+        documentTagRepository.flush();
+        document.getDocumentCollections().clear();
+        document.getDocumentTags().clear();
+
+        List<DocumentCollection> collectionLinks = collections.stream()
+                .map(collection -> documentCollection(document, collection))
+                .toList();
+        List<DocumentTag> tagLinks = tags.stream()
+                .map(tag -> documentTag(document, tag))
+                .toList();
+        if (!collectionLinks.isEmpty()) {
+            documentCollectionRepository.saveAll(collectionLinks);
+            document.getDocumentCollections().addAll(collectionLinks);
+        }
+        if (!tagLinks.isEmpty()) {
+            documentTagRepository.saveAll(tagLinks);
+            document.getDocumentTags().addAll(tagLinks);
+        }
+
+        return new DocumentTaxonomyResponse(
+                documentId,
+                collections.stream().map(Collection::getSlug).sorted().toList(),
+                tags.stream().map(Tag::getSlug).sorted().toList());
+    }
+
+    @Transactional
+    public DocumentUploadResponse review(UUID reviewerUserId, UUID submissionId, DocumentReviewRequest request) {
+        if (request == null || request.decision() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A review decision is required.");
+        }
+        DocumentSubmission submission = findSubmission(submissionId);
+        DocumentReviewDecision decision = request.decision();
+        if (submission.getStatus() == DocumentSubmissionStatus.PENDING_PROCESSING) {
+            throw new ApiException(HttpStatus.CONFLICT, "The document is still processing and cannot be reviewed.");
+        }
+        if (decision == DocumentReviewDecision.REJECTED
+                && (request.rejectionReason() == null || request.rejectionReason().isBlank())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A rejection reason is required.");
+        }
+        if (submission.getDocument().getMedia().getStatus() != MediaStatus.READY) {
+            throw new ApiException(HttpStatus.CONFLICT, "The document is not ready for review.");
+        }
+
+        Document document = submission.getDocument();
+        document.setVisibilityStatus(decision == DocumentReviewDecision.APPROVED
+                ? DocumentVisibilityStatus.PUBLIC
+                : DocumentVisibilityStatus.HIDDEN);
+        submission.setStatus(decision == DocumentReviewDecision.APPROVED
+                ? DocumentSubmissionStatus.APPROVED
+                : DocumentSubmissionStatus.REJECTED);
+        submission.setRejectionReason(decision == DocumentReviewDecision.REJECTED
+                ? request.rejectionReason().strip()
+                : null);
+        submission.setReviewedBy(userAccountRepository.getReferenceById(reviewerUserId));
+        submission.setReviewedAt(Instant.now());
+        documentRepository.saveAndFlush(document);
+        submissionRepository.saveAndFlush(submission);
+        return toUploadResponse(submission);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentSubmissionResponse> listMySubmissions(UUID userId) {
+        return submissionRepository.findBySubmittedBy_IdOrderBySubmittedAtDesc(userId).stream()
+                .map(this::toSubmissionResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentSubmissionResponse> listAdminSubmissions() {
+        return submissionRepository.findAllByOrderBySubmittedAtDesc().stream()
+                .map(this::toSubmissionResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentPreviewResponse previewSubmission(UUID submissionId) {
+        DocumentSubmission submission = findSubmission(submissionId);
+        String url = storageService.presignedGetUrl(submission.getDocument().getMedia().getObjectKey());
+        Media media = submission.getDocument().getMedia();
+        return new DocumentPreviewResponse(
+                submission.getDocument().getId(),
+                submission.getId(),
+                submission.getDocument().getTitle(),
+                media.getFileName(),
+                media.getMimeType(),
+                media.getSizeBytes(),
+                submission.getStatus(),
+                url,
+                url);
+    }
+
+    private DocumentSubmission findSubmission(UUID submissionId) {
+        return submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document submission not found."));
+    }
+
+    private DocumentUploadResponse toUploadResponse(DocumentSubmission submission) {
+        Document document = submission.getDocument();
+        Media media = document.getMedia();
+        return new DocumentUploadResponse(
+                document.getId(),
+                submission.getId(),
+                media.getId(),
+                document.getTitle(),
+                document.getSlug(),
+                document.getDescription(),
+                media.getFileName(),
+                media.getMimeType(),
+                media.getSizeBytes(),
+                document.getVisibilityStatus(),
+                media.getStatus(),
+                submission.getStatus(),
+                submission.getSubmittedAt());
+    }
+
+    private DocumentSubmissionResponse toSubmissionResponse(DocumentSubmission submission) {
+        Document document = submission.getDocument();
+        Media media = document.getMedia();
+        return new DocumentSubmissionResponse(
+                document.getId(),
+                submission.getId(),
+                document.getTitle(),
+                document.getDescription(),
+                document.getSlug(),
+                media.getFileName(),
+                media.getMimeType(),
+                media.getSizeBytes(),
+                document.getDocumentCollections().stream()
+                        .map(link -> link.getCollection().getSlug())
+                        .sorted()
+                        .toList(),
+                document.getDocumentTags().stream()
+                        .map(link -> link.getTag().getSlug())
+                        .sorted()
+                        .toList(),
+                submission.getSubmittedBy() == null ? null : submission.getSubmittedBy().getFullName(),
+                document.getVisibilityStatus(),
+                media.getStatus(),
+                submission.getStatus(),
+                submission.getSubmittedAt(),
+                submission.getReviewedAt(),
+                submission.getRejectionReason());
+    }
+
+    private void saveTags(Document document, List<String> tagSlugs) {
+        if (tagSlugs == null || tagSlugs.isEmpty()) {
+            return;
+        }
+        List<DocumentTag> links = new LinkedHashSet<>(tagSlugs).stream()
+                .map(String::strip)
+                .filter(slug -> !slug.isBlank())
+                .map(slug -> tagRepository.findBySlug(slug)
+                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Tag not found: " + slug)))
+                .map(tag -> documentTag(document, tag))
+                .toList();
+        documentTagRepository.saveAll(links);
+    }
+
+    private static DocumentTag documentTag(Document document, Tag tag) {
+        DocumentTag link = new DocumentTag();
+        link.setDocument(document);
+        link.setTag(tag);
+        return link;
+    }
+
+    private static DocumentCollection documentCollection(Document document, Collection collection) {
+        DocumentCollection link = new DocumentCollection();
+        link.setId(new DocumentCollectionId(document.getId(), collection.getId()));
+        link.setDocument(document);
+        link.setCollection(collection);
+        return link;
+    }
+
+    private static List<String> normalizeTaxonomySlugs(List<String> values, String label) {
+        if (values == null) {
+            return List.of();
+        }
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        for (String value : values) {
+            if (value == null || value.isBlank()) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, label + " slug is required.");
+            }
+            normalized.add(value.strip());
+        }
+        return List.copyOf(normalized);
+    }
+
+    private void validateExtension(String extension) {
+        if (extension == null || !allowedExtensions.contains(extension)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, INVALID_EXTENSION_MESSAGE);
+        }
+    }
+
+    private static String normalizeMimeType(String mimeType) {
+        if (mimeType == null || mimeType.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "MIME type is required.");
+        }
+        return mimeType.strip().toLowerCase(Locale.ROOT);
+    }
+
+    private static void validateContentSignature(String fileName, byte[] prefix) {
+        String extension = extensionOf(fileName);
+        if ("pdf".equals(extension) && !startsWith(prefix, new byte[] {'%', 'P', 'D', 'F', '-'})) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The uploaded PDF signature is invalid.");
+        }
+        if (("docx".equals(extension) || "pptx".equals(extension))
+                && !startsWith(prefix, new byte[] {'P', 'K', 3, 4})) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The uploaded Office document signature is invalid.");
+        }
+    }
+
+    private static boolean startsWith(byte[] value, byte[] prefix) {
+        if (value == null || value.length < prefix.length) {
+            return false;
+        }
+        for (int index = 0; index < prefix.length; index++) {
+            if (value[index] != prefix[index]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Transactional

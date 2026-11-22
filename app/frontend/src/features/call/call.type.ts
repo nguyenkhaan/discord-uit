@@ -10,7 +10,7 @@ export interface LiveKitJoinResponse {
     roomName: string;
     serverUrl: string;
     token: string;
-    coordinatorUserId: string; 
+    coordinatorUserId: string;
 }
 
 export interface ActiveCallParticipant {

@@ -148,6 +148,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/calls/screen-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startScreenShare"];
+        delete: operations["stopScreenShare"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/participants/{targetUserId}/force-stop-screen-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["forceStopScreenShare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/participants/{targetUserId}/force-mute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["forceMute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}/calls/join": {
         parameters: {
             query?: never;
@@ -356,6 +404,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documents/{submissionId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/upload-init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["initUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/verify-email": {
         parameters: {
             query?: never;
@@ -532,6 +612,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/documents/submissions/{submissionId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/collections": {
         parameters: {
             query?: never;
@@ -626,6 +722,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["updateTag"];
+        trace?: never;
+    };
+    "/admin/documents/{documentId}/taxonomy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateTaxonomy"];
         trace?: never;
     };
     "/admin/collections/{id}": {
@@ -948,6 +1060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documents/my-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMySubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/collections": {
         parameters: {
             query?: never;
@@ -988,6 +1116,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["testingAuthentication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/documents/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/documents/submissions/{submissionId}/preview-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1191,6 +1351,8 @@ export interface components {
             roomName?: string;
             serverUrl?: string;
             token?: string;
+            /** Format: uuid */
+            coordinatorUserId?: string;
         };
         ChatAttachmentResponse: {
             /** Format: uuid */
@@ -1319,6 +1481,37 @@ export interface components {
             /** Format: date-time */
             submittedAt?: string;
         };
+        DocumentUploadInitRequest: {
+            title: string;
+            description?: string;
+            slug?: string;
+            fileName: string;
+            mimeType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            tagSlugs?: string[];
+        };
+        DocumentUploadInitResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            /** Format: uuid */
+            mediaId?: string;
+            uploadUrl?: string;
+            /** Format: date-time */
+            uploadUrlExpiresAt?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @enum {string} */
+            visibilityStatus?: "HIDDEN" | "PUBLIC" | "REMOVED";
+            /** @enum {string} */
+            mediaStatus?: "QUARANTINED" | "SCANNING" | "READY" | "REJECTED" | "DELETED";
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+        };
         VerifyEmailRequest: {
             token: string;
         };
@@ -1398,6 +1591,11 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        DocumentReviewRequest: {
+            /** @enum {string} */
+            decision: "APPROVED" | "REJECTED";
+            rejectionReason?: string;
+        };
         CollectionRequest: {
             name: string;
             description?: string;
@@ -1465,6 +1663,16 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        DocumentTaxonomyUpdateRequest: {
+            collectionSlugs?: string[];
+            tagSlugs?: string[];
+        };
+        DocumentTaxonomyResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            collectionSlugs?: string[];
+            tagSlugs?: string[];
         };
         MyDirectInviteResponse: {
             /** Format: uuid */
@@ -1549,6 +1757,8 @@ export interface components {
             /** Format: int32 */
             maxParticipants?: number;
             participants?: components["schemas"]["Participant"][];
+            /** Format: uuid */
+            activeScreenSharerUserId?: string;
         };
         Participant: {
             /** Format: uuid */
@@ -1656,6 +1866,33 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        DocumentSubmissionResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            title?: string;
+            description?: string;
+            slug?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+            collectionSlugs?: string[];
+            tagSlugs?: string[];
+            submittedBy?: string;
+            /** @enum {string} */
+            visibilityStatus?: "HIDDEN" | "PUBLIC" | "REMOVED";
+            /** @enum {string} */
+            mediaStatus?: "QUARANTINED" | "SCANNING" | "READY" | "REJECTED" | "DELETED";
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: date-time */
+            reviewedAt?: string;
+            rejectionReason?: string;
+        };
         TaxonomyListResponseCollectionResponse: {
             items?: components["schemas"]["CollectionResponse"][];
             /** Format: int32 */
@@ -1666,6 +1903,21 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
+        };
+        DocumentPreviewResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            title?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+            previewUrl?: string;
+            downloadUrl?: string;
         };
         JsonWebKey: {
             kty?: string;
@@ -2041,6 +2293,78 @@ export interface operations {
             };
         };
     };
+    startScreenShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    stopScreenShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    forceStopScreenShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    forceMute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     joinCall: {
         parameters: {
             query?: never;
@@ -2293,7 +2617,7 @@ export interface operations {
     search: {
         parameters: {
             query: {
-                request: components["schemas"]["ForumPostListRequest"];
+                arg1: components["schemas"]["ForumPostListRequest"];
             };
             header?: never;
             path?: never;
@@ -2356,6 +2680,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["DocumentUploadResponse"];
+                };
+            };
+        };
+    };
+    completeUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                submissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadResponse"];
+                };
+            };
+        };
+    };
+    initUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentUploadInitRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadInitResponse"];
                 };
             };
         };
@@ -2648,6 +3018,32 @@ export interface operations {
             };
         };
     };
+    review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                submissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadResponse"];
+                };
+            };
+        };
+    };
     listCollections: {
         parameters: {
             query?: {
@@ -2904,6 +3300,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TagResponse"];
+                };
+            };
+        };
+    };
+    updateTaxonomy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentTaxonomyUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentTaxonomyResponse"];
                 };
             };
         };
@@ -3180,7 +3602,7 @@ export interface operations {
     listNotifications: {
         parameters: {
             query: {
-                request: components["schemas"]["NotificationListRequest"];
+                arg1: components["schemas"]["NotificationListRequest"];
             };
             header?: never;
             path?: never;
@@ -3388,7 +3810,7 @@ export interface operations {
     listMine_1: {
         parameters: {
             query: {
-                request: components["schemas"]["ForumPostListRequest"];
+                arg1: components["schemas"]["ForumPostListRequest"];
             };
             header?: never;
             path?: never;
@@ -3403,6 +3825,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MyForumPostPageResponse"];
+                };
+            };
+        };
+    };
+    listMySubmissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentSubmissionResponse"][];
                 };
             };
         };
@@ -3469,6 +3911,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    listSubmissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentSubmissionResponse"][];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                submissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentPreviewResponse"];
                 };
             };
         };

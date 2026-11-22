@@ -7,30 +7,29 @@ import {
     Mic,
     MicOff,
     PhoneOff,
-    ScreenShare, 
-    ScreenShareOff, 
+    ScreenShare,
+    ScreenShareOff,
     Users,
     Video,
-    X, 
+    X,
 } from 'lucide-react';
-import { Track, type Participant } from 'livekit-client'; 
+import { Track, type Participant } from 'livekit-client';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { useAuth } from '@/context/useAuth';
 import { CallLobby } from '@/features/call/components/CallLobby';
-import { ParticipantControls } from '@/features/call/components/ParticipantControls'; 
+import { ParticipantControls } from '@/features/call/components/ParticipantControls';
 import {
     ParticipantTile,
     type TileVariant,
 } from '@/features/call/components/ParticipantTile';
-import { ScreenShareTile } from '@/features/call/components/ScreenShareTile'; 
+import { ScreenShareTile } from '@/features/call/components/ScreenShareTile';
 import { useActiveCall } from '@/features/call/hooks/useActiveCall';
 import { useLiveKitCall } from '@/features/call/hooks/useLiveKitCall';
 import { useServer } from '@/features/server/server.hooks';
 import { useServerMembers } from '@/features/server/server-member.hooks';
-
 
 interface StageItem {
     key: string;
@@ -53,7 +52,7 @@ export default function CallRoomPage() {
     const [joined, setJoined] = useState(false);
     const [microphonePref, setMicrophonePref] = useState(true);
     const [cameraPref, setCameraPref] = useState(true);
-    const [pinnedKey, setPinnedKey] = useState<string | null>(null); 
+    const [pinnedKey, setPinnedKey] = useState<string | null>(null);
     const call = useLiveKitCall(serverId, {
         enabled: joined,
         microphone: microphonePref,
@@ -66,8 +65,7 @@ export default function CallRoomPage() {
         call.coordinatorUserId ??
         activeCallQuery.data?.coordinatorUserId ??
         null;
-    const isCoordinator =
-        Boolean(user?.id) && coordinatorUserId === user?.id;
+    const isCoordinator = Boolean(user?.id) && coordinatorUserId === user?.id;
     const localIdentity = call.room?.localParticipant.identity;
     const coordinatorPresent =
         coordinatorUserId !== null &&
@@ -90,7 +88,6 @@ export default function CallRoomPage() {
     }, [membersQuery.data]);
     const [actionError, setActionError] = useState<string | null>(null);
 
-    
     const getName = useCallback(
         (participant: Participant) =>
             memberNames.get(participant.identity) ||
@@ -107,7 +104,9 @@ export default function CallRoomPage() {
     const stageItems = useMemo(() => {
         const items: StageItem[] = [];
         for (const participant of call.participants) {
-            if (participant.getTrackPublication(Track.Source.ScreenShare)?.track) {
+            if (
+                participant.getTrackPublication(Track.Source.ScreenShare)?.track
+            ) {
                 items.push({
                     key: `screen:${participant.identity}`,
                     kind: 'screen',
@@ -124,7 +123,8 @@ export default function CallRoomPage() {
         }
         return items;
     }, [call.participants]);
-    const screenItem = stageItems.find((item) => item.kind === 'screen') ?? null;
+    const screenItem =
+        stageItems.find((item) => item.kind === 'screen') ?? null;
     const stageItem =
         stageItems.find((item) => item.key === pinnedKey) ?? screenItem;
     const stripItems = stageItem
@@ -173,7 +173,6 @@ export default function CallRoomPage() {
         }
     }, [endCall, closeCallTab]);
 
-    
     const renderItem = (item: StageItem, variant: TileVariant) => {
         const { participant } = item;
         const isLocal = participant.identity === localIdentity;
