@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cloudian.backend.modules.document.dto.DocumentPreviewResponse;
 import com.cloudian.backend.modules.document.dto.DocumentReviewRequest;
 import com.cloudian.backend.modules.document.dto.DocumentSubmissionResponse;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyResponse;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyUpdateRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
 import com.cloudian.backend.security.CustomUserDetails;
 
@@ -47,5 +50,12 @@ public class AdminDocumentController {
             @PathVariable("submissionId") UUID submissionId,
             @Valid @RequestBody DocumentReviewRequest request) {
         return documentService.review(principal.getUserId(), submissionId, request);
+    }
+
+    @PatchMapping("/{documentId}/taxonomy")
+    public DocumentTaxonomyResponse updateTaxonomy(
+            @PathVariable("documentId") UUID documentId,
+            @Valid @RequestBody DocumentTaxonomyUpdateRequest request) {
+        return documentService.updateTaxonomy(documentId, request);
     }
 }

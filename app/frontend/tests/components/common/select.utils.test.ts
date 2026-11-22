@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 
 import {
     filterSelectOptions,
+    shouldCloseDropdownOnFocusChange,
+    getDropdownStateAfterTriggerClick,
     getMultiSelectSummary,
     toggleSelectValue,
 } from '@/components/common/select.utils';
@@ -74,5 +76,15 @@ describe('select utilities', () => {
             getMultiSelectSummary(options.slice(0, 2), 'Tất cả'),
             'AI Research +1'
         );
+    });
+
+    it('closes an open dropdown when its trigger is clicked again', () => {
+        assert.equal(getDropdownStateAfterTriggerClick(true), false);
+        assert.equal(getDropdownStateAfterTriggerClick(false), true);
+    });
+
+    it('keeps the dropdown open while focus moves within its root', () => {
+        assert.equal(shouldCloseDropdownOnFocusChange(true), false);
+        assert.equal(shouldCloseDropdownOnFocusChange(false), true);
     });
 });

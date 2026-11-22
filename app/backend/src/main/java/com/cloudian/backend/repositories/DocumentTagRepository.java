@@ -11,4 +11,6 @@ public interface DocumentTagRepository extends JpaRepository<DocumentTag, UUID> 
     boolean existsByTag_Id(UUID tagId);
 
     long countByTag_Id(UUID tagId);
+
+    void deleteByDocument_Id(UUID documentId);
 }

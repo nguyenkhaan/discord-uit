@@ -29,6 +29,7 @@ import {
     type AdminDocumentFilter,
 } from '@/features/documents/admin-document.utils';
 import { Skeleton } from '@/components/common/Skeleton';
+import { formatFileSize } from '@/features/documents/document.format';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 6;
@@ -42,11 +43,6 @@ const statusOptions: readonly AdminSelectOption<
     { value: 'APPROVED', label: 'Đã duyệt' },
     { value: 'REJECTED', label: 'Đã từ chối' },
 ];
-
-function formatFileSize(sizeBytes: number): string {
-    if (sizeBytes < 1024) return `${sizeBytes} B`;
-    return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 function toAdminDocument(item: DocumentSubmission) {
     const extension = item.fileName.split('.').pop()?.toUpperCase() ?? 'FILE';

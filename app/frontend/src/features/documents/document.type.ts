@@ -35,6 +35,18 @@ export interface DocumentPreview {
     downloadUrl: string;
 }
 
+export interface DocumentTaxonomyUpdateInput {
+    documentId: string;
+    collectionSlugs: string[];
+    tagSlugs: string[];
+}
+
+export interface DocumentTaxonomyResponse {
+    documentId: string;
+    collectionSlugs: string[];
+    tagSlugs: string[];
+}
+
 export interface UploadDocumentInput {
     title: string;
     description?: string;

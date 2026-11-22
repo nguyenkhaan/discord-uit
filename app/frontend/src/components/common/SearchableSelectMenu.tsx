@@ -81,15 +81,7 @@ export function SearchableSelectMenu({
     }
 
     return (
-        <div
-            className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-xl border border-line bg-surface shadow-card"
-            onBlur={(event) => {
-                const nextTarget = event.relatedTarget;
-                if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
-                    onClose();
-                }
-            }}
-        >
+        <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-40 overflow-hidden rounded-xl border border-line bg-surface shadow-card">
             <div className="border-b border-line-subtle p-2">
                 <Input
                     aria-label={searchPlaceholder}

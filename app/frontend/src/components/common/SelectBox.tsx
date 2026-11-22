@@ -3,6 +3,7 @@ import { useId, useRef, useState } from 'react';
 
 import { SearchableSelectMenu } from '@/components/common/SearchableSelectMenu';
 import type { SelectOption } from '@/components/common/select.types';
+import { getDropdownStateAfterTriggerClick } from '@/components/common/select.utils';
 import { useDismissibleDropdown } from '@/components/common/useDismissibleDropdown';
 import { cn } from '@/lib/utils';
 
@@ -76,7 +77,9 @@ export function SelectBox({
                 )}
                 disabled={disabled}
                 id={controlId}
-                onClick={() => setIsOpen((open) => !open)}
+                onClick={() =>
+                    setIsOpen(getDropdownStateAfterTriggerClick(isOpen))
+                }
                 onKeyDown={(event) => {
                     if (event.key === 'Escape' && isOpen) {
                         event.preventDefault();

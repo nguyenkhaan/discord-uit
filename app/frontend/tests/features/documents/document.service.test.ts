@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, describe, it } from 'node:test';
 
-import { validateDocumentFile } from '@/features/documents/document.service';
+import { privateClient } from '@/api/client';
+import {
+    updateAdminDocumentTaxonomy,
+    validateDocumentFile,
+} from '@/features/documents/document.service';
+
+const originalPrivatePatch = privateClient.patch;
+
+afterEach(() => {
+    privateClient.patch = originalPrivatePatch;
+});
 
 describe('document upload validation', () => {
     it('accepts supported files within the storage limit', () => {
@@ -26,5 +36,41 @@ describe('document upload validation', () => {
 
         assert.match(validateDocumentFile(unsupported) ?? '', /PDF/);
         assert.match(validateDocumentFile(oversized) ?? '', /5 MB/);
+    });
+});
+
+describe('document taxonomy service', () => {
+    it('patches both taxonomy lists and maps the response', async () => {
+        const calls: unknown[][] = [];
+        privateClient.patch = (async (...arguments_: unknown[]) => {
+            calls.push(arguments_);
+            return {
+                data: {
+                    documentId: 'document-id',
+                    collectionSlugs: ['ai-research', 'software-engineering'],
+                    tagSlugs: ['machine-learning', 'research'],
+                },
+            };
+        }) as typeof privateClient.patch;
+
+        const response = await updateAdminDocumentTaxonomy('document-id', {
+            collectionSlugs: ['ai-research', 'software-engineering'],
+            tagSlugs: ['machine-learning', 'research'],
+        });
+
+        assert.deepEqual(response, {
+            documentId: 'document-id',
+            collectionSlugs: ['ai-research', 'software-engineering'],
+            tagSlugs: ['machine-learning', 'research'],
+        });
+        assert.deepEqual(calls, [
+            [
+                '/admin/documents/document-id/taxonomy',
+                {
+                    collectionSlugs: ['ai-research', 'software-engineering'],
+                    tagSlugs: ['machine-learning', 'research'],
+                },
+            ],
+        ]);
     });
 });

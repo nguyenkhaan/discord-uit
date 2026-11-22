@@ -12,4 +12,6 @@ public interface DocumentCollectionRepository extends JpaRepository<DocumentColl
     boolean existsByCollection_Id(UUID collectionId);
 
     long countByCollection_Id(UUID collectionId);
+
+    void deleteByDocument_Id(UUID documentId);
 }

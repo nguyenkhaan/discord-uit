@@ -644,6 +644,22 @@ export interface paths {
         patch: operations["updateTag"];
         trace?: never;
     };
+    "/admin/documents/{documentId}/taxonomy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateTaxonomy"];
+        trace?: never;
+    };
     "/admin/collections/{id}": {
         parameters: {
             query?: never;
@@ -1522,6 +1538,16 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        DocumentTaxonomyUpdateRequest: {
+            collectionSlugs?: string[];
+            tagSlugs?: string[];
+        };
+        DocumentTaxonomyResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            collectionSlugs?: string[];
+            tagSlugs?: string[];
+        };
         MyDirectInviteResponse: {
             /** Format: uuid */
             inviteId?: string;
@@ -2291,7 +2317,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                submissionId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -2623,7 +2651,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                submissionId: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -2899,6 +2929,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TagResponse"];
+                };
+            };
+        };
+    };
+    updateTaxonomy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentTaxonomyUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentTaxonomyResponse"];
                 };
             };
         };
@@ -3490,7 +3546,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                submissionId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

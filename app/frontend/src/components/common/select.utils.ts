@@ -29,6 +29,16 @@ export function toggleSelectValue(
         : [...values, value];
 }
 
+export function getDropdownStateAfterTriggerClick(isOpen: boolean): boolean {
+    return !isOpen;
+}
+
+export function shouldCloseDropdownOnFocusChange(
+    isFocusWithinRoot: boolean
+): boolean {
+    return !isFocusWithinRoot;
+}
+
 export function getMultiSelectSummary(
     selectedOptions: SelectOption[],
     placeholder: string

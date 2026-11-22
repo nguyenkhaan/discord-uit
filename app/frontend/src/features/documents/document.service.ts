@@ -4,6 +4,8 @@ import { privateClient } from '@/api/client';
 import type {
     DocumentPreview,
     DocumentSubmission,
+    DocumentTaxonomyResponse,
+    DocumentTaxonomyUpdateInput,
     DocumentUploadResult,
     UploadDocumentInput,
     UploadProgress,
@@ -117,6 +119,17 @@ export async function getAdminDocumentPreview(
 ): Promise<DocumentPreview> {
     const response = await privateClient.get<DocumentPreview>(
         `/admin/documents/submissions/${submissionId}/preview-url`
+    );
+    return response.data;
+}
+
+export async function updateAdminDocumentTaxonomy(
+    documentId: string,
+    input: Omit<DocumentTaxonomyUpdateInput, 'documentId'>
+): Promise<DocumentTaxonomyResponse> {
+    const response = await privateClient.patch<DocumentTaxonomyResponse>(
+        `/admin/documents/${documentId}/taxonomy`,
+        input
     );
     return response.data;
 }

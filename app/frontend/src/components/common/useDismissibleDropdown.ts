@@ -1,5 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 
+import { shouldCloseDropdownOnFocusChange } from '@/components/common/select.utils';
+
 export function useDismissibleDropdown(
     rootRef: RefObject<HTMLDivElement | null>,
     isOpen: boolean,
@@ -14,8 +16,20 @@ export function useDismissibleDropdown(
             }
         }
 
+        function handleFocusIn(event: FocusEvent) {
+            const isFocusWithinRoot = Boolean(
+                rootRef.current?.contains(event.target as Node)
+            );
+            if (shouldCloseDropdownOnFocusChange(isFocusWithinRoot)) {
+                onClose();
+            }
+        }
+
         document.addEventListener('pointerdown', handlePointerDown);
-        return () =>
+        document.addEventListener('focusin', handleFocusIn);
+        return () => {
             document.removeEventListener('pointerdown', handlePointerDown);
+            document.removeEventListener('focusin', handleFocusIn);
+        };
     }, [isOpen, onClose, rootRef]);
 }

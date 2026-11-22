@@ -24,9 +24,17 @@ import com.cloudian.backend.commons.enums.DocumentSubmissionStatus;
 import com.cloudian.backend.commons.enums.DocumentVisibilityStatus;
 import com.cloudian.backend.commons.enums.MediaStatus;
 import com.cloudian.backend.exceptions.ApiException;
+import com.cloudian.backend.models.Collection;
 import com.cloudian.backend.models.Document;
+import com.cloudian.backend.models.DocumentCollection;
 import com.cloudian.backend.models.DocumentSubmission;
+import com.cloudian.backend.models.DocumentTag;
 import com.cloudian.backend.models.Media;
+import com.cloudian.backend.models.Tag;
+import com.cloudian.backend.models.ids.DocumentCollectionId;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyUpdateRequest;
+import com.cloudian.backend.repositories.CollectionRepository;
+import com.cloudian.backend.repositories.DocumentCollectionRepository;
 import com.cloudian.backend.repositories.DocumentTagRepository;
 import com.cloudian.backend.repositories.DocumentRepository;
 import com.cloudian.backend.repositories.DocumentSubmissionRepository;
@@ -47,6 +55,10 @@ class DocumentServiceTest {
     private static final UUID MEDIA_ID = UUID.fromString("00000000-0000-0000-0000-000000009001");
     private static final UUID DOCUMENT_ID = UUID.fromString("00000000-0000-0000-0000-000000009002");
     private static final UUID SUBMISSION_ID = UUID.fromString("00000000-0000-0000-0000-000000009003");
+    private static final UUID COLLECTION_ONE_ID = UUID.fromString("00000000-0000-0000-0000-000000009101");
+    private static final UUID COLLECTION_TWO_ID = UUID.fromString("00000000-0000-0000-0000-000000009102");
+    private static final UUID TAG_ONE_ID = UUID.fromString("00000000-0000-0000-0000-000000009103");
+    private static final UUID TAG_TWO_ID = UUID.fromString("00000000-0000-0000-0000-000000009104");
 
     @Mock
     private StorageService storageService;
@@ -56,6 +68,12 @@ class DocumentServiceTest {
 
     @Mock
     private DocumentRepository documentRepository;
+
+    @Mock
+    private CollectionRepository collectionRepository;
+
+    @Mock
+    private DocumentCollectionRepository documentCollectionRepository;
 
     @Mock
     private DocumentSubmissionRepository submissionRepository;
@@ -120,6 +138,7 @@ class DocumentServiceTest {
         assertThat(response.documentId()).isEqualTo(DOCUMENT_ID);
         assertThat(response.submissionId()).isEqualTo(SUBMISSION_ID);
         assertThat(response.mediaId()).isEqualTo(MEDIA_ID);
+        assertThat(response.sizeBytes()).isEqualTo(7);
         assertThat(response.slug()).matches("my-document-[a-f0-9]{10}");
         assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
         assertThat(response.mediaStatus()).isEqualTo(MediaStatus.QUARANTINED);
@@ -134,6 +153,7 @@ class DocumentServiceTest {
 
         assertThat(media.getValue().getFileName()).isEqualTo("course.PDF");
         assertThat(media.getValue().getMimeType()).isEqualTo("application/pdf");
+        assertThat(media.getValue().getSizeBytes()).isEqualTo(7);
         assertThat(media.getValue().getStatus()).isEqualTo(MediaStatus.QUARANTINED);
         assertThat(document.getValue().getTitle()).isEqualTo("My document");
         assertThat(document.getValue().getDescription()).isEqualTo("Document description");
@@ -347,6 +367,97 @@ class DocumentServiceTest {
         assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.PUBLIC);
     }
 
+    @Test
+    void replacesTaxonomyForAnApprovedDocumentAndDeduplicatesSlugs() {
+        Document document = pendingDocument();
+        document.setVisibilityStatus(DocumentVisibilityStatus.PUBLIC);
+        document.getDocumentCollections().add(documentCollection(document, collection("old-collection", COLLECTION_ONE_ID)));
+        document.getDocumentTags().add(documentTag(document, tag("old-tag", TAG_ONE_ID)));
+        Collection replacementCollection = collection("replacement-collection", COLLECTION_TWO_ID);
+        Tag replacementTag = tag("replacement-tag", TAG_TWO_ID);
+        when(documentRepository.findByIdForUpdate(DOCUMENT_ID)).thenReturn(Optional.of(document));
+        when(collectionRepository.findBySlug("replacement-collection"))
+                .thenReturn(Optional.of(replacementCollection));
+        when(tagRepository.findBySlug("replacement-tag")).thenReturn(Optional.of(replacementTag));
+        when(documentCollectionRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentTagRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service().updateTaxonomy(
+                DOCUMENT_ID,
+                new DocumentTaxonomyUpdateRequest(
+                        List.of("replacement-collection", "replacement-collection"),
+                        List.of("replacement-tag", "replacement-tag")));
+
+        assertThat(response.documentId()).isEqualTo(DOCUMENT_ID);
+        assertThat(response.collectionSlugs()).containsExactly("replacement-collection");
+        assertThat(response.tagSlugs()).containsExactly("replacement-tag");
+        assertThat(document.getDocumentCollections())
+                .extracting(link -> link.getCollection().getSlug())
+                .containsExactly("replacement-collection");
+        assertThat(document.getDocumentTags())
+                .extracting(link -> link.getTag().getSlug())
+                .containsExactly("replacement-tag");
+        verify(documentCollectionRepository).deleteByDocument_Id(DOCUMENT_ID);
+        verify(documentCollectionRepository).flush();
+        verify(documentTagRepository).deleteByDocument_Id(DOCUMENT_ID);
+        verify(documentTagRepository).flush();
+    }
+
+    @Test
+    void clearsBothTaxonomyListsWhenSelectionsAreEmpty() {
+        Document document = pendingDocument();
+        document.getDocumentCollections().add(documentCollection(document, collection("old-collection", COLLECTION_ONE_ID)));
+        document.getDocumentTags().add(documentTag(document, tag("old-tag", TAG_ONE_ID)));
+        when(documentRepository.findByIdForUpdate(DOCUMENT_ID)).thenReturn(Optional.of(document));
+
+        var response = service().updateTaxonomy(
+                DOCUMENT_ID,
+                new DocumentTaxonomyUpdateRequest(List.of(), List.of()));
+
+        assertThat(response.collectionSlugs()).isEmpty();
+        assertThat(response.tagSlugs()).isEmpty();
+        assertThat(document.getDocumentCollections()).isEmpty();
+        assertThat(document.getDocumentTags()).isEmpty();
+        verify(documentCollectionRepository).deleteByDocument_Id(DOCUMENT_ID);
+        verify(documentTagRepository).deleteByDocument_Id(DOCUMENT_ID);
+        verify(documentCollectionRepository, org.mockito.Mockito.never()).saveAll(any());
+        verify(documentTagRepository, org.mockito.Mockito.never()).saveAll(any());
+    }
+
+    @Test
+    void rejectsUnknownTaxonomySlugBeforeDeletingExistingLinks() {
+        Document document = pendingDocument();
+        document.getDocumentCollections().add(documentCollection(document, collection("old-collection", COLLECTION_ONE_ID)));
+        when(documentRepository.findByIdForUpdate(DOCUMENT_ID)).thenReturn(Optional.of(document));
+        when(collectionRepository.findBySlug("missing-collection")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service().updateTaxonomy(
+                DOCUMENT_ID,
+                new DocumentTaxonomyUpdateRequest(List.of("missing-collection"), List.of())))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("Collection not found");
+
+        assertThat(document.getDocumentCollections())
+                .extracting(link -> link.getCollection().getSlug())
+                .containsExactly("old-collection");
+        verify(documentCollectionRepository, org.mockito.Mockito.never()).deleteByDocument_Id(any());
+        verify(documentTagRepository, org.mockito.Mockito.never()).deleteByDocument_Id(any());
+    }
+
+    @Test
+    void rejectsBlankTaxonomySlugBeforeDeletingExistingLinks() {
+        Document document = pendingDocument();
+        when(documentRepository.findByIdForUpdate(DOCUMENT_ID)).thenReturn(Optional.of(document));
+
+        assertThatThrownBy(() -> service().updateTaxonomy(
+                DOCUMENT_ID,
+                new DocumentTaxonomyUpdateRequest(List.of("  "), List.of())))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("Collection slug");
+
+        verify(documentCollectionRepository, org.mockito.Mockito.never()).deleteByDocument_Id(any());
+    }
+
     private Document pendingDocument() {
         Media media = new Media();
         media.setId(MEDIA_ID);
@@ -379,11 +490,45 @@ class DocumentServiceTest {
                 storageService,
                 mediaRepository,
                 documentRepository,
+                collectionRepository,
+                documentCollectionRepository,
                 submissionRepository,
                 userAccountRepository,
                 tagRepository,
                 documentTagRepository,
                 "pdf,docx,pptx,txt",
                 5_242_880L);
+    }
+
+    private static Collection collection(String slug, UUID id) {
+        Collection collection = new Collection();
+        collection.setId(id);
+        collection.setName(slug);
+        collection.setSlug(slug);
+        return collection;
+    }
+
+    private static Tag tag(String slug, UUID id) {
+        Tag tag = new Tag();
+        tag.setId(id);
+        tag.setName(slug);
+        tag.setSlug(slug);
+        tag.setDescription(slug);
+        return tag;
+    }
+
+    private static DocumentCollection documentCollection(Document document, Collection collection) {
+        DocumentCollection link = new DocumentCollection();
+        link.setId(new DocumentCollectionId(document.getId(), collection.getId()));
+        link.setDocument(document);
+        link.setCollection(collection);
+        return link;
+    }
+
+    private static DocumentTag documentTag(Document document, Tag tag) {
+        DocumentTag link = new DocumentTag();
+        link.setDocument(document);
+        link.setTag(tag);
+        return link;
     }
 }

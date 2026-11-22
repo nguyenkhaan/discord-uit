@@ -6,7 +6,6 @@ import {
     Download,
     FileCode2,
     FileText,
-    Hash,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -16,14 +15,22 @@ import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Skeleton } from '@/components/common/Skeleton';
 import { AdminBadge } from '@/features/admin/components/AdminBadge';
+import { AdminDocumentTaxonomyEditor } from '@/features/admin/components/AdminDocumentTaxonomyEditor';
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader';
 import { formatAdminDate, formatAdminTime } from '@/features/admin/admin.utils';
+import { hasTaxonomySelectionChanged } from '@/features/admin/admin-document-taxonomy.utils';
 import type { AdminTone } from '@/features/admin/admin.type';
+import { formatFileSize } from '@/features/documents/document.format';
 import {
     useAdminDocumentPreviewQuery,
+    useUpdateAdminDocumentTaxonomyMutation,
     useAdminSubmissionsQuery,
     useReviewAdminDocumentMutation,
 } from '@/features/documents/document.hooks';
+import {
+    useAdminCollectionsQuery,
+    useAdminTagsQuery,
+} from '@/features/taxonomy/taxonomy.hooks';
 import type {
     DocumentPreview,
     DocumentSubmissionStatus,
@@ -41,11 +48,6 @@ function statusTone(status: DocumentSubmissionStatus): AdminTone {
     if (status === 'APPROVED') return 'success';
     if (status === 'REJECTED') return 'danger';
     return 'warning';
-}
-
-function formatBytes(value: number): string {
-    if (value < 1024) return `${value} B`;
-    return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function MetadataRow({ label, value }: { label: string; value: string }) {
@@ -207,6 +209,12 @@ function DetailSkeleton() {
     );
 }
 
+interface TaxonomyDraft {
+    submissionId: string;
+    collectionSlugs: string[];
+    tagSlugs: string[];
+}
+
 function NotFound() {
     return (
         <section className="rounded-2xl border border-dashed border-line-brand bg-surface p-12 text-center">
@@ -231,15 +239,22 @@ function NotFound() {
 export default function AdminDocumentReviewPage() {
     const { documentId } = useParams<{ documentId: string }>();
     const submissionsQuery = useAdminSubmissionsQuery();
+    const collectionsQuery = useAdminCollectionsQuery();
+    const tagsQuery = useAdminTagsQuery();
     const submission = submissionsQuery.data?.find(
         (item) =>
             item.submissionId === documentId || item.documentId === documentId
     );
     const previewQuery = useAdminDocumentPreviewQuery(submission?.submissionId);
     const reviewMutation = useReviewAdminDocumentMutation();
+    const taxonomyMutation = useUpdateAdminDocumentTaxonomyMutation();
     const [decision, setDecision] = useState<'APPROVED' | 'REJECTED' | ''>('');
     const [rejectionReason, setRejectionReason] = useState('');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isRecoveringTaxonomy, setIsRecoveringTaxonomy] = useState(false);
+    const [taxonomyDraft, setTaxonomyDraft] = useState<TaxonomyDraft | null>(
+        null
+    );
 
     if (submissionsQuery.isLoading) {
         return (
@@ -279,11 +294,65 @@ export default function AdminDocumentReviewPage() {
     }
     if (!submission) return <NotFound />;
 
-    const isPending = submission.submissionStatus === 'PENDING_REVIEW';
+    const currentSubmission = submission;
+    const isPending = currentSubmission.submissionStatus === 'PENDING_REVIEW';
     const canConfirm =
         decision !== '' &&
         (decision !== 'REJECTED' || rejectionReason.trim() !== '');
-    const submissionId = submission.submissionId;
+    const submissionId = currentSubmission.submissionId;
+    const currentDraft =
+        taxonomyDraft?.submissionId === submissionId
+            ? taxonomyDraft
+            : {
+                  submissionId,
+                  collectionSlugs: currentSubmission.collectionSlugs,
+                  tagSlugs: currentSubmission.tagSlugs,
+              };
+    const selectedCollectionSlugs = currentDraft.collectionSlugs;
+    const selectedTagSlugs = currentDraft.tagSlugs;
+    const hasUnsavedTaxonomyChanges = hasTaxonomySelectionChanged(
+        {
+            collectionSlugs: selectedCollectionSlugs,
+            tagSlugs: selectedTagSlugs,
+        },
+        {
+            collectionSlugs: currentSubmission.collectionSlugs,
+            tagSlugs: currentSubmission.tagSlugs,
+        }
+    );
+    const currentDocumentId = currentSubmission.documentId;
+
+    function updateTaxonomyDraft(
+        changes: Partial<Pick<TaxonomyDraft, 'collectionSlugs' | 'tagSlugs'>>
+    ) {
+        setTaxonomyDraft((current) => {
+            const nextDraft = {
+                submissionId,
+                collectionSlugs:
+                    current?.submissionId === submissionId
+                        ? current.collectionSlugs
+                        : currentSubmission.collectionSlugs,
+                tagSlugs:
+                    current?.submissionId === submissionId
+                        ? current.tagSlugs
+                        : currentSubmission.tagSlugs,
+                ...changes,
+            };
+
+            if (
+                !taxonomyMutation.isPending &&
+                !isRecoveringTaxonomy &&
+                !hasTaxonomySelectionChanged(nextDraft, {
+                    collectionSlugs: currentSubmission.collectionSlugs,
+                    tagSlugs: currentSubmission.tagSlugs,
+                })
+            ) {
+                return null;
+            }
+
+            return nextDraft;
+        });
+    }
 
     async function confirmReview() {
         if (!decision || !canConfirm) return;
@@ -302,6 +371,63 @@ export default function AdminDocumentReviewPage() {
             setDecision('');
         } catch {
             showToast('Không thể lưu quyết định. Vui lòng thử lại.');
+        }
+    }
+
+    async function saveTaxonomy() {
+        if (
+            !hasUnsavedTaxonomyChanges ||
+            taxonomyMutation.isPending ||
+            isRecoveringTaxonomy
+        ) {
+            return;
+        }
+        const submittedTaxonomy = {
+            collectionSlugs: [...selectedCollectionSlugs],
+            tagSlugs: [...selectedTagSlugs],
+        };
+        try {
+            await taxonomyMutation.mutateAsync({
+                documentId: currentDocumentId,
+                ...submittedTaxonomy,
+            });
+            setTaxonomyDraft((current) => {
+                if (current?.submissionId !== submissionId) return current;
+
+                const hasNewerChanges = hasTaxonomySelectionChanged(
+                    current,
+                    submittedTaxonomy
+                );
+                return hasNewerChanges ? current : null;
+            });
+            showToast('Đã cập nhật collection và tag cho tài liệu.');
+        } catch {
+            setIsRecoveringTaxonomy(true);
+            try {
+                const refreshedSubmissions = await submissionsQuery.refetch();
+                const refreshedSubmission =
+                    refreshedSubmissions.isSuccess &&
+                    refreshedSubmissions.data?.find(
+                        (item) => item.submissionId === submissionId
+                    );
+                if (refreshedSubmission) {
+                    setTaxonomyDraft((current) => {
+                        if (current?.submissionId !== submissionId)
+                            return current;
+
+                        const matchesPersistedTaxonomy =
+                            !hasTaxonomySelectionChanged(current, {
+                                collectionSlugs:
+                                    refreshedSubmission.collectionSlugs,
+                                tagSlugs: refreshedSubmission.tagSlugs,
+                            });
+                        return matchesPersistedTaxonomy ? null : current;
+                    });
+                }
+            } finally {
+                setIsRecoveringTaxonomy(false);
+            }
+            showToast('Không thể lưu taxonomy. Vui lòng thử lại.');
         }
     }
 
@@ -406,7 +532,7 @@ export default function AdminDocumentReviewPage() {
                             />
                             <MetadataRow
                                 label="Kích thước"
-                                value={formatBytes(submission.sizeBytes)}
+                                value={formatFileSize(submission.sizeBytes)}
                             />
                             <MetadataRow
                                 label="Người gửi"
@@ -420,37 +546,35 @@ export default function AdminDocumentReviewPage() {
                             />
                         </dl>
                     </section>
-                    <section className="rounded-2xl bg-surface p-5 shadow-soft">
-                        <h2 className="font-bold text-heading">Taxonomy</h2>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {submission.collectionSlugs.map((slug) => (
-                                <span
-                                    className="rounded-full bg-brand-subtle px-3 py-1.5 text-xs font-semibold text-brand"
-                                    key={slug}
-                                >
-                                    {slug}
-                                </span>
-                            ))}
-                            {submission.tagSlugs.map((slug) => (
-                                <span
-                                    className="inline-flex items-center gap-1 rounded-full bg-violet-subtle px-3 py-1.5 text-xs font-semibold text-feedback-violet"
-                                    key={slug}
-                                >
-                                    <Hash
-                                        aria-hidden="true"
-                                        className="size-3.5"
-                                    />
-                                    {slug}
-                                </span>
-                            ))}
-                            {submission.collectionSlugs.length === 0 &&
-                                submission.tagSlugs.length === 0 && (
-                                    <span className="text-sm text-muted">
-                                        Chưa phân loại.
-                                    </span>
-                                )}
-                        </div>
-                    </section>
+                    <AdminDocumentTaxonomyEditor
+                        collections={collectionsQuery.data?.items ?? []}
+                        hasUnsavedChanges={hasUnsavedTaxonomyChanges}
+                        isError={collectionsQuery.isError || tagsQuery.isError}
+                        isLoading={
+                            collectionsQuery.isLoading || tagsQuery.isLoading
+                        }
+                        isSaving={
+                            taxonomyMutation.isPending || isRecoveringTaxonomy
+                        }
+                        onCollectionChange={(values) =>
+                            updateTaxonomyDraft({ collectionSlugs: values })
+                        }
+                        onRetry={() => {
+                            void collectionsQuery.refetch();
+                            void tagsQuery.refetch();
+                        }}
+                        onSave={() => void saveTaxonomy()}
+                        onTagChange={(values) =>
+                            updateTaxonomyDraft({ tagSlugs: values })
+                        }
+                        assignedCollectionSlugs={
+                            currentSubmission.collectionSlugs
+                        }
+                        assignedTagSlugs={currentSubmission.tagSlugs}
+                        selectedCollectionSlugs={selectedCollectionSlugs}
+                        selectedTagSlugs={selectedTagSlugs}
+                        tags={tagsQuery.data?.items ?? []}
+                    />
                     <section className="rounded-2xl bg-surface p-5 shadow-soft">
                         <div className="flex items-start gap-3">
                             <Clock3

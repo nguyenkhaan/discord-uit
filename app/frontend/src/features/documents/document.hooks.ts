@@ -5,12 +5,16 @@ import {
     listAdminSubmissions,
     listMySubmissions,
     reviewAdminDocument,
+    updateAdminDocumentTaxonomy,
     uploadDocument,
 } from '@/features/documents/document.service';
 import type {
+    DocumentSubmission,
+    DocumentTaxonomyUpdateInput,
     UploadDocumentInput,
     UploadProgress,
 } from '@/features/documents/document.type';
+import { taxonomyKeys } from '@/features/taxonomy/taxonomy.keys';
 
 export const documentKeys = {
     all: ['documents'] as const,
@@ -67,6 +71,40 @@ export function useReviewAdminDocumentMutation() {
             void queryClient.invalidateQueries({
                 queryKey: documentKeys.adminPreview(variables.submissionId),
             });
+        },
+    });
+}
+
+export function useUpdateAdminDocumentTaxonomyMutation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            documentId,
+            collectionSlugs,
+            tagSlugs,
+        }: DocumentTaxonomyUpdateInput) =>
+            updateAdminDocumentTaxonomy(documentId, {
+                collectionSlugs,
+                tagSlugs,
+            }),
+        onSuccess: (updated) => {
+            queryClient.setQueryData<DocumentSubmission[]>(
+                documentKeys.adminSubmissions(),
+                (current) =>
+                    current?.map((item) =>
+                        item.documentId === updated.documentId
+                            ? {
+                                  ...item,
+                                  collectionSlugs: updated.collectionSlugs,
+                                  tagSlugs: updated.tagSlugs,
+                              }
+                            : item
+                    )
+            );
+            void queryClient.invalidateQueries({
+                queryKey: documentKeys.adminSubmissions(),
+            });
+            void queryClient.invalidateQueries({ queryKey: taxonomyKeys.all });
         },
     });
 }

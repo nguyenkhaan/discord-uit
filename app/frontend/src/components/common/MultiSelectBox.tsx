@@ -4,6 +4,7 @@ import { useId, useRef, useState } from 'react';
 import { SearchableSelectMenu } from '@/components/common/SearchableSelectMenu';
 import type { SelectOption } from '@/components/common/select.types';
 import {
+    getDropdownStateAfterTriggerClick,
     getMultiSelectSummary,
     toggleSelectValue,
 } from '@/components/common/select.utils';
@@ -79,7 +80,9 @@ export function MultiSelectBox({
                 )}
                 disabled={disabled}
                 id={controlId}
-                onClick={() => setIsOpen((open) => !open)}
+                onClick={() =>
+                    setIsOpen(getDropdownStateAfterTriggerClick(isOpen))
+                }
                 onKeyDown={(event) => {
                     if (event.key === 'Escape' && isOpen) {
                         event.preventDefault();

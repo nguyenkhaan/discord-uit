@@ -28,14 +28,19 @@ import com.cloudian.backend.commons.enums.MediaStatus;
 import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.exceptions.StorageException;
 import com.cloudian.backend.models.Document;
+import com.cloudian.backend.models.Collection;
+import com.cloudian.backend.models.DocumentCollection;
 import com.cloudian.backend.models.DocumentSubmission;
 import com.cloudian.backend.models.DocumentTag;
 import com.cloudian.backend.models.Media;
 import com.cloudian.backend.models.Tag;
+import com.cloudian.backend.models.ids.DocumentCollectionId;
 import com.cloudian.backend.modules.document.dto.DocumentPreviewResponse;
 import com.cloudian.backend.modules.document.dto.DocumentReviewDecision;
 import com.cloudian.backend.modules.document.dto.DocumentReviewRequest;
 import com.cloudian.backend.modules.document.dto.DocumentSubmissionResponse;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyResponse;
+import com.cloudian.backend.modules.document.dto.DocumentTaxonomyUpdateRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadInitRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadInitResponse;
 import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
@@ -43,6 +48,8 @@ import com.cloudian.backend.modules.document.dto.UploadDocumentRequest;
 import com.cloudian.backend.repositories.DocumentTagRepository;
 import com.cloudian.backend.repositories.DocumentRepository;
 import com.cloudian.backend.repositories.DocumentSubmissionRepository;
+import com.cloudian.backend.repositories.CollectionRepository;
+import com.cloudian.backend.repositories.DocumentCollectionRepository;
 import com.cloudian.backend.repositories.MediaRepository;
 import com.cloudian.backend.repositories.TagRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
@@ -65,6 +72,8 @@ public class DocumentService {
     private final StorageService storageService;
     private final MediaRepository mediaRepository;
     private final DocumentRepository documentRepository;
+    private final CollectionRepository collectionRepository;
+    private final DocumentCollectionRepository documentCollectionRepository;
     private final DocumentSubmissionRepository submissionRepository;
     private final UserAccountRepository userAccountRepository;
     private final TagRepository tagRepository;
@@ -76,6 +85,8 @@ public class DocumentService {
             StorageService storageService,
             MediaRepository mediaRepository,
             DocumentRepository documentRepository,
+            CollectionRepository collectionRepository,
+            DocumentCollectionRepository documentCollectionRepository,
             DocumentSubmissionRepository submissionRepository,
             UserAccountRepository userAccountRepository,
             TagRepository tagRepository,
@@ -85,6 +96,8 @@ public class DocumentService {
         this.storageService = storageService;
         this.mediaRepository = mediaRepository;
         this.documentRepository = documentRepository;
+        this.collectionRepository = collectionRepository;
+        this.documentCollectionRepository = documentCollectionRepository;
         this.submissionRepository = submissionRepository;
         this.userAccountRepository = userAccountRepository;
         this.tagRepository = tagRepository;
@@ -201,6 +214,55 @@ public class DocumentService {
         mediaRepository.saveAndFlush(media);
         submissionRepository.saveAndFlush(submission);
         return toUploadResponse(submission);
+    }
+
+    @Transactional
+    public DocumentTaxonomyResponse updateTaxonomy(
+            UUID documentId,
+            DocumentTaxonomyUpdateRequest request) {
+        if (request == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Document taxonomy is required.");
+        }
+
+        Document document = documentRepository.findByIdForUpdate(documentId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Document not found."));
+        List<String> collectionSlugs = normalizeTaxonomySlugs(request.collectionSlugs(), "Collection");
+        List<String> tagSlugs = normalizeTaxonomySlugs(request.tagSlugs(), "Tag");
+        List<Collection> collections = collectionSlugs.stream()
+                .map(slug -> collectionRepository.findBySlug(slug)
+                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Collection not found: " + slug)))
+                .toList();
+        List<Tag> tags = tagSlugs.stream()
+                .map(slug -> tagRepository.findBySlug(slug)
+                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Tag not found: " + slug)))
+                .toList();
+
+        documentCollectionRepository.deleteByDocument_Id(documentId);
+        documentCollectionRepository.flush();
+        documentTagRepository.deleteByDocument_Id(documentId);
+        documentTagRepository.flush();
+        document.getDocumentCollections().clear();
+        document.getDocumentTags().clear();
+
+        List<DocumentCollection> collectionLinks = collections.stream()
+                .map(collection -> documentCollection(document, collection))
+                .toList();
+        List<DocumentTag> tagLinks = tags.stream()
+                .map(tag -> documentTag(document, tag))
+                .toList();
+        if (!collectionLinks.isEmpty()) {
+            documentCollectionRepository.saveAll(collectionLinks);
+            document.getDocumentCollections().addAll(collectionLinks);
+        }
+        if (!tagLinks.isEmpty()) {
+            documentTagRepository.saveAll(tagLinks);
+            document.getDocumentTags().addAll(tagLinks);
+        }
+
+        return new DocumentTaxonomyResponse(
+                documentId,
+                collections.stream().map(Collection::getSlug).sorted().toList(),
+                tags.stream().map(Tag::getSlug).sorted().toList());
     }
 
     @Transactional
@@ -341,6 +403,28 @@ public class DocumentService {
         link.setDocument(document);
         link.setTag(tag);
         return link;
+    }
+
+    private static DocumentCollection documentCollection(Document document, Collection collection) {
+        DocumentCollection link = new DocumentCollection();
+        link.setId(new DocumentCollectionId(document.getId(), collection.getId()));
+        link.setDocument(document);
+        link.setCollection(collection);
+        return link;
+    }
+
+    private static List<String> normalizeTaxonomySlugs(List<String> values, String label) {
+        if (values == null) {
+            return List.of();
+        }
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        for (String value : values) {
+            if (value == null || value.isBlank()) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, label + " slug is required.");
+            }
+            normalized.add(value.strip());
+        }
+        return List.copyOf(normalized);
     }
 
     private void validateExtension(String extension) {
