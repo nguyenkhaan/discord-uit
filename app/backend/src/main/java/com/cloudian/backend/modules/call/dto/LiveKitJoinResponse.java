@@ -7,5 +7,6 @@ public record LiveKitJoinResponse(
         UUID callSessionId,
         String roomName,
         String serverUrl,
-        String token) {
+        String token,
+        UUID coordinatorUserId) {
 }

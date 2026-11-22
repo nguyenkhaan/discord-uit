@@ -156,27 +156,25 @@ public class CallSessionService {
                                                 HttpStatus.NOT_FOUND,
                                                 "No active call found in this server."));
 
-                // 5. Prevent the same user from joining the same call twice.
+                //    rejoin is allowed. LiveKit disconnects the old
+                //    connection with the same identity, and the
+                //    participant_joined webhook closes the old participation.
                 boolean alreadyJoined = callParticipationRepository
-                                .findByCallSession_IdAndUser_IdAndLeftAtIsNull(
-                                                callSession.getId(),
-                                                userId)
-                                .isPresent();
+                        .findByCallSession_IdAndUser_IdAndLeftAtIsNull(
+                                callSession.getId(),
+                                userId)
+                        .isPresent();
 
-                if (alreadyJoined) {
-                        throw new ApiException(
-                                        HttpStatus.CONFLICT,
-                                        "You are already in this call.");
-                }
-
-                // 6. Check the participant limit.
-                long participantCount = callParticipationRepository
+                // 6. Check the participant limit (a rejoining user already holds a slot).
+                if (!alreadyJoined) {
+                        long participantCount = callParticipationRepository
                                 .countByCallSession_IdAndLeftAtIsNull(callSession.getId());
 
-                if (participantCount >= MAX_PARTICIPANTS) {
-                        throw new ApiException(
+                        if (participantCount >= MAX_PARTICIPANTS) {
+                                throw new ApiException(
                                         HttpStatus.CONFLICT,
                                         "This call has reached its participant limit.");
+                        }
                 }
 
                 return callSession;
@@ -281,205 +279,277 @@ public class CallSessionService {
                 callSessionRepository.save(callSession);
         }
 
-        /**
-         * Starts screen sharing for an active call participant.
-         */
-        @Transactional
-        public void startScreenShare(UUID serverId, UUID userId) {
-
-                // 1. Lock the server to serialize concurrent operations.
-                serverRepository
-                                .findByIdAndDeletedAtIsNullForUpdate(serverId)
-                                .orElseThrow(CallSessionService::serverNotFound);
-
-                // 2. Find the active call.
-                CallSession callSession = callSessionRepository
-                                .findByServer_IdAndStatus(serverId, CallStatus.ACTIVE)
-                                .orElseThrow(() -> new ApiException(
-                                                HttpStatus.NOT_FOUND,
-                                                "No active call found in this server."));
-
-                // 3. Verify that the user is participating in this call.
-                boolean isParticipant = callParticipationRepository
-                                .findByCallSession_IdAndUser_IdAndLeftAtIsNull(
-                                                callSession.getId(),
-                                                userId)
-                                .isPresent();
-
-                if (!isParticipant) {
-                        throw new ApiException(
-                                        HttpStatus.FORBIDDEN,
-                                        "You are not an active participant in this call.");
-                }
-
-                // 4. Only one participant can share the screen at a time.
-                if (callSession.getActiveScreenSharer() != null) {
-                        throw new ApiException(
-                                        HttpStatus.CONFLICT,
-                                        "Someone is already sharing their screen.");
-                }
-
-                // 5. Update the active screen sharer.
-                callSession.setActiveScreenSharer(
-                                userAccountRepository.getReferenceById(userId));
-
-                callSessionRepository.save(callSession);
-
-                // 6. Record the screen sharing event.
-                callEventService.recordEvent(
-                                serverId,
-                                userId,
-                                null,
-                                CallEventType.SCREEN_SHARE_STARTED);
-        }
 
         /**
-         * Stops screen sharing for the current screen sharer.
+         * Reserves the single screen-share slot for an active participant.
+         * Returns the call so the caller can grant the LiveKit permission.
          */
         @Transactional
-        public void stopScreenShare(UUID serverId, UUID userId) {
+        public CallSession startScreenShare(UUID serverId, UUID userId) {
 
-                // 1. Lock the server.
-                serverRepository
-                                .findByIdAndDeletedAtIsNullForUpdate(serverId)
-                                .orElseThrow(CallSessionService::serverNotFound);
+                // 1. Serialize concurrent share attempts on the server row.
+                lockServer(serverId);
 
                 // 2. Find the active call.
-                CallSession callSession = callSessionRepository
-                                .findByServer_IdAndStatus(serverId, CallStatus.ACTIVE)
-                                .orElseThrow(() -> new ApiException(
-                                                HttpStatus.NOT_FOUND,
-                                                "No active call found in this server."));
+                CallSession callSession = findActiveCall(serverId);
 
-                // 3. Verify that a participant is currently sharing.
+                // 3. Only active participants can share.
+                requireActiveParticipant(
+                        callSession,
+                        userId,
+                        "You are not an active participant in this call.");
+
+                // 4. Only one participant can share at a time.
                 UserAccount activeSharer = callSession.getActiveScreenSharer();
 
-                if (activeSharer == null) {
+                if (activeSharer != null) {
+                        if (activeSharer.getId().equals(userId)) {
+                                // Retry from the same user: keep the slot, no new event.
+                                return callSession;
+                        }
                         throw new ApiException(
-                                        HttpStatus.CONFLICT,
-                                        "No one is currently sharing their screen.");
+                                HttpStatus.CONFLICT,
+                                "Someone is already sharing their screen.");
                 }
 
-                // 4. Only the current screen sharer can stop their own sharing.
-                if (!activeSharer.getId().equals(userId)) {
-                        throw new ApiException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Only the current screen sharer can stop sharing.");
-                }
-
-                // 5. Clear the active screen sharer.
-                callSession.setActiveScreenSharer(null);
-
+                // 5. Take the slot and record the event.
+                callSession.setActiveScreenSharer(
+                        userAccountRepository.getReferenceById(userId));
                 callSessionRepository.save(callSession);
 
-                // 6. Record the stop event.
-                callEventService.recordEvent(
-                                serverId,
-                                userId,
-                                null,
-                                CallEventType.SCREEN_SHARE_STOPPED);
+                callEventService.record(
+                        callSession,
+                        userId,
+                        null,
+                        CallEventType.SCREEN_SHARE_STARTED);
+
+                return callSession;
         }
 
         /**
-         * Records an owner's request to force mute a participant.
+         * Releases the caller's slot. Idempotent: the track_unpublished
+         * webhook may already have released it.
+         * Returns the room name so the caller can revoke the LiveKit permission.
          */
         @Transactional
-        public void forceMute(
-                        UUID serverId,
-                        UUID actorUserId,
-                        UUID targetUserId) {
+        public String stopScreenShare(UUID serverId, UUID userId) {
 
-                // 1. Lock the server.
-                serverRepository
-                                .findByIdAndDeletedAtIsNullForUpdate(serverId)
-                                .orElseThrow(CallSessionService::serverNotFound);
+                lockServer(serverId);
+                CallSession callSession = findActiveCall(serverId);
 
-                // 2. Verify that the actor is an active OWNER.
-                requireOwner(serverId, actorUserId);
+                clearSharerIfMatches(callSession, userId);
 
-                // 3. Record the force mute event.
-                // CallEventService also verifies that both users
-                // are active participants in the call.
-                callEventService.recordEvent(
-                                serverId,
-                                actorUserId,
-                                targetUserId,
-                                CallEventType.FORCE_MUTE);
+                return callSession.getLivekitRoomName();
         }
 
         /**
-         * Allows an owner to force the current screen sharer to stop sharing.
+         * Authorizes a force mute before LiveKit is called.
          */
         @Transactional
-        public void forceStopScreenShare(
-                        UUID serverId,
-                        UUID actorUserId,
-                        UUID targetUserId) {
+        public CallSession authorizeForceMute(
+                UUID serverId,
+                UUID actorUserId,
+                UUID targetUserId) {
 
-                // 1. Lock the server.
-                serverRepository
-                                .findByIdAndDeletedAtIsNullForUpdate(serverId)
-                                .orElseThrow(CallSessionService::serverNotFound);
+                lockServer(serverId);
+                CallSession callSession = findActiveCall(serverId);
+                requireCoordinatorControl(callSession, actorUserId, targetUserId);
 
-                // 2. Find the active call.
+                return callSession;
+        }
+
+        /**
+         * Records a force mute after LiveKit succeeded.
+         */
+        @Transactional
+        public void completeForceMute(
+                CallSession callSession,
+                UUID actorUserId,
+                UUID targetUserId) {
+
+                callEventService.record(
+                        callSession,
+                        actorUserId,
+                        targetUserId,
+                        CallEventType.FORCE_MUTE);
+        }
+
+        /**
+         * Authorizes a forced screen-share stop before LiveKit is called.
+         */
+        @Transactional
+        public CallSession authorizeForceStopScreenShare(
+                UUID serverId,
+                UUID actorUserId,
+                UUID targetUserId) {
+
+                lockServer(serverId);
+                CallSession callSession = findActiveCall(serverId);
+                requireCoordinatorControl(callSession, actorUserId, targetUserId);
+
+                UserAccount activeSharer = callSession.getActiveScreenSharer();
+
+                if (activeSharer == null || !activeSharer.getId().equals(targetUserId)) {
+                        throw new ApiException(
+                                HttpStatus.CONFLICT,
+                                "The target user is not currently sharing their screen.");
+                }
+
+                return callSession;
+        }
+
+        /**
+         * Clears the sharer and records the forced stop after LiveKit succeeded.
+         */
+        @Transactional
+        public void completeForceStopScreenShare(
+                CallSession callSession,
+                UUID actorUserId,
+                UUID targetUserId) {
+
+                callSession.setActiveScreenSharer(null);
+                callSessionRepository.save(callSession);
+
+                callEventService.record(
+                        callSession,
+                        actorUserId,
+                        targetUserId,
+                        CallEventType.FORCE_SCREEN_SHARE_STOP);
+        }
+
+        /**
+         * Releases the slot when LiveKit reports that the sharer's screen
+         * track was unpublished (browser "Stop sharing", crash, revoke).
+         * Returns true when the slot was released.
+         */
+        @Transactional
+        public boolean handleScreenShareUnpublishedWebhook(
+                String roomName,
+                UUID userId) {
+
+                CallSession initialSession = callSessionRepository
+                        .findByLivekitRoomNameAndStatus(roomName, CallStatus.ACTIVE)
+                        .orElse(null);
+
+                if (initialSession == null) {
+                        return false;
+                }
+
+                UUID serverId = initialSession.getServer().getId();
+
+                if (serverRepository
+                        .findByIdAndDeletedAtIsNullForUpdate(serverId)
+                        .isEmpty()) {
+                        return false;
+                }
+
                 CallSession callSession = callSessionRepository
-                                .findByServer_IdAndStatus(serverId, CallStatus.ACTIVE)
-                                .orElseThrow(() -> new ApiException(
-                                                HttpStatus.NOT_FOUND,
-                                                "No active call found in this server."));
+                        .findByLivekitRoomNameAndStatus(roomName, CallStatus.ACTIVE)
+                        .orElse(null);
 
-                // 3. Verify that the actor is an active OWNER.
-                requireOwner(serverId, actorUserId);
+                if (callSession == null) {
+                        return false;
+                }
 
-                // 4. Validate the target user.
+                return clearSharerIfMatches(callSession, userId);
+        }
+
+        /**
+         * Coordinator controls require: the actor IS the coordinator,
+         * the coordinator is connected right now, and the target is another
+         * active participant. Server role (OWNER) is intentionally ignored.
+         */
+        private void requireCoordinatorControl(
+                CallSession callSession,
+                UUID actorUserId,
+                UUID targetUserId) {
+
                 if (targetUserId == null) {
                         throw new ApiException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Target user is required.");
+                                HttpStatus.BAD_REQUEST,
+                                "Target user is required.");
                 }
 
-                // 5. Check whether someone is currently sharing.
+                if (!callSession.getCoordinator().getId().equals(actorUserId)) {
+                        throw new ApiException(
+                                HttpStatus.FORBIDDEN,
+                                "Only the call coordinator can control participants.");
+                }
+
+                requireActiveParticipant(
+                        callSession,
+                        actorUserId,
+                        "The call coordinator must be in the call to control participants.");
+
+                if (actorUserId.equals(targetUserId)) {
+                        throw new ApiException(
+                                HttpStatus.BAD_REQUEST,
+                                "Coordinator controls cannot target yourself.");
+                }
+
+                if (!isActiveParticipant(callSession, targetUserId)) {
+                        throw new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "Target user is not an active participant in this call.");
+                }
+        }
+
+        /**
+         * Clears the slot if this user holds it and records SCREEN_SHARE_STOPPED.
+         * Whoever clears first (API or webhook) records the event, exactly once.
+         */
+        private boolean clearSharerIfMatches(CallSession callSession, UUID userId) {
+
                 UserAccount activeSharer = callSession.getActiveScreenSharer();
 
-                if (activeSharer == null) {
-                        throw new ApiException(
-                                        HttpStatus.CONFLICT,
-                                        "No one is currently sharing their screen.");
+                if (activeSharer == null || !activeSharer.getId().equals(userId)) {
+                        return false;
                 }
 
-                // 6. The target must be the current screen sharer.
-                if (!activeSharer.getId().equals(targetUserId)) {
-                        throw new ApiException(
-                                        HttpStatus.CONFLICT,
-                                        "The target user is not currently sharing their screen.");
-                }
-
-                // 7. Clear the current screen sharer.
                 callSession.setActiveScreenSharer(null);
                 callSessionRepository.save(callSession);
 
-                // 8. Record the force stop event.
-                callEventService.recordEvent(
-                                serverId,
-                                actorUserId,
-                                targetUserId,
-                                CallEventType.FORCE_SCREEN_SHARE_STOP);
+                callEventService.record(
+                        callSession,
+                        userId,
+                        null,
+                        CallEventType.SCREEN_SHARE_STOPPED);
+
+                return true;
         }
 
-        private void requireOwner(UUID serverId, UUID userId) {
+        private void lockServer(UUID serverId) {
+                serverRepository
+                        .findByIdAndDeletedAtIsNullForUpdate(serverId)
+                        .orElseThrow(CallSessionService::serverNotFound);
+        }
 
-                ServerMemberRole role = serverMembershipRepository
-                                .findActiveRole(serverId, userId)
-                                .orElseThrow(() -> new ApiException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Only active server owners can control this call."));
+        private CallSession findActiveCall(UUID serverId) {
+                return callSessionRepository
+                        .findByServer_IdAndStatus(serverId, CallStatus.ACTIVE)
+                        .orElseThrow(() -> new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "No active call found in this server."));
+        }
 
-                if (role != ServerMemberRole.OWNER) {
-                        throw new ApiException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Only active server owners can control this call.");
+        private boolean isActiveParticipant(CallSession callSession, UUID userId) {
+                return callParticipationRepository
+                        .findByCallSession_IdAndUser_IdAndLeftAtIsNull(
+                                callSession.getId(),
+                                userId)
+                        .isPresent();
+        }
+
+        private void requireActiveParticipant(
+                CallSession callSession,
+                UUID userId,
+                String message) {
+
+                if (!isActiveParticipant(callSession, userId)) {
+                        throw new ApiException(HttpStatus.FORBIDDEN, message);
                 }
         }
+
 
         /**
          * Retrieves the active call's LiveKit room name
@@ -576,11 +646,15 @@ public class CallSessionService {
                 }
 
                 CallParticipation participation = callParticipationRepository
-                                .findByCallSession_IdAndUser_IdAndJoinedAt(
-                                                callSession.getId(),
-                                                userId,
-                                                joinedAt)
-                                .orElse(null);
+                        .findByCallSession_IdAndUser_IdAndJoinedAt(
+                                callSession.getId(),
+                                userId,
+                                joinedAt)
+                        .orElse(null);
+
+                // true only when this event closes a connection we saw open.
+                boolean closedOpenParticipation = participation != null
+                        && participation.getLeftAt() == null;
 
                 if (participation == null) {
                         // participant_left arrived before participant_joined.
@@ -588,13 +662,18 @@ public class CallSessionService {
                         participation = new CallParticipation();
                         participation.setCallSession(callSession);
                         participation.setUser(
-                                        userAccountRepository.getReferenceById(userId));
+                                userAccountRepository.getReferenceById(userId));
                         participation.setJoinedAt(joinedAt);
                 }
 
                 if (participation.getLeftAt() == null) {
                         participation.setLeftAt(leftAt);
                         callParticipationRepository.save(participation);
+                }
+
+                // a sharer who disconnects must release the slot.
+                if (closedOpenParticipation) {
+                        clearSharerIfMatches(callSession, userId);
                 }
 
                 long remainingParticipants = callParticipationRepository
@@ -705,15 +784,26 @@ public class CallSessionService {
                         return;
                 }
 
-                // Do not create another active participation for this user.
-                boolean alreadyActive = callParticipationRepository
-                                .findByCallSession_IdAndUser_IdAndLeftAtIsNull(
-                                                callSession.getId(),
-                                                userId)
-                                .isPresent();
+                // same user reconnected (rejoin / new tab). LiveKit has
+                // already replaced the old connection, so close it here.
+                CallParticipation previous = callParticipationRepository
+                        .findByCallSession_IdAndUser_IdAndLeftAtIsNull(
+                                callSession.getId(),
+                                userId)
+                        .orElse(null);
 
-                if (alreadyActive) {
-                        return;
+                if (previous != null) {
+                        if (!previous.getJoinedAt().isBefore(joinedAt)) {
+                                // Stale webhook of an older connection.
+                                return;
+                        }
+
+                        previous.setLeftAt(joinedAt);
+                        // Flush now: Hibernate runs INSERTs before UPDATEs,
+                        // which would violate uq_call_participation_active.
+                        callParticipationRepository.saveAndFlush(previous);
+
+                        clearSharerIfMatches(callSession, userId);
                 }
 
                 CallParticipation participation = new CallParticipation();

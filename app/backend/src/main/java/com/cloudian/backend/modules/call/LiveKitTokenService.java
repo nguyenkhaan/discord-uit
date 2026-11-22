@@ -4,19 +4,15 @@ package com.cloudian.backend.modules.call;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
+import io.livekit.server.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.cloudian.backend.configs.LiveKitProperties;
 import com.cloudian.backend.exceptions.ApiException;
-
-import io.livekit.server.AccessToken;
-import io.livekit.server.RoomJoin;
-import io.livekit.server.RoomName;
-import io.livekit.server.CanPublish;
-import io.livekit.server.CanSubscribe;
 
 @Service
 public class LiveKitTokenService {
@@ -62,6 +58,7 @@ public class LiveKitTokenService {
                 new RoomJoin(true),
                 new RoomName(roomName),
                 new CanPublish(true),
+                new CanPublishSources(List.of("camera", "microphone")),
                 new CanSubscribe(true));
 
         // 6. Generate JWT.

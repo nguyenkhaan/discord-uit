@@ -6,12 +6,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.cloudian.backend.models.CallSession;
 import com.cloudian.backend.modules.call.dto.ActiveCallResponse;
@@ -89,5 +84,46 @@ public class CallSessionController {
         callSessionLiveKitService.endCall(
                 serverId,
                 principal.getUserId());
+    }
+
+
+    @PostMapping("/screen-share")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void startScreenShare(
+            @PathVariable UUID serverId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        callSessionLiveKitService.startScreenShare(serverId, principal.getUserId());
+    }
+
+    @DeleteMapping("/screen-share")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void stopScreenShare(
+            @PathVariable UUID serverId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        callSessionLiveKitService.stopScreenShare(serverId, principal.getUserId());
+    }
+
+    @PostMapping("/participants/{targetUserId}/force-mute")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void forceMute(
+            @PathVariable UUID serverId,
+            @PathVariable UUID targetUserId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        callSessionLiveKitService.forceMute(
+                serverId, principal.getUserId(), targetUserId);
+    }
+
+    @PostMapping("/participants/{targetUserId}/force-stop-screen-share")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void forceStopScreenShare(
+            @PathVariable UUID serverId,
+            @PathVariable UUID targetUserId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+
+        callSessionLiveKitService.forceStopScreenShare(
+                serverId, principal.getUserId(), targetUserId);
     }
 }

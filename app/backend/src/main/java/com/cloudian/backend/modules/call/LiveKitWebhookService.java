@@ -15,6 +15,7 @@ import com.cloudian.backend.repositories.LiveKitWebhookEventRepository;
 import livekit.LivekitModels.ParticipantInfo;
 import io.livekit.server.WebhookReceiver;
 import livekit.LivekitWebhook.WebhookEvent;
+import livekit.LivekitModels.TrackSource;
 
 @Service
 public class LiveKitWebhookService {
@@ -23,12 +24,14 @@ public class LiveKitWebhookService {
     private final LiveKitWebhookEventRepository webhookEventRepository;
     private final CallSessionRepository callSessionRepository;
     private final CallSessionService callSessionService;
+    private final LiveKitRoomService liveKitRoomService;
 
     public LiveKitWebhookService(
             LiveKitProperties properties,
             LiveKitWebhookEventRepository webhookEventRepository,
             CallSessionRepository callSessionRepository,
-            CallSessionService callSessionService) {
+            CallSessionService callSessionService,
+            LiveKitRoomService liveKitRoomService) {
 
         this.webhookReceiver = new WebhookReceiver(
                 properties.getApiKey(),
@@ -37,6 +40,7 @@ public class LiveKitWebhookService {
         this.webhookEventRepository = webhookEventRepository;
         this.callSessionRepository = callSessionRepository;
         this.callSessionService = callSessionService;
+        this.liveKitRoomService = liveKitRoomService;
     }
 
     @Transactional
@@ -154,6 +158,32 @@ public class LiveKitWebhookService {
             case "room_finished":
 
                 callSessionService.handleRoomFinishedWebhook(roomName);
+                break;
+
+            case "track_unpublished":
+
+                if (!event.hasParticipant() || !event.hasTrack()) {
+                    break;
+                }
+
+                // Only the video track decides the slot; screen audio is ignored.
+                if (event.getTrack().getSource() != TrackSource.SCREEN_SHARE) {
+                    break;
+                }
+
+                String sharerIdentity = event.getParticipant().getIdentity();
+
+                boolean released = callSessionService
+                        .handleScreenShareUnpublishedWebhook(
+                                roomName,
+                                parseParticipantIdentity(sharerIdentity));
+
+                // Close the door: they must ask the backend again to share.
+                if (released) {
+                    liveKitRoomService.setScreenShareAllowed(
+                            roomName, sharerIdentity, false);
+                }
+
                 break;
         }
     }
