@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/webhooks/livekit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["handleWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers": {
         parameters: {
             query?: never;
@@ -94,6 +110,54 @@ export interface paths {
         get: operations["getInviteLinks"];
         put?: never;
         post: operations["createInviteLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startCall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["joinCall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["endCall"];
         delete?: never;
         options?: never;
         head?: never;
@@ -254,6 +318,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["upload_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{submissionId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/upload-init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["initUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -430,6 +526,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/documents/submissions/{submissionId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["review"];
         delete?: never;
         options?: never;
         head?: never;
@@ -660,6 +772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servers/{serverId}/calls/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getActiveCall"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/status-counts": {
         parameters: {
             query?: never;
@@ -820,6 +948,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documents/my-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMySubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/collections": {
         parameters: {
             query?: never;
@@ -860,6 +1004,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["testingAuthentication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/documents/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/documents/submissions/{submissionId}/preview-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1026,6 +1202,22 @@ export interface components {
             /** @enum {string} */
             status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
         };
+        CallSessionStartResponse: {
+            /** Format: uuid */
+            callSessionId?: string;
+            roomName?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "ENDED";
+            /** Format: date-time */
+            startedAt?: string;
+        };
+        LiveKitJoinResponse: {
+            /** Format: uuid */
+            callSessionId?: string;
+            roomName?: string;
+            serverUrl?: string;
+            token?: string;
+        };
         ChatAttachmentResponse: {
             /** Format: uuid */
             mediaId?: string;
@@ -1147,6 +1339,37 @@ export interface components {
             /** Format: date-time */
             submittedAt?: string;
         };
+        DocumentUploadInitRequest: {
+            title: string;
+            description?: string;
+            slug?: string;
+            fileName: string;
+            mimeType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            tagSlugs?: string[];
+        };
+        DocumentUploadInitResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            /** Format: uuid */
+            mediaId?: string;
+            uploadUrl?: string;
+            /** Format: date-time */
+            uploadUrlExpiresAt?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @enum {string} */
+            visibilityStatus?: "HIDDEN" | "PUBLIC" | "REMOVED";
+            /** @enum {string} */
+            mediaStatus?: "QUARANTINED" | "SCANNING" | "READY" | "REJECTED" | "DELETED";
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+        };
         VerifyEmailRequest: {
             token: string;
         };
@@ -1225,6 +1448,11 @@ export interface components {
             readAt?: string;
             /** Format: date-time */
             createdAt?: string;
+        };
+        DocumentReviewRequest: {
+            /** @enum {string} */
+            decision: "APPROVED" | "REJECTED";
+            rejectionReason?: string;
         };
         CollectionRequest: {
             name: string;
@@ -1364,6 +1592,25 @@ export interface components {
             /** @enum {string} */
             status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
         };
+        ActiveCallResponse: {
+            /** Format: uuid */
+            callSessionId?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: uuid */
+            coordinatorUserId?: string;
+            coordinatorFullName?: string;
+            /** Format: int32 */
+            participantCount?: number;
+            /** Format: int32 */
+            maxParticipants?: number;
+            participants?: components["schemas"]["Participant"][];
+        };
+        Participant: {
+            /** Format: uuid */
+            userId?: string;
+            fullName?: string;
+        };
         ServerStatusCountResponse: {
             /** @enum {string} */
             status?: "ACTIVE" | "LOCKED" | "CLOSED";
@@ -1408,6 +1655,33 @@ export interface components {
         HealthResponse: {
             message?: string;
         };
+        DocumentSubmissionResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            title?: string;
+            description?: string;
+            slug?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+            collectionSlugs?: string[];
+            tagSlugs?: string[];
+            submittedBy?: string;
+            /** @enum {string} */
+            visibilityStatus?: "HIDDEN" | "PUBLIC" | "REMOVED";
+            /** @enum {string} */
+            mediaStatus?: "QUARANTINED" | "SCANNING" | "READY" | "REJECTED" | "DELETED";
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: date-time */
+            reviewedAt?: string;
+            rejectionReason?: string;
+        };
         TaxonomyListResponseCollectionResponse: {
             items?: components["schemas"]["CollectionResponse"][];
             /** Format: int32 */
@@ -1418,6 +1692,21 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
+        };
+        DocumentPreviewResponse: {
+            /** Format: uuid */
+            documentId?: string;
+            /** Format: uuid */
+            submissionId?: string;
+            title?: string;
+            fileName?: string;
+            mimeType?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+            /** @enum {string} */
+            submissionStatus?: "PENDING_PROCESSING" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+            previewUrl?: string;
+            downloadUrl?: string;
         };
         JsonWebKey: {
             kty?: string;
@@ -1445,6 +1734,30 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    handleWebhook: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listMine: {
         parameters: {
             query?: {
@@ -1679,6 +1992,70 @@ export interface operations {
             };
         };
     };
+    startCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CallSessionStartResponse"];
+                };
+            };
+        };
+    };
+    joinCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LiveKitJoinResponse"];
+                };
+            };
+        };
+    };
+    endCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     upload: {
         parameters: {
             query?: never;
@@ -1906,6 +2283,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["DocumentUploadResponse"];
+                };
+            };
+        };
+    };
+    completeUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadResponse"];
+                };
+            };
+        };
+    };
+    initUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentUploadInitRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadInitResponse"];
                 };
             };
         };
@@ -2194,6 +2615,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["NotificationResponse"];
+                };
+            };
+        };
+    };
+    review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentUploadResponse"];
                 };
             };
         };
@@ -2683,6 +3128,28 @@ export interface operations {
             };
         };
     };
+    getActiveCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ActiveCallResponse"];
+                };
+            };
+        };
+    };
     countMineByStatus: {
         parameters: {
             query?: {
@@ -2708,7 +3175,7 @@ export interface operations {
     listNotifications: {
         parameters: {
             query: {
-                request: components["schemas"]["NotificationListRequest"];
+                arg1: components["schemas"]["NotificationListRequest"];
             };
             header?: never;
             path?: never;
@@ -2913,6 +3380,26 @@ export interface operations {
             };
         };
     };
+    listMySubmissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentSubmissionResponse"][];
+                };
+            };
+        };
+    };
     listCollections_1: {
         parameters: {
             query?: {
@@ -2975,6 +3462,46 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    listSubmissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentSubmissionResponse"][];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentPreviewResponse"];
                 };
             };
         };

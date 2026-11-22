@@ -1,6 +1,6 @@
 export type AdminDocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export type AdminDocumentPreviewKind = 'HTML' | 'DOCX' | 'PDF';
+export type AdminDocumentPreviewKind = 'HTML' | 'DOCX' | 'PDF' | 'PPTX' | 'TXT';
 
 export interface AdminDocument {
     id: string;

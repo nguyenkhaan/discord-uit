@@ -157,7 +157,7 @@ export function AdminTaxonomyFormModal({
                 {(formError || submitError) && (
                     <div
                         aria-live="polite"
-                        className="flex items-start gap-2 rounded-lg border border-danger-border bg-danger-subtle px-3 py-2.5 text-sm text-feedback-danger"
+                        className="flex items-start gap-2 px-3 py-2.5 text-sm text-feedback-danger"
                         role="alert"
                     >
                         <AlertCircle

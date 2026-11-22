@@ -3,7 +3,6 @@ import {
     FileText,
     FolderOpen,
     Hash,
-    LoaderCircle,
     RotateCcw,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -15,6 +14,7 @@ import { Tabs } from '@/components/common/Tabs';
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader';
 import { AdminTaxonomyFormModal } from '@/features/admin/components/AdminTaxonomyFormModal';
 import { AdminTaxonomyTable } from '@/features/admin/components/AdminTaxonomyTable';
+import { Skeleton } from '@/components/common/Skeleton';
 import {
     useAdminCollectionsQuery,
     useAdminTagsQuery,
@@ -36,6 +36,39 @@ import { showToast } from '@/lib/toast';
 
 function isCollection(item: TaxonomyItem): item is TaxonomyCollection {
     return 'keywords' in item;
+}
+
+function AdminTaxonomySkeleton() {
+    return (
+        <div aria-label="Đang tải taxonomy" className="space-y-6" role="status">
+            <div className="grid gap-3 sm:grid-cols-3">
+                {[0, 1, 2].map((item) => (
+                    <div
+                        className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft"
+                        key={item}
+                    >
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="mt-3 h-8 w-16" />
+                        <Skeleton className="mt-2 h-3 w-32" />
+                    </div>
+                ))}
+            </div>
+            <section className="overflow-hidden rounded-xl border border-line-subtle bg-surface shadow-soft">
+                <div className="flex items-center justify-between border-b border-line-subtle p-4">
+                    <Skeleton className="h-10 w-48 rounded-lg" />
+                    <Skeleton className="h-10 w-32 rounded-lg" />
+                </div>
+                <div className="space-y-4 p-4">
+                    {[0, 1, 2, 3].map((item) => (
+                        <Skeleton
+                            className="h-14 w-full rounded-lg"
+                            key={item}
+                        />
+                    ))}
+                </div>
+            </section>
+        </div>
+    );
 }
 
 export default function AdminDocumentsPage() {
@@ -229,59 +262,16 @@ export default function AdminDocumentsPage() {
                         Danh mục tài liệu
                     </Link>
                 }
-                description="Quản lý collections và tags dùng để phân loại, duyệt và khám phá tài liệu trên UIT Connect."
+                description=""
                 title="Quản lý tài liệu"
             />
 
-            <div className="mb-6 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
-                    <p className="text-sm text-muted">Collections</p>
-                    <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
-                        {collections.length}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                        Nhóm tài liệu public
-                    </p>
-                </div>
-                <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
-                    <p className="text-sm text-muted">Tags</p>
-                    <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
-                        {tags.length}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                        Nhãn dùng cho filter
-                    </p>
-                </div>
-                <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
-                    <p className="text-sm text-muted">Đang được sử dụng</p>
-                    <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
-                        {referencedCount}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                        Không thể xóa trực tiếp
-                    </p>
-                </div>
-            </div>
-
             {isLoading ? (
-                <section
-                    aria-label="Đang tải taxonomy"
-                    className="rounded-xl border border-line-subtle bg-surface p-10 shadow-soft"
-                >
-                    <div className="flex flex-col items-center justify-center text-center">
-                        <LoaderCircle
-                            aria-hidden="true"
-                            className="size-8 animate-spin text-brand motion-reduce:animate-none"
-                        />
-                        <p className="mt-3 text-sm font-medium text-foreground">
-                            Đang tải danh mục taxonomy...
-                        </p>
-                    </div>
-                </section>
+                <AdminTaxonomySkeleton />
             ) : hasLoadError ? (
                 <section
                     aria-live="assertive"
-                    className="rounded-xl border border-danger-border bg-danger-subtle p-10 text-center"
+                    className="p-10 text-center"
                     role="alert"
                 >
                     <AlertTriangle
@@ -305,12 +295,46 @@ export default function AdminDocumentsPage() {
                     </Button>
                 </section>
             ) : (
-                <Tabs
-                    items={tabItems}
-                    label="Quản lý collections và tags"
-                    onValueChange={setActiveTab}
-                    value={activeTab}
-                />
+                <>
+                    <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
+                            <p className="text-sm text-muted">Collections</p>
+                            <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
+                                {collections.length}
+                            </p>
+                            <p className="mt-1 text-xs text-muted">
+                                Nhóm tài liệu public
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
+                            <p className="text-sm text-muted">Tags</p>
+                            <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
+                                {tags.length}
+                            </p>
+                            <p className="mt-1 text-xs text-muted">
+                                Nhãn dùng cho filter
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-line-subtle bg-surface p-4 shadow-soft">
+                            <p className="text-sm text-muted">
+                                Đang được sử dụng
+                            </p>
+                            <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
+                                {referencedCount}
+                            </p>
+                            <p className="mt-1 text-xs text-muted">
+                                Không thể xóa trực tiếp
+                            </p>
+                        </div>
+                    </div>
+
+                    <Tabs
+                        items={tabItems}
+                        label="Quản lý collections và tags"
+                        onValueChange={setActiveTab}
+                        value={activeTab}
+                    />
+                </>
             )}
 
             <AdminTaxonomyFormModal
@@ -328,8 +352,8 @@ export default function AdminDocumentsPage() {
                 }
                 description={
                     deleteIsBlocked
-                        ? deleteError ??
-                          `Không thể xóa ${deleteLabel} "${deleteTarget?.name}" vì đang được document hoặc AI classification sử dụng.`
+                        ? (deleteError ??
+                          `Không thể xóa ${deleteLabel} "${deleteTarget?.name}" vì đang được document hoặc AI classification sử dụng.`)
                         : `Bạn chắc chắn muốn xóa ${deleteLabel} "${deleteTarget?.name}"? Thao tác này không thể hoàn tác.`
                 }
                 isOpen={deleteTarget !== null}

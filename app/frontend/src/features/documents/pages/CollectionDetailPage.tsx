@@ -40,7 +40,7 @@ export default function CollectionDetailPage() {
         return (
             <div
                 aria-live="assertive"
-                className="rounded-2xl border border-danger-border bg-danger-subtle p-12 text-center"
+                className="p-12 text-center"
                 role="alert"
             >
                 <AlertTriangle
@@ -87,7 +87,7 @@ export default function CollectionDetailPage() {
     );
 
     return (
-        <div className="space-y-6 pb-10">
+        <div className="space-y-6 p-4 sm:p-6">
             <Link
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand hover:text-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
                 to="/documents"
@@ -102,9 +102,6 @@ export default function CollectionDetailPage() {
                         <FolderOpen aria-hidden="true" className="size-7" />
                     </span>
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-brand">
-                            Collection
-                        </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight text-heading">
                             {collection.name}
                         </h1>

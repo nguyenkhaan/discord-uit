@@ -1,11 +1,5 @@
-import {
-    ArrowLeft,
-    FileText,
-    LoaderCircle,
-    RotateCcw,
-    SearchX,
-} from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, FileText, RotateCcw, SearchX } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AdminBadge } from '@/features/admin/components/AdminBadge';
@@ -24,14 +18,17 @@ import {
     useAdminCollectionsQuery,
     useAdminTagsQuery,
 } from '@/features/taxonomy/taxonomy.hooks';
-import { mockAdminDocuments } from '@/features/documents/admin-document.mock';
+import { useAdminSubmissionsQuery } from '@/features/documents/document.hooks';
+import type { DocumentSubmission } from '@/features/documents/document.type';
 import type { AdminDocumentStatus } from '@/features/documents/admin-document.type';
 import {
     ALL_DOCUMENT_FILTER,
     filterAdminDocuments,
     formatDocumentStatus,
+    getAdminDocumentStats,
     type AdminDocumentFilter,
 } from '@/features/documents/admin-document.utils';
+import { Skeleton } from '@/components/common/Skeleton';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 6;
@@ -45,6 +42,101 @@ const statusOptions: readonly AdminSelectOption<
     { value: 'APPROVED', label: 'Đã duyệt' },
     { value: 'REJECTED', label: 'Đã từ chối' },
 ];
+
+function formatFileSize(sizeBytes: number): string {
+    if (sizeBytes < 1024) return `${sizeBytes} B`;
+    return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function toAdminDocument(item: DocumentSubmission) {
+    const extension = item.fileName.split('.').pop()?.toUpperCase() ?? 'FILE';
+    const fileType = ['DOCX', 'PDF', 'PPTX', 'TXT'].includes(extension)
+        ? (extension as 'DOCX' | 'PDF' | 'PPTX' | 'TXT')
+        : 'TXT';
+    return {
+        id: item.submissionId,
+        title: item.title,
+        slug: item.slug,
+        summary: item.description ?? 'Chưa có mô tả.',
+        collectionSlugs: item.collectionSlugs,
+        tagSlugs: item.tagSlugs,
+        status:
+            item.submissionStatus === 'APPROVED'
+                ? ('APPROVED' as const)
+                : item.submissionStatus === 'REJECTED'
+                  ? ('REJECTED' as const)
+                  : ('PENDING' as const),
+        submittedBy: item.submittedBy ?? 'Không xác định',
+        submittedAt: item.submittedAt,
+        fileName: item.fileName,
+        fileType,
+        fileSize: formatFileSize(item.sizeBytes),
+        pageCount: 0,
+        version: 1,
+        previewKind: fileType,
+        previewHtml: '',
+    };
+}
+
+function AdminDocumentListSkeleton() {
+    return (
+        <div
+            aria-label="Đang tải danh sách tài liệu"
+            className="space-y-6"
+            role="status"
+        >
+            <section className="grid gap-3 sm:grid-cols-3">
+                {[0, 1, 2].map((item) => (
+                    <div
+                        className="rounded-xl bg-surface p-4 shadow-soft"
+                        key={item}
+                    >
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="mt-3 h-8 w-16" />
+                        <Skeleton className="mt-2 h-3 w-32" />
+                    </div>
+                ))}
+            </section>
+
+            <section className="overflow-hidden rounded-xl bg-surface shadow-soft">
+                <div className="flex flex-wrap gap-3 border-b border-line-subtle p-4">
+                    <Skeleton className="h-11 min-w-64 flex-1 rounded-lg" />
+                    <Skeleton className="h-11 w-40 rounded-lg" />
+                    <Skeleton className="h-11 w-40 rounded-lg" />
+                    <Skeleton className="h-11 w-40 rounded-lg" />
+                </div>
+                <div className="space-y-3 p-4">
+                    <div className="grid grid-cols-7 gap-4 px-2 py-2">
+                        {[0, 1, 2, 3, 4, 5, 6].map((item) => (
+                            <Skeleton className="h-3 w-full" key={item} />
+                        ))}
+                    </div>
+                    {[0, 1, 2, 3, 4].map((row) => (
+                        <div
+                            className="grid grid-cols-7 gap-4 px-2 py-4"
+                            key={row}
+                        >
+                            {[0, 1, 2, 3, 4, 5, 6].map((column) => (
+                                <Skeleton
+                                    className={cn(
+                                        'h-4 w-full',
+                                        column === 1 && 'w-4/5',
+                                        column === 3 && 'w-3/5'
+                                    )}
+                                    key={column}
+                                />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex items-center justify-between border-t border-line-subtle p-4">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-9 w-32 rounded-lg" />
+                </div>
+            </section>
+        </div>
+    );
+}
 
 function getStatusTone(status: AdminDocumentStatus): AdminTone {
     if (status === 'PENDING') return 'warning';
@@ -62,6 +154,7 @@ function getInitialFilters(collectionSlug: string | null): AdminDocumentFilter {
 }
 
 export default function AdminDocumentListPage() {
+    const documentsQuery = useAdminSubmissionsQuery();
     const collectionsQuery = useAdminCollectionsQuery();
     const tagsQuery = useAdminTagsQuery();
     const collections = useMemo(
@@ -78,21 +171,17 @@ export default function AdminDocumentListPage() {
         getInitialFilters(searchParams.get('collection'))
     );
     const [currentPage, setCurrentPage] = useState(1);
-    const [isDocumentLoading, setIsDocumentLoading] = useState(true);
-
-    useEffect(() => {
-        const timeoutId = window.setTimeout(
-            () => setIsDocumentLoading(false),
-            260
-        );
-        return () => window.clearTimeout(timeoutId);
-    }, []);
+    const documents = useMemo(
+        () => (documentsQuery.data ?? []).map(toAdminDocument),
+        [documentsQuery.data]
+    );
 
     const isLoading =
-        isDocumentLoading ||
+        documentsQuery.isLoading ||
         collectionsQuery.isLoading ||
         tagsQuery.isLoading;
-    const hasLoadError = collectionsQuery.isError || tagsQuery.isError;
+    const hasLoadError =
+        documentsQuery.isError || collectionsQuery.isError || tagsQuery.isError;
 
     const collectionOptions = useMemo(
         () =>
@@ -118,8 +207,12 @@ export default function AdminDocumentListPage() {
     );
 
     const filteredDocuments = useMemo(
-        () => filterAdminDocuments(mockAdminDocuments, filters),
-        [filters]
+        () => filterAdminDocuments(documents, filters),
+        [documents, filters]
+    );
+    const documentStats = useMemo(
+        () => getAdminDocumentStats(filteredDocuments),
+        [filteredDocuments]
     );
     const pageSlice = paginate(filteredDocuments, currentPage, PAGE_SIZE);
     const isFiltering =
@@ -153,12 +246,12 @@ export default function AdminDocumentListPage() {
         }
     }
 
-    function retryMockLoad() {
-        setIsDocumentLoading(true);
+    function retryLoad() {
         void Promise.all([
+            documentsQuery.refetch(),
             collectionsQuery.refetch(),
             tagsQuery.refetch(),
-        ]).finally(() => setIsDocumentLoading(false));
+        ]);
     }
 
     return (
@@ -178,55 +271,12 @@ export default function AdminDocumentListPage() {
                 title="Danh sách tài liệu"
             />
 
-            <section className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl bg-surface p-4 shadow-soft">
-                    <p className="text-sm text-muted">Tổng tài liệu</p>
-                    <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
-                        {mockAdminDocuments.length}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">Tất cả trạng thái</p>
-                </div>
-                <div className="rounded-xl bg-surface p-4 shadow-soft">
-                    <p className="text-sm text-muted">Chờ duyệt</p>
-                    <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
-                        {
-                            mockAdminDocuments.filter(
-                                (item) => item.status === 'PENDING'
-                            ).length
-                        }
-                    </p>
-                    <p className="mt-1 text-xs text-muted">Cần admin xử lý</p>
-                </div>
-                <div className="rounded-xl bg-surface p-4 shadow-soft">
-                    <p className="text-sm text-muted">Kết quả hiện tại</p>
-                    <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
-                        {filteredDocuments.length}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                        Theo bộ lọc đang chọn
-                    </p>
-                </div>
-            </section>
-
             {isLoading ? (
-                <section
-                    aria-label="Đang tải tài liệu"
-                    className="rounded-xl border border-line-subtle bg-surface p-10 shadow-soft"
-                >
-                    <div className="flex flex-col items-center justify-center text-center">
-                        <LoaderCircle
-                            aria-hidden="true"
-                            className="size-8 animate-spin text-brand motion-reduce:animate-none"
-                        />
-                        <p className="mt-3 text-sm font-medium text-foreground">
-                            Đang tải danh sách tài liệu...
-                        </p>
-                    </div>
-                </section>
+                <AdminDocumentListSkeleton />
             ) : hasLoadError ? (
                 <section
                     aria-live="assertive"
-                    className="rounded-xl border border-danger-border bg-danger-subtle p-10 text-center"
+                    className="p-10 text-center"
                     role="alert"
                 >
                     <SearchX
@@ -241,7 +291,7 @@ export default function AdminDocumentListPage() {
                     </p>
                     <button
                         className="mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-line-brand bg-surface px-3 text-sm font-bold text-brand transition-colors hover:bg-brand-subtle focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
-                        onClick={retryMockLoad}
+                        onClick={retryLoad}
                         type="button"
                     >
                         <RotateCcw aria-hidden="true" className="size-4" />
@@ -249,262 +299,359 @@ export default function AdminDocumentListPage() {
                     </button>
                 </section>
             ) : (
-                <section className="overflow-hidden rounded-xl bg-surface shadow-soft">
-                    <AdminTableToolbar
-                        filters={
-                            <>
-                                <AdminFilterSelect
-                                    label="Collection"
-                                    onChange={(value) =>
-                                        updateFilter('collectionSlug', value)
-                                    }
-                                    options={collectionOptions}
-                                    value={filters.collectionSlug}
-                                />
-                                <AdminFilterSelect
-                                    label="Tag"
-                                    onChange={(value) =>
-                                        updateFilter('tagSlug', value)
-                                    }
-                                    options={tagOptions}
-                                    value={filters.tagSlug}
-                                />
-                                <AdminFilterSelect
-                                    label="Trạng thái"
-                                    onChange={(value) =>
-                                        updateFilter('status', value)
-                                    }
-                                    options={statusOptions}
-                                    value={filters.status}
-                                />
-                            </>
-                        }
-                        onSearchChange={(value) =>
-                            updateFilter('search', value)
-                        }
-                        searchLabel="Tìm kiếm tài liệu"
-                        searchPlaceholder="Tìm theo tên, slug hoặc người gửi..."
-                        searchValue={filters.search}
-                    />
+                <>
+                    <section className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-xl bg-surface p-4 shadow-soft">
+                            <p className="text-sm text-muted">Tổng tài liệu</p>
+                            <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
+                                {documentStats.total}
+                            </p>
+                            <p className="mt-1 text-xs text-muted">
+                                Theo bộ lọc đang chọn
+                            </p>
+                        </div>
+                        <div className="rounded-xl bg-surface p-4 shadow-soft">
+                            <p className="text-sm text-muted">Chờ duyệt</p>
+                            <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
+                                {documentStats.pending}
+                            </p>
+                            <p className="mt-1 text-xs text-muted">
+                                Trong kết quả hiện tại
+                            </p>
+                        </div>
+                        <div className="rounded-xl bg-surface p-4 shadow-soft">
+                            <p className="text-sm text-muted">
+                                Kết quả hiện tại
+                            </p>
+                            <p className="mt-1 text-2xl font-bold text-heading tabular-nums">
+                                {filteredDocuments.length}
+                            </p>
+                            <p className="mt-1 text-xs text-muted">
+                                Theo bộ lọc đang chọn
+                            </p>
+                        </div>
+                    </section>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1120px] border-collapse">
-                            <thead className="bg-surface-subtle/60">
-                                <tr>
-                                    <th
-                                        className={cn(
-                                            ADMIN_TH_CLASS,
-                                            'w-12 pl-5'
-                                        )}
-                                        scope="col"
-                                    >
-                                        #
-                                    </th>
-                                    <th className={ADMIN_TH_CLASS} scope="col">
-                                        Tài liệu
-                                    </th>
-                                    <th className={ADMIN_TH_CLASS} scope="col">
-                                        Collection
-                                    </th>
-                                    <th className={ADMIN_TH_CLASS} scope="col">
-                                        Tags
-                                    </th>
-                                    <th className={ADMIN_TH_CLASS} scope="col">
-                                        Người gửi
-                                    </th>
-                                    <th className={ADMIN_TH_CLASS} scope="col">
-                                        Trạng thái
-                                    </th>
-                                    <th
-                                        className={cn(ADMIN_TH_CLASS, 'pr-5')}
-                                        scope="col"
-                                    >
-                                        Cập nhật
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-line-subtle">
-                                {pageSlice.items.length === 0 ? (
-                                    <AdminEmptyRow
-                                        colSpan={COLUMN_COUNT}
-                                        emptyIcon={FileText}
-                                        emptyTitle="Chưa có tài liệu nào"
-                                        isFiltering={isFiltering}
-                                    />
-                                ) : (
-                                    pageSlice.items.map((document, index) => {
-                                        const collections =
-                                            document.collectionSlugs
-                                                .map(
-                                                    (slug) =>
-                                                        collectionBySlug.get(
-                                                            slug
-                                                        )?.name
-                                                )
-                                                .filter(Boolean);
-                                        const tags = document.tagSlugs
-                                            .map(
-                                                (slug) =>
-                                                    tagBySlug.get(slug)?.name
+                    <section className="mt-6 overflow-hidden rounded-xl bg-surface shadow-soft">
+                        <AdminTableToolbar
+                            filters={
+                                <>
+                                    <AdminFilterSelect
+                                        label="Collection"
+                                        onChange={(value) =>
+                                            updateFilter(
+                                                'collectionSlug',
+                                                value
                                             )
-                                            .filter(Boolean);
+                                        }
+                                        options={collectionOptions}
+                                        value={filters.collectionSlug}
+                                    />
+                                    <AdminFilterSelect
+                                        label="Tag"
+                                        onChange={(value) =>
+                                            updateFilter('tagSlug', value)
+                                        }
+                                        options={tagOptions}
+                                        value={filters.tagSlug}
+                                    />
+                                    <AdminFilterSelect
+                                        label="Trạng thái"
+                                        onChange={(value) =>
+                                            updateFilter('status', value)
+                                        }
+                                        options={statusOptions}
+                                        value={filters.status}
+                                    />
+                                </>
+                            }
+                            onSearchChange={(value) =>
+                                updateFilter('search', value)
+                            }
+                            searchLabel="Tìm kiếm tài liệu"
+                            searchPlaceholder="Tìm theo tên, slug hoặc người gửi..."
+                            searchValue={filters.search}
+                        />
 
-                                        return (
-                                            <tr
-                                                aria-label={`Mở tài liệu ${document.title}`}
-                                                className="cursor-pointer transition-colors hover:bg-brand-subtle/40 focus-within:bg-brand-subtle/40"
-                                                key={document.id}
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/admin/documents/${document.id}`
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[1120px] border-collapse">
+                                <thead className="bg-surface-subtle/60">
+                                    <tr>
+                                        <th
+                                            className={cn(
+                                                ADMIN_TH_CLASS,
+                                                'w-12 pl-5'
+                                            )}
+                                            scope="col"
+                                        >
+                                            #
+                                        </th>
+                                        <th
+                                            className={ADMIN_TH_CLASS}
+                                            scope="col"
+                                        >
+                                            Tài liệu
+                                        </th>
+                                        <th
+                                            className={ADMIN_TH_CLASS}
+                                            scope="col"
+                                        >
+                                            Collection
+                                        </th>
+                                        <th
+                                            className={ADMIN_TH_CLASS}
+                                            scope="col"
+                                        >
+                                            Tags
+                                        </th>
+                                        <th
+                                            className={ADMIN_TH_CLASS}
+                                            scope="col"
+                                        >
+                                            Người gửi
+                                        </th>
+                                        <th
+                                            className={ADMIN_TH_CLASS}
+                                            scope="col"
+                                        >
+                                            Trạng thái
+                                        </th>
+                                        <th
+                                            className={cn(
+                                                ADMIN_TH_CLASS,
+                                                'pr-5'
+                                            )}
+                                            scope="col"
+                                        >
+                                            Cập nhật
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-line-subtle">
+                                    {pageSlice.items.length === 0 ? (
+                                        <AdminEmptyRow
+                                            colSpan={COLUMN_COUNT}
+                                            emptyIcon={FileText}
+                                            emptyTitle="Chưa có tài liệu nào"
+                                            isFiltering={isFiltering}
+                                        />
+                                    ) : (
+                                        pageSlice.items.map(
+                                            (document, index) => {
+                                                const collections =
+                                                    document.collectionSlugs
+                                                        .map(
+                                                            (slug) =>
+                                                                collectionBySlug.get(
+                                                                    slug
+                                                                )?.name
+                                                        )
+                                                        .filter(Boolean);
+                                                const tags = document.tagSlugs
+                                                    .map(
+                                                        (slug) =>
+                                                            tagBySlug.get(slug)
+                                                                ?.name
                                                     )
-                                                }
-                                                onKeyDown={(event) => {
-                                                    if (
-                                                        event.key === 'Enter' ||
-                                                        event.key === ' '
-                                                    ) {
-                                                        event.preventDefault();
-                                                        navigate(
-                                                            `/admin/documents/${document.id}`
-                                                        );
-                                                    }
-                                                }}
-                                                role="link"
-                                                tabIndex={0}
-                                            >
-                                                <td
-                                                    className={cn(
-                                                        ADMIN_TD_CLASS,
-                                                        'pl-5 text-sm text-muted tabular-nums'
-                                                    )}
-                                                >
-                                                    {pageSlice.start +
-                                                        index +
-                                                        1}
-                                                </td>
-                                                <td className={ADMIN_TD_CLASS}>
-                                                    <Link
-                                                        className="group block max-w-80 focus-visible:outline-none"
-                                                        onClick={(event) =>
-                                                            event.stopPropagation()
-                                                        }
-                                                        to={`/admin/documents/${document.id}`}
-                                                    >
-                                                        <span className="block truncate text-sm font-semibold text-heading group-hover:text-brand group-focus-visible:text-brand">
-                                                            {document.title}
-                                                        </span>
-                                                        <span className="mt-1 block truncate text-xs text-muted">
-                                                            {document.fileName}{' '}
-                                                            ·{' '}
-                                                            {document.fileSize}
-                                                        </span>
-                                                    </Link>
-                                                </td>
-                                                <td className={ADMIN_TD_CLASS}>
-                                                    <div className="max-w-56 space-y-1">
-                                                        <p className="truncate text-sm text-foreground-secondary">
-                                                            {collections[0] ??
-                                                                'Chưa phân loại'}
-                                                        </p>
-                                                        {collections.length >
-                                                            1 && (
-                                                            <p className="text-xs text-muted">
-                                                                +
-                                                                {collections.length -
-                                                                    1}{' '}
-                                                                collection
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className={ADMIN_TD_CLASS}>
-                                                    <div className="flex max-w-52 flex-wrap gap-1.5">
-                                                        {tags
-                                                            .slice(0, 2)
-                                                            .map((tag) => (
-                                                                <span
-                                                                    className="rounded-md bg-surface-subtle px-2 py-1 text-xs text-foreground-secondary"
-                                                                    key={tag}
-                                                                >
-                                                                    {tag}
-                                                                </span>
-                                                            ))}
-                                                        {tags.length > 2 && (
-                                                            <span className="px-1 py-1 text-xs text-muted">
-                                                                +
-                                                                {tags.length -
-                                                                    2}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td
-                                                    className={cn(
-                                                        ADMIN_TD_CLASS,
-                                                        'text-sm text-foreground-secondary'
-                                                    )}
-                                                >
-                                                    <p>
-                                                        {document.submittedBy}
-                                                    </p>
-                                                    <time
-                                                        className="mt-1 block text-xs text-muted"
-                                                        dateTime={
-                                                            document.submittedAt
-                                                        }
-                                                    >
-                                                        {formatAdminDate(
-                                                            document.submittedAt
-                                                        )}
-                                                    </time>
-                                                </td>
-                                                <td className={ADMIN_TD_CLASS}>
-                                                    <AdminBadge
-                                                        tone={getStatusTone(
-                                                            document.status
-                                                        )}
-                                                        withDot
-                                                    >
-                                                        {formatDocumentStatus(
-                                                            document.status
-                                                        )}
-                                                    </AdminBadge>
-                                                </td>
-                                                <td
-                                                    className={cn(
-                                                        ADMIN_TD_CLASS,
-                                                        'pr-5 text-xs text-muted'
-                                                    )}
-                                                >
-                                                    <Link
-                                                        className="inline-flex min-h-9 items-center text-brand hover:text-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
-                                                        onClick={(event) =>
-                                                            event.stopPropagation()
-                                                        }
-                                                        to={`/admin/documents/${document.id}`}
-                                                    >
-                                                        Xem chi tiết
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                                    .filter(Boolean);
 
-                    <AdminPagination
-                        end={pageSlice.end}
-                        itemLabel="tài liệu"
-                        onPageChange={setCurrentPage}
-                        page={pageSlice.page}
-                        start={pageSlice.start}
-                        totalItems={filteredDocuments.length}
-                        totalPages={pageSlice.totalPages}
-                    />
-                </section>
+                                                return (
+                                                    <tr
+                                                        aria-label={`Mở tài liệu ${document.title}`}
+                                                        className="cursor-pointer transition-colors hover:bg-brand-subtle/40 focus-within:bg-brand-subtle/40"
+                                                        key={document.id}
+                                                        onClick={() =>
+                                                            navigate(
+                                                                `/admin/documents/${document.id}`
+                                                            )
+                                                        }
+                                                        onKeyDown={(event) => {
+                                                            if (
+                                                                event.key ===
+                                                                    'Enter' ||
+                                                                event.key ===
+                                                                    ' '
+                                                            ) {
+                                                                event.preventDefault();
+                                                                navigate(
+                                                                    `/admin/documents/${document.id}`
+                                                                );
+                                                            }
+                                                        }}
+                                                        role="link"
+                                                        tabIndex={0}
+                                                    >
+                                                        <td
+                                                            className={cn(
+                                                                ADMIN_TD_CLASS,
+                                                                'pl-5 text-sm text-muted tabular-nums'
+                                                            )}
+                                                        >
+                                                            {pageSlice.start +
+                                                                index +
+                                                                1}
+                                                        </td>
+                                                        <td
+                                                            className={
+                                                                ADMIN_TD_CLASS
+                                                            }
+                                                        >
+                                                            <Link
+                                                                className="group block max-w-80 focus-visible:outline-none"
+                                                                onClick={(
+                                                                    event
+                                                                ) =>
+                                                                    event.stopPropagation()
+                                                                }
+                                                                to={`/admin/documents/${document.id}`}
+                                                            >
+                                                                <span className="block truncate text-sm font-semibold text-heading group-hover:text-brand group-focus-visible:text-brand">
+                                                                    {
+                                                                        document.title
+                                                                    }
+                                                                </span>
+                                                                <span className="mt-1 block truncate text-xs text-muted">
+                                                                    {
+                                                                        document.fileName
+                                                                    }{' '}
+                                                                    ·{' '}
+                                                                    {
+                                                                        document.fileSize
+                                                                    }
+                                                                </span>
+                                                            </Link>
+                                                        </td>
+                                                        <td
+                                                            className={
+                                                                ADMIN_TD_CLASS
+                                                            }
+                                                        >
+                                                            <div className="max-w-56 space-y-1">
+                                                                <p className="truncate text-sm text-foreground-secondary">
+                                                                    {collections[0] ??
+                                                                        'Chưa phân loại'}
+                                                                </p>
+                                                                {collections.length >
+                                                                    1 && (
+                                                                    <p className="text-xs text-muted">
+                                                                        +
+                                                                        {collections.length -
+                                                                            1}{' '}
+                                                                        collection
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td
+                                                            className={
+                                                                ADMIN_TD_CLASS
+                                                            }
+                                                        >
+                                                            <div className="flex max-w-52 flex-wrap gap-1.5">
+                                                                {tags
+                                                                    .slice(0, 2)
+                                                                    .map(
+                                                                        (
+                                                                            tag
+                                                                        ) => (
+                                                                            <span
+                                                                                className="rounded-md bg-surface-subtle px-2 py-1 text-xs text-foreground-secondary"
+                                                                                key={
+                                                                                    tag
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    tag
+                                                                                }
+                                                                            </span>
+                                                                        )
+                                                                    )}
+                                                                {tags.length >
+                                                                    2 && (
+                                                                    <span className="px-1 py-1 text-xs text-muted">
+                                                                        +
+                                                                        {tags.length -
+                                                                            2}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td
+                                                            className={cn(
+                                                                ADMIN_TD_CLASS,
+                                                                'text-sm text-foreground-secondary'
+                                                            )}
+                                                        >
+                                                            <p>
+                                                                {
+                                                                    document.submittedBy
+                                                                }
+                                                            </p>
+                                                            <time
+                                                                className="mt-1 block text-xs text-muted"
+                                                                dateTime={
+                                                                    document.submittedAt
+                                                                }
+                                                            >
+                                                                {formatAdminDate(
+                                                                    document.submittedAt
+                                                                )}
+                                                            </time>
+                                                        </td>
+                                                        <td
+                                                            className={
+                                                                ADMIN_TD_CLASS
+                                                            }
+                                                        >
+                                                            <AdminBadge
+                                                                tone={getStatusTone(
+                                                                    document.status
+                                                                )}
+                                                                withDot
+                                                            >
+                                                                {formatDocumentStatus(
+                                                                    document.status
+                                                                )}
+                                                            </AdminBadge>
+                                                        </td>
+                                                        <td
+                                                            className={cn(
+                                                                ADMIN_TD_CLASS,
+                                                                'pr-5 text-xs text-muted'
+                                                            )}
+                                                        >
+                                                            <Link
+                                                                className="inline-flex min-h-9 items-center text-brand hover:text-brand-active focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-focus"
+                                                                onClick={(
+                                                                    event
+                                                                ) =>
+                                                                    event.stopPropagation()
+                                                                }
+                                                                to={`/admin/documents/${document.id}`}
+                                                            >
+                                                                Xem chi tiết
+                                                            </Link>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <AdminPagination
+                            end={pageSlice.end}
+                            itemLabel="tài liệu"
+                            onPageChange={setCurrentPage}
+                            page={pageSlice.page}
+                            start={pageSlice.start}
+                            totalItems={filteredDocuments.length}
+                            totalPages={pageSlice.totalPages}
+                        />
+                    </section>
+                </>
             )}
         </div>
     );

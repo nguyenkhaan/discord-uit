@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
     filterAdminDocuments,
     getInitialDocumentDecision,
+    getAdminDocumentStats,
     type AdminDocumentFilter,
 } from '@/features/documents/admin-document.utils';
 import type { AdminDocument } from '@/features/documents/admin-document.type';
@@ -77,6 +78,18 @@ describe('admin document filtering', () => {
             result.map((document) => document.id),
             ['doc-1', 'doc-2']
         );
+    });
+
+    it('computes summary counts from the filtered documents', () => {
+        const result = filterAdminDocuments(documents, {
+            ...baseFilters,
+            collectionSlug: 'missing-collection',
+        });
+
+        assert.deepEqual(getAdminDocumentStats(result), {
+            total: 0,
+            pending: 0,
+        });
     });
 });
 

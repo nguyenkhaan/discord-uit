@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,12 +27,17 @@ import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.models.Document;
 import com.cloudian.backend.models.DocumentSubmission;
 import com.cloudian.backend.models.Media;
+import com.cloudian.backend.repositories.DocumentTagRepository;
 import com.cloudian.backend.repositories.DocumentRepository;
 import com.cloudian.backend.repositories.DocumentSubmissionRepository;
 import com.cloudian.backend.repositories.MediaRepository;
+import com.cloudian.backend.repositories.TagRepository;
 import com.cloudian.backend.repositories.UserAccountRepository;
 import com.cloudian.backend.services.StorageService;
+import com.cloudian.backend.services.StorageService.StorageObjectMetadata;
 import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
+import com.cloudian.backend.modules.document.dto.DocumentReviewRequest;
+import com.cloudian.backend.modules.document.dto.DocumentUploadInitRequest;
 import com.cloudian.backend.modules.document.dto.UploadDocumentRequest;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +62,12 @@ class DocumentServiceTest {
 
     @Mock
     private UserAccountRepository userAccountRepository;
+
+    @Mock
+    private TagRepository tagRepository;
+
+    @Mock
+    private DocumentTagRepository documentTagRepository;
 
     @Test
     void rejectsUnsupportedExtensionBeforeStorageOrDatabase() {
@@ -182,6 +195,149 @@ class DocumentServiceTest {
         verifyNoInteractions(storageService, mediaRepository, submissionRepository, userAccountRepository);
     }
 
+    @Test
+    void initializesDirectUploadWithoutUploadingTheFile() {
+        when(userAccountRepository.getReferenceById(USER_ID)).thenReturn(null);
+        when(mediaRepository.saveAndFlush(any(Media.class))).thenAnswer(invocation -> {
+            Media media = invocation.getArgument(0);
+            media.setId(MEDIA_ID);
+            return media;
+        });
+        when(documentRepository.saveAndFlush(any(Document.class))).thenAnswer(invocation -> {
+            Document document = invocation.getArgument(0);
+            document.setId(DOCUMENT_ID);
+            return document;
+        });
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> {
+            DocumentSubmission submission = invocation.getArgument(0);
+            submission.setId(SUBMISSION_ID);
+            return submission;
+        });
+        when(storageService.presignedPutUrl(any(), any())).thenReturn("http://minio/upload");
+
+        var response = service().initUpload(USER_ID, new DocumentUploadInitRequest(
+                "My document", "Description", null, "course.pdf", "application/pdf", 7L, List.of()));
+
+        assertThat(response.uploadUrl()).isEqualTo("http://minio/upload");
+        assertThat(response.submissionId()).isEqualTo(SUBMISSION_ID);
+        assertThat(response.mediaStatus()).isEqualTo(MediaStatus.QUARANTINED);
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
+        verify(storageService).presignedPutUrl(any(), any());
+        verify(storageService, org.mockito.Mockito.never()).upload(any(), any(), any(Long.class), any());
+    }
+
+    @Test
+    void completesUploadOnlyWhenMinioObjectMatchesDeclaredMetadata() {
+        Media media = new Media();
+        media.setId(MEDIA_ID);
+        media.setObjectKey("documents/object.pdf");
+        media.setFileName("course.pdf");
+        media.setMimeType("application/pdf");
+        media.setSizeBytes(7);
+        media.setStatus(MediaStatus.QUARANTINED);
+
+        Document document = new Document();
+        document.setId(DOCUMENT_ID);
+        document.setMedia(media);
+        document.setVisibilityStatus(DocumentVisibilityStatus.HIDDEN);
+        document.setTitle("My document");
+        document.setSlug("my-document");
+
+        DocumentSubmission submission = new DocumentSubmission();
+        submission.setId(SUBMISSION_ID);
+        submission.setDocument(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        submission.setSubmittedAt(java.time.Instant.now());
+
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(storageService.statObject("documents/object.pdf"))
+                .thenReturn(new StorageObjectMetadata(7L, "application/pdf", "etag", new byte[] {'%', 'P', 'D', 'F', '-'}));
+        when(mediaRepository.saveAndFlush(any(Media.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DocumentUploadResponse response = service().completeUpload(USER_ID, SUBMISSION_ID);
+
+        assertThat(response.mediaStatus()).isEqualTo(MediaStatus.READY);
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_REVIEW);
+        assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
+    }
+
+    @Test
+    void rejectsCompletionWhenStorageMetadataDoesNotMatchDeclaration() {
+        Document document = pendingDocument();
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(storageService.statObject("documents/object.pdf"))
+                .thenReturn(new StorageObjectMetadata(8L, "application/pdf", "etag", new byte[] {'%', 'P', 'D', 'F', '-'}));
+
+        assertThatThrownBy(() -> service().completeUpload(USER_ID, SUBMISSION_ID))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("size");
+
+        verify(mediaRepository, org.mockito.Mockito.never()).saveAndFlush(any(Media.class));
+        verify(submissionRepository, org.mockito.Mockito.never()).saveAndFlush(any(DocumentSubmission.class));
+    }
+
+    @Test
+    void approvesPendingSubmissionAndPublishesDocument() {
+        Document document = pendingDocument();
+        DocumentSubmission submission = pendingSubmission(document);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(userAccountRepository.getReferenceById(USER_ID)).thenReturn(null);
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentRepository.saveAndFlush(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DocumentUploadResponse response = service().review(USER_ID, SUBMISSION_ID,
+                new DocumentReviewRequest(com.cloudian.backend.modules.document.dto.DocumentReviewDecision.APPROVED, null));
+
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.APPROVED);
+        assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.PUBLIC);
+    }
+
+    @Test
+    void rejectsPendingSubmissionAndKeepsDocumentHidden() {
+        Document document = pendingDocument();
+        DocumentSubmission submission = pendingSubmission(document);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(userAccountRepository.getReferenceById(USER_ID)).thenReturn(null);
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(documentRepository.saveAndFlush(any(Document.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DocumentUploadResponse response = service().review(USER_ID, SUBMISSION_ID,
+                new DocumentReviewRequest(com.cloudian.backend.modules.document.dto.DocumentReviewDecision.REJECTED, "Không đúng nội dung"));
+
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.REJECTED);
+        assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
+    }
+
+    private Document pendingDocument() {
+        Media media = new Media();
+        media.setId(MEDIA_ID);
+        media.setFileName("course.pdf");
+        media.setMimeType("application/pdf");
+        media.setSizeBytes(7);
+        media.setStatus(MediaStatus.READY);
+        media.setObjectKey("documents/object.pdf");
+
+        Document document = new Document();
+        document.setId(DOCUMENT_ID);
+        document.setMedia(media);
+        document.setTitle("My document");
+        document.setSlug("my-document");
+        document.setVisibilityStatus(DocumentVisibilityStatus.HIDDEN);
+        return document;
+    }
+
+    private DocumentSubmission pendingSubmission(Document document) {
+        DocumentSubmission submission = new DocumentSubmission();
+        submission.setId(SUBMISSION_ID);
+        submission.setDocument(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_REVIEW);
+        submission.setSubmittedAt(java.time.Instant.now());
+        return submission;
+    }
+
     private DocumentService service() {
         return new DocumentService(
                 storageService,
@@ -189,6 +345,9 @@ class DocumentServiceTest {
                 documentRepository,
                 submissionRepository,
                 userAccountRepository,
-                "pdf,docx,pptx,txt");
+                tagRepository,
+                documentTagRepository,
+                "pdf,docx,pptx,txt",
+                5_242_880L);
     }
 }

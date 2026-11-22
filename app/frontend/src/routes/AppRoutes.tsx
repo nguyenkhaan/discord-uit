@@ -24,10 +24,11 @@ import AdminAccountsPage from '@/features/admin/pages/AdminAccountsPage';
 import AdminReportsPage from '@/features/admin/pages/AdminReportsPage';
 import AdminServersPage from '@/features/admin/pages/AdminServersPage';
 import AdminDocumentsPage from '@/features/admin/pages/AdminDocumentsPage';
-import AdminDocumentDetailPage from '@/features/admin/pages/AdminDocumentDetailPage';
+import AdminDocumentReviewPage from '@/features/admin/pages/AdminDocumentReviewPage';
 import AdminDocumentListPage from '@/features/admin/pages/AdminDocumentListPage';
 import CollectionDetailPage from '@/features/documents/pages/CollectionDetailPage';
 import DocumentsPage from '@/features/documents/pages/DocumentsPage';
+import DocumentUploadPage from '@/features/documents/pages/DocumentUploadPage';
 import AdminComingSoonPage from '@/pages/AdminComingSoonPage';
 
 export default function AppRoutes() {
@@ -91,6 +92,10 @@ export default function AppRoutes() {
                         />
                         <Route path="/documents" element={<DocumentsPage />} />
                         <Route
+                            path="/documents/upload"
+                            element={<DocumentUploadPage />}
+                        />
+                        <Route
                             path="/documents/collections/:slug"
                             element={<CollectionDetailPage />}
                         />
@@ -143,7 +148,7 @@ export default function AppRoutes() {
                         />
                         <Route
                             path="documents/:documentId"
-                            element={<AdminDocumentDetailPage />}
+                            element={<AdminDocumentReviewPage />}
                         />
                         <Route
                             path="forum"
