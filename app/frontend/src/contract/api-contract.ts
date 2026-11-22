@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/forum/posts/{postId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put: operations["update"];
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/livekit": {
         parameters: {
             query?: never;
@@ -126,6 +142,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["startCall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/screen-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startScreenShare"];
+        delete: operations["stopScreenShare"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/participants/{targetUserId}/force-stop-screen-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["forceStopScreenShare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/calls/participants/{targetUserId}/force-mute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["forceMute"];
         delete?: never;
         options?: never;
         head?: never;
@@ -302,6 +366,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["authorizeServer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search"];
+        put?: never;
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -590,7 +670,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete"];
+        delete: operations["delete_1"];
         options?: never;
         head?: never;
         patch: operations["edit"];
@@ -747,7 +827,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get"];
+        get: operations["get_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -964,6 +1044,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/forum/posts/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMine_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/documents/my-submissions": {
         parameters: {
             query?: never;
@@ -1144,6 +1240,28 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UpdateForumPostRequest: {
+            title: string;
+            content: string;
+            topics?: string[];
+        };
+        ForumPostResponse: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            content?: string;
+            topics?: string[];
+            anonymous?: boolean;
+            authorName?: string;
+            mine?: boolean;
+            /** @enum {string} */
+            status?: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "REMOVED";
+            moderationReason?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         CreateServerRequest: {
             name: string;
             description?: string;
@@ -1233,6 +1351,8 @@ export interface components {
             roomName?: string;
             serverUrl?: string;
             token?: string;
+            /** Format: uuid */
+            coordinatorUserId?: string;
         };
         ChatAttachmentResponse: {
             /** Format: uuid */
@@ -1324,6 +1444,12 @@ export interface components {
             serverId?: string;
             /** @enum {string} */
             role?: "OWNER" | "MEMBER";
+        };
+        CreateForumPostRequest: {
+            title: string;
+            content: string;
+            topics?: string[];
+            anonymous: boolean;
         };
         UploadDocumentRequest: {
             title: string;
@@ -1631,6 +1757,8 @@ export interface components {
             /** Format: int32 */
             maxParticipants?: number;
             participants?: components["schemas"]["Participant"][];
+            /** Format: uuid */
+            activeScreenSharerUserId?: string;
         };
         Participant: {
             /** Format: uuid */
@@ -1680,6 +1808,63 @@ export interface components {
         };
         HealthResponse: {
             message?: string;
+        };
+        ForumPostListRequest: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            q?: string;
+            topics?: string[];
+        };
+        ForumPostPageResponse: {
+            items?: components["schemas"]["ForumPostSummaryResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        ForumPostSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            excerpt?: string;
+            topics?: string[];
+            anonymous?: boolean;
+            authorName?: string;
+            mine?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        MyForumPostPageResponse: {
+            items?: components["schemas"]["MyForumPostResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        MyForumPostResponse: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            excerpt?: string;
+            topics?: string[];
+            anonymous?: boolean;
+            /** @enum {string} */
+            status?: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "REMOVED";
+            moderationReason?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         DocumentSubmissionResponse: {
             /** Format: uuid */
@@ -1760,6 +1945,74 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ForumPostResponse"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateForumPostRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ForumPostResponse"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     handleWebhook: {
         parameters: {
             query?: never;
@@ -2040,6 +2293,78 @@ export interface operations {
             };
         };
     };
+    startScreenShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    stopScreenShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    forceStopScreenShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    forceMute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     joinCall: {
         parameters: {
             query?: never;
@@ -2285,6 +2610,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RealtimeServerAuthorizationResponse"];
+                };
+            };
+        };
+    };
+    search: {
+        parameters: {
+            query: {
+                arg1: components["schemas"]["ForumPostListRequest"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ForumPostPageResponse"];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateForumPostRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ForumPostResponse"];
                 };
             };
         };
@@ -2747,7 +3118,7 @@ export interface operations {
             };
         };
     };
-    delete: {
+    delete_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3115,7 +3486,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3432,6 +3803,28 @@ export interface operations {
                     "*/*": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    listMine_1: {
+        parameters: {
+            query: {
+                arg1: components["schemas"]["ForumPostListRequest"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyForumPostPageResponse"];
                 };
             };
         };

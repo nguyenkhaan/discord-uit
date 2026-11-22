@@ -4,6 +4,7 @@ package com.cloudian.backend.modules.call;
 import java.io.IOException;
 import java.util.List;
 
+import livekit.LivekitModels;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,27 @@ import livekit.LivekitModels.ParticipantInfo;
 import livekit.LivekitModels.Room;
 import retrofit2.Response;
 
+import java.util.Optional;
+
+import livekit.LivekitModels.ParticipantPermission;
+import livekit.LivekitModels.TrackInfo;
+import livekit.LivekitModels.TrackSource;
+
 @Service
 public class LiveKitRoomService {
 
     private static final int MAX_PARTICIPANTS = 30;
+    /** Sources every participant may publish (must match LiveKitTokenService). */
+    private static final List<TrackSource> DEFAULT_SOURCES = List.of(
+            TrackSource.CAMERA,
+            TrackSource.MICROPHONE);
+
+    /** Sources of the single active screen sharer. */
+    private static final List<TrackSource> SHARER_SOURCES = List.of(
+            TrackSource.CAMERA,
+            TrackSource.MICROPHONE,
+            TrackSource.SCREEN_SHARE,
+            TrackSource.SCREEN_SHARE_AUDIO);
 
     private final RoomServiceClient roomServiceClient;
 
@@ -128,6 +146,85 @@ public class LiveKitRoomService {
             throw new ApiException(
                     HttpStatus.BAD_GATEWAY,
                     "Unable to connect to LiveKit when listing participants.");
+        }
+    }
+
+    /**
+     * Grants or revokes the right to publish a screen share.
+     */
+    public void setScreenShareAllowed(
+            String roomName,
+            String identity,
+            boolean allowed) {
+
+        // UpdateParticipant replaces the WHOLE permission object,
+        // so every flag from the join token must be repeated here.
+        ParticipantPermission permission = ParticipantPermission.newBuilder()
+                .setCanSubscribe(true)
+                .setCanPublish(true)
+                .setCanPublishData(true)
+                .addAllCanPublishSources(allowed ? SHARER_SOURCES : DEFAULT_SOURCES)
+                .build();
+
+        try {
+            Response<ParticipantInfo> response = roomServiceClient
+                    .updateParticipant(roomName, identity, null, null, permission)
+                    .execute();
+
+            // Revoking for someone who already left the room is fine.
+            boolean alreadyGone = !allowed && response.code() == 404;
+
+            if (!response.isSuccessful() && !alreadyGone) {
+                throw new ApiException(
+                        HttpStatus.BAD_GATEWAY,
+                        "LiveKit permission update failed. HTTP status: "
+                                + response.code());
+            }
+
+        } catch (IOException e) {
+            throw new ApiException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Unable to connect to LiveKit when updating permissions.");
+        }
+    }
+
+    /**
+     * Returns the sid of a participant's published, unmuted track of a source.
+     */
+    public Optional<String> findPublishedTrackSid(
+            String roomName,
+            String identity,
+            TrackSource source) {
+
+        return listParticipants(roomName).stream()
+                .filter(participant -> identity.equals(participant.getIdentity()))
+                .flatMap(participant -> participant.getTracksList().stream())
+                .filter(track -> track.getSource() == source && !track.getMuted())
+                .map(TrackInfo::getSid)
+                .findFirst();
+    }
+
+    /**
+     * Server-side mute of a published track.
+     */
+    public void muteTrack(String roomName, String identity, String trackSid) {
+
+        try {
+            Response<TrackInfo> response = roomServiceClient
+                    .mutePublishedTrack(roomName, identity, trackSid, true)
+                    .execute();
+
+            if (!response.isSuccessful()) {
+                throw new ApiException(
+                        HttpStatus.BAD_GATEWAY,
+                        "LiveKit track mute failed. HTTP status: "
+                                + response.code());
+            }
+
+        } catch (IOException e) {
+            throw new ApiException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Unable to connect to LiveKit when muting a track.");
         }
     }
 }
