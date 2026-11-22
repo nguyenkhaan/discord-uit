@@ -3,17 +3,12 @@ import axios from 'axios';
 import { privateClient } from '@/api/client';
 import type {
     ActiveCallResponse,
-    CallConnection,
     CallSessionStartResponse,
     LiveKitJoinResponse,
 } from '@/features/call/call.type';
 
 function callUrl(serverId: string): string {
     return `/servers/${serverId}/calls`;
-}
-
-function coordinatorStorageKey(serverId: string): string {
-    return `uit-connect:call-coordinator:${serverId}`;
 }
 
 /** Returns the server's active call, or null when there is none (HTTP 204). */
@@ -45,7 +40,32 @@ export async function joinCall(serverId: string): Promise<LiveKitJoinResponse> {
 
 export async function endCall(serverId: string): Promise<void> {
     await privateClient.post(`${callUrl(serverId)}/end`);
-    sessionStorage.removeItem(coordinatorStorageKey(serverId));
+}
+
+export async function startScreenShare(serverId: string): Promise<void> {
+    await privateClient.post(`${callUrl(serverId)}/screen-share`);
+}
+
+export async function stopScreenShare(serverId: string): Promise<void> {
+    await privateClient.delete(`${callUrl(serverId)}/screen-share`);
+}
+
+export async function forceMute(
+    serverId: string,
+    targetUserId: string
+): Promise<void> {
+    await privateClient.post(
+        `${callUrl(serverId)}/participants/${targetUserId}/force-mute`
+    );
+}
+
+export async function forceStopScreenShare(
+    serverId: string,
+    targetUserId: string
+): Promise<void> {
+    await privateClient.post(
+        `${callUrl(serverId)}/participants/${targetUserId}/force-stop-screen-share`
+    );
 }
 
 function getHttpStatus(error: unknown): number | undefined {
@@ -53,49 +73,26 @@ function getHttpStatus(error: unknown): number | undefined {
 }
 
 /**
- * Join an existing active call. If the server has no active call, create one
- * and then join it. A 409 during creation can mean another request won the
- * race, in which case we retry joining the existing call.
+ * Join the active call, or create one first when there is none (404).
+ * A 409 while creating means another request won the race: just join it.
+ * The coordinator is decided by the backend (coordinatorUserId).
  */
 export async function joinOrStartCall(
     serverId: string
-): Promise<CallConnection> {
+): Promise<LiveKitJoinResponse> {
     try {
-        const response = await joinCall(serverId);
-        const storedRoomName = sessionStorage.getItem(
-            coordinatorStorageKey(serverId)
-        );
-        const isCoordinator = storedRoomName === response.roomName;
-
-        if (storedRoomName && !isCoordinator) {
-            sessionStorage.removeItem(coordinatorStorageKey(serverId));
-        }
-
-        return { response, isCoordinator };
+        return await joinCall(serverId);
     } catch (joinError) {
-        if (getHttpStatus(joinError) !== 404) {
-            throw joinError;
-        }
+        if (getHttpStatus(joinError) !== 404) throw joinError;
     }
 
     try {
-        const createdCall = await startCall(serverId);
-        sessionStorage.setItem(
-            coordinatorStorageKey(serverId),
-            createdCall.roomName
-        );
-        const response = await joinCall(serverId);
-        return { response, isCoordinator: true };
+        await startCall(serverId);
     } catch (startError) {
-        if (getHttpStatus(startError) !== 409) {
-            throw startError;
-        }
-
-        return {
-            response: await joinCall(serverId),
-            isCoordinator: false,
-        };
+        if (getHttpStatus(startError) !== 409) throw startError;
     }
+
+    return joinCall(serverId);
 }
 
 export function getCallErrorMessage(error: unknown): string {
@@ -126,4 +123,43 @@ export function getCallErrorMessage(error: unknown): string {
 
     if (error instanceof Error && error.message) return error.message;
     return 'Đã xảy ra lỗi khi thực hiện cuộc gọi.';
+}
+
+export function getScreenShareErrorMessage(error: unknown): string {
+    const status = getHttpStatus(error);
+    if (status === 409) {
+        return 'Đang có người khác chia sẻ màn hình. Hãy đợi họ dừng rồi thử lại.';
+    }
+    if (status === 403 || status === 404) {
+        return 'Bạn không còn ở trong cuộc gọi nên không thể chia sẻ màn hình.';
+    }
+    if (status === 502) {
+        return 'Không cập nhật được quyền trên LiveKit. Vui lòng thử lại.';
+    }
+    if (error instanceof Error && error.name === 'DeviceUnsupportedError') {
+        return 'Trình duyệt này không hỗ trợ chia sẻ màn hình.';
+    }
+    return getCallErrorMessage(error);
+}
+
+export function getControlErrorMessage(
+    error: unknown,
+    action: 'mute' | 'stop-share'
+): string {
+    const status = getHttpStatus(error);
+    if (status === 403) {
+        return 'Chỉ người điều phối đang có mặt trong cuộc gọi mới dùng được quyền điều khiển.';
+    }
+    if (status === 404) {
+        return 'Người này không còn ở trong cuộc gọi.';
+    }
+    if (status === 409) {
+        return action === 'mute'
+            ? 'Microphone của người này đang tắt sẵn.'
+            : 'Người này không còn chia sẻ màn hình.';
+    }
+    if (status === 502) {
+        return 'LiveKit không phản hồi. Vui lòng thử lại.';
+    }
+    return getCallErrorMessage(error);
 }

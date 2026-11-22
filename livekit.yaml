@@ -1,0 +1,17 @@
+port: 7880
+rtc:
+  tcp_port: 7881
+  # One UDP port instead of a 50000-60000 range: easy to map on Docker Desktop.
+  udp_port: 7882
+  use_external_ip: false
+keys:
+  # key: secret — the secret should be at least 32 characters.
+  devkey: uit-discord-local-secret-change-me-0123456789
+webhook:
+  # Must be one of the keys above; LiveKit signs webhooks with it.
+  api_key: devkey
+  urls:
+    # Backend runs on the host at port 4000 with context path /api.
+    - http://host.docker.internal:4000/api/webhooks/livekit
+logging:
+  level: info

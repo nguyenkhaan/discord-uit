@@ -10,12 +10,7 @@ export interface LiveKitJoinResponse {
     roomName: string;
     serverUrl: string;
     token: string;
-}
-
-export interface CallConnection {
-    response: LiveKitJoinResponse;
-    /** True only when this browser created the call during this connection flow. */
-    isCoordinator: boolean;
+    coordinatorUserId: string; 
 }
 
 export interface ActiveCallParticipant {
@@ -32,4 +27,5 @@ export interface ActiveCallResponse {
     participantCount: number;
     maxParticipants: number;
     participants: ActiveCallParticipant[];
+    activeScreenSharerUserId: string | null;
 }
