@@ -134,6 +134,7 @@ enum OutboxStatus {
   PENDING
   PUBLISHED
   FAILED
+  DEAD_LETTER
 }
 
 // Authentication

@@ -199,7 +199,11 @@ public class DocumentService {
 
         Media media = submission.getDocument().getMedia();
         if (media.getStatus() == MediaStatus.READY) {
+            classificationEventWriter.enqueue(submission);
             return toUploadResponse(submission);
+        }
+        if (media.getStatus() != MediaStatus.QUARANTINED) {
+            throw new ApiException(HttpStatus.CONFLICT, "The document scan is not ready for completion.");
         }
         StorageObjectMetadata metadata;
         try {
@@ -216,10 +220,10 @@ public class DocumentService {
         }
         validateContentSignature(media.getFileName(), metadata.prefix());
 
-        media.setStatus(MediaStatus.READY);
+        media.setVerifiedEtag(metadata.etag());
+        media.setStatus(MediaStatus.SCANNING);
         mediaRepository.saveAndFlush(media);
         submissionRepository.saveAndFlush(submission);
-        classificationEventWriter.enqueue(submission);
         return toUploadResponse(submission);
     }
 

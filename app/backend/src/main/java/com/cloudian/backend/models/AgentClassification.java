@@ -44,7 +44,7 @@ public class AgentClassification {
     @Column(name = "model_id", nullable = false, updatable = false)
     private String modelId;
 
-    @Column(name = "classification_run_id", nullable = false, unique = true, updatable = false, length = 128)
+    @Column(name = "classification_run_id", nullable = false, unique = true, updatable = false)
     private String classificationRunId;
 
     @Column(name = "ocr_text", updatable = false)

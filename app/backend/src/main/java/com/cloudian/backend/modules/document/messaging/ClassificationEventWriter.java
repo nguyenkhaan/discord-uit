@@ -70,7 +70,8 @@ public class ClassificationEventWriter {
                 new ClassificationRequestedEvent.FileMetadata(
                         media.getFileName(),
                         media.getMimeType(),
-                        media.getSizeBytes()),
+                        media.getSizeBytes(),
+                        media.getVerifiedEtag()),
                 new ClassificationRequestedEvent.SignedGetUrl(
                         storageService.presignedGetUrl(media.getObjectKey()),
                         storageService.presignedGetUrlExpiresAt()),

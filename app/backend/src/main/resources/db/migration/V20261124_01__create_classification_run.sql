@@ -1,5 +1,8 @@
 BEGIN;
 
+ALTER TABLE public.media
+    ADD COLUMN IF NOT EXISTS verified_etag varchar(128);
+
 CREATE TABLE IF NOT EXISTS public.classification_run (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     classification_run_id varchar(128) NOT NULL,
@@ -36,8 +39,5 @@ CREATE INDEX IF NOT EXISTS idx_classification_run_media
 
 CREATE INDEX IF NOT EXISTS idx_classification_run_status
     ON public.classification_run (status);
-
-ALTER TABLE public.agent_classification
-    ALTER COLUMN classification_run_id TYPE varchar(128);
 
 COMMIT;

@@ -34,11 +34,12 @@ public record ClassificationRequestedEvent(
         occurredAt = Objects.requireNonNull(occurredAt, "occurredAt is required.");
     }
 
-    public record FileMetadata(String fileName, String mimeType, long sizeBytes) {
+    public record FileMetadata(String fileName, String mimeType, long sizeBytes, String verifiedEtag) {
 
         public FileMetadata {
             fileName = required(fileName, "fileName");
             mimeType = required(mimeType, "mimeType");
+            verifiedEtag = required(verifiedEtag, "verifiedEtag");
             if (sizeBytes <= 0) {
                 throw new IllegalArgumentException("sizeBytes must be positive.");
             }

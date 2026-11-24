@@ -177,7 +177,8 @@ public class ClassificationRun {
                     || next == ClassificationRunStatus.DEAD_LETTER;
             case FAILED -> next == ClassificationRunStatus.QUEUED
                     || next == ClassificationRunStatus.DEAD_LETTER;
-            case SUCCEEDED, DEAD_LETTER -> false;
+            case SUCCEEDED -> false;
+            case DEAD_LETTER -> next == ClassificationRunStatus.QUEUED;
         };
     }
 

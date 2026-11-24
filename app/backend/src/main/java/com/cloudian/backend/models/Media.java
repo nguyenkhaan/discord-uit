@@ -51,6 +51,9 @@ public class Media {
     @Column(name = "object_key", nullable = false, unique = true, updatable = false)
     private String objectKey;
 
+    @Column(name = "verified_etag", length = 128)
+    private String verifiedEtag;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private MediaStatus status = MediaStatus.QUARANTINED;
