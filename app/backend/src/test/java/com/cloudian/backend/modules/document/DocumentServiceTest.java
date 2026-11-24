@@ -47,6 +47,7 @@ import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
 import com.cloudian.backend.modules.document.dto.DocumentReviewRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadInitRequest;
 import com.cloudian.backend.modules.document.dto.UploadDocumentRequest;
+import com.cloudian.backend.modules.document.messaging.ClassificationEventWriter;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
@@ -86,6 +87,9 @@ class DocumentServiceTest {
 
     @Mock
     private DocumentTagRepository documentTagRepository;
+
+    @Mock
+    private ClassificationEventWriter classificationEventWriter;
 
     @Test
     void rejectsUnsupportedExtensionBeforeStorageOrDatabase() {
@@ -278,8 +282,29 @@ class DocumentServiceTest {
         DocumentUploadResponse response = service().completeUpload(USER_ID, SUBMISSION_ID);
 
         assertThat(response.mediaStatus()).isEqualTo(MediaStatus.READY);
-        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_REVIEW);
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
         assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
+        verify(classificationEventWriter).enqueue(submission);
+    }
+
+    @Test
+    void doesNotEnqueueASecondRunForDuplicateCompletionOfReadyMedia() {
+        Document document = pendingDocument();
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+        when(storageService.statObject("documents/object.pdf"))
+                .thenReturn(new StorageObjectMetadata(7L, "application/pdf", "etag", new byte[] {'%', 'P', 'D', 'F', '-'}));
+        when(mediaRepository.saveAndFlush(any(Media.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service().completeUpload(USER_ID, SUBMISSION_ID);
+        DocumentUploadResponse duplicateResponse = service().completeUpload(USER_ID, SUBMISSION_ID);
+
+        assertThat(duplicateResponse.mediaStatus()).isEqualTo(MediaStatus.READY);
+        assertThat(duplicateResponse.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
+        verify(classificationEventWriter).enqueue(submission);
+        verify(storageService).statObject("documents/object.pdf");
     }
 
     @Test
@@ -496,6 +521,7 @@ class DocumentServiceTest {
                 userAccountRepository,
                 tagRepository,
                 documentTagRepository,
+                classificationEventWriter,
                 "pdf,docx,pptx,txt",
                 5_242_880L);
     }
