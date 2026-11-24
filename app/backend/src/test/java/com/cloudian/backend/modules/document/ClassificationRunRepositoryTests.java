@@ -58,7 +58,7 @@ class ClassificationRunRepositoryTests {
     }
 
     @Test
-    void permitsRetryableTransitionsButNotLeavingTerminalStates() {
+    void permitsRetryableTransitionsAndExplicitAdminRequeueFromDeadLetter() {
         DocumentSubmission submission = submissionWithMedia(MediaStatus.READY);
         ClassificationRun run = ClassificationRun.queued(
                 "classification-run-1",
@@ -73,11 +73,8 @@ class ClassificationRunRepositoryTests {
         run.transitionTo(ClassificationRunStatus.DEAD_LETTER, QUEUED_AT.plusSeconds(5));
 
         assertThat(run.getStatus()).isEqualTo(ClassificationRunStatus.DEAD_LETTER);
-        assertThatThrownBy(() -> run.transitionTo(
-                ClassificationRunStatus.QUEUED,
-                QUEUED_AT.plusSeconds(6)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("DEAD_LETTER");
+        run.transitionTo(ClassificationRunStatus.QUEUED, QUEUED_AT.plusSeconds(6));
+        assertThat(run.getStatus()).isEqualTo(ClassificationRunStatus.QUEUED);
     }
 
     @Test
