@@ -99,7 +99,8 @@ class ClassificationRunRepositoryTests {
                 UUID.fromString("00000000-0000-0000-0000-000000005102"),
                 SUBMISSION_ID,
                 MEDIA_ID,
-                new ClassificationRequestedEvent.FileMetadata("course.pdf", "application/pdf", 128L),
+                new ClassificationRequestedEvent.FileMetadata(
+                        "course.pdf", "application/pdf", 128L, "verified-etag"),
                 new ClassificationRequestedEvent.SignedGetUrl(
                         "https://storage.example/signed",
                         Instant.parse("2026-11-24T08:15:00Z")),

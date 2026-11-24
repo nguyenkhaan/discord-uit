@@ -281,31 +281,41 @@ class DocumentServiceTest {
 
         DocumentUploadResponse response = service().completeUpload(USER_ID, SUBMISSION_ID);
 
-        assertThat(response.mediaStatus()).isEqualTo(MediaStatus.READY);
+        assertThat(response.mediaStatus()).isEqualTo(MediaStatus.SCANNING);
         assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
         assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
-        verify(classificationEventWriter).enqueue(submission);
+        verify(classificationEventWriter, org.mockito.Mockito.never()).enqueue(any(DocumentSubmission.class));
     }
 
     @Test
-    void doesNotEnqueueASecondRunForDuplicateCompletionOfReadyMedia() {
+    void enqueuesReadyMediaOnRepeatedCompletionWithoutCreatingASecondRunHere() {
         Document document = pendingDocument();
-        document.getMedia().setStatus(MediaStatus.QUARANTINED);
         DocumentSubmission submission = pendingSubmission(document);
         submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
         when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
-        when(storageService.statObject("documents/object.pdf"))
-                .thenReturn(new StorageObjectMetadata(7L, "application/pdf", "etag", new byte[] {'%', 'P', 'D', 'F', '-'}));
-        when(mediaRepository.saveAndFlush(any(Media.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(submissionRepository.saveAndFlush(any(DocumentSubmission.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service().completeUpload(USER_ID, SUBMISSION_ID);
         DocumentUploadResponse duplicateResponse = service().completeUpload(USER_ID, SUBMISSION_ID);
 
         assertThat(duplicateResponse.mediaStatus()).isEqualTo(MediaStatus.READY);
         assertThat(duplicateResponse.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
-        verify(classificationEventWriter).enqueue(submission);
-        verify(storageService).statObject("documents/object.pdf");
+        verify(classificationEventWriter, org.mockito.Mockito.times(2)).enqueue(submission);
+        verifyNoInteractions(storageService);
+    }
+
+    @Test
+    void rejectsCompletionWhenMediaWasRejectedByScanning() {
+        Document document = pendingDocument();
+        document.getMedia().setStatus(MediaStatus.REJECTED);
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+
+        assertThatThrownBy(() -> service().completeUpload(USER_ID, SUBMISSION_ID))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("scan");
+
+        verifyNoInteractions(storageService, classificationEventWriter);
     }
 
     @Test

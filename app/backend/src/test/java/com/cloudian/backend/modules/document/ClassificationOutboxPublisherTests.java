@@ -20,7 +20,9 @@ import com.cloudian.backend.messagings.KafkaEventProducer;
 import com.cloudian.backend.models.OutboxEvent;
 import com.cloudian.backend.configs.ClassificationKafkaConfig;
 import com.cloudian.backend.modules.document.messaging.ClassificationOutboxPublisher;
+import com.cloudian.backend.models.ClassificationRun;
 import com.cloudian.backend.repositories.OutboxEventRepository;
+import com.cloudian.backend.repositories.ClassificationRunRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ClassificationOutboxPublisherTests {
@@ -33,6 +35,9 @@ class ClassificationOutboxPublisherTests {
 
     @Mock
     private KafkaEventProducer kafkaEventProducer;
+
+    @Mock
+    private ClassificationRunRepository classificationRunRepository;
 
     @Test
     void publishesPendingClassificationRequestAndMarksItPublished() {
@@ -80,17 +85,25 @@ class ClassificationOutboxPublisherTests {
         doThrow(new IllegalStateException("Kafka unavailable"))
                 .when(kafkaEventProducer)
                 .publish(any(), any(), any());
+        ClassificationRun run = org.mockito.Mockito.mock(ClassificationRun.class);
+        when(classificationRunRepository.findById(RUN_ID)).thenReturn(java.util.Optional.of(run));
         ClassificationOutboxPublisher publisher = publisher(3);
 
         publisher.publishPending();
 
         assertThat(event.getAttemptCount()).isEqualTo(3);
         assertThat(event.getStatus()).isEqualTo(OutboxStatus.DEAD_LETTER);
+        verify(run).transitionTo(eq(com.cloudian.backend.commons.enums.ClassificationRunStatus.DEAD_LETTER), any());
+        verify(classificationRunRepository).save(run);
         verify(outboxEventRepository).save(event);
     }
 
     private ClassificationOutboxPublisher publisher(int maxAttempts) {
-        return new ClassificationOutboxPublisher(outboxEventRepository, kafkaEventProducer, maxAttempts);
+        return new ClassificationOutboxPublisher(
+                outboxEventRepository,
+                kafkaEventProducer,
+                classificationRunRepository,
+                maxAttempts);
     }
 
     private static OutboxEvent pendingEvent(int attemptCount) {

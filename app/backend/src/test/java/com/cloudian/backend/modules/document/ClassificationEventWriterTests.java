@@ -100,6 +100,8 @@ class ClassificationEventWriterTests {
                 .isEqualTo("https://storage.example/signed");
         assertThat(payload.get("signedGetUrl").get("expiresAt").stringValue())
                 .isEqualTo(EXPIRES_AT.toString());
+        assertThat(payload.get("file").get("verifiedEtag").stringValue())
+                .isEqualTo("verified-etag");
         assertThat(payload.get("taxonomy").get("collectionSlugs").get(0).stringValue())
                 .isEqualTo("cloud-computing");
         assertThat(payload.get("taxonomy").get("tagSlugs").get(0).stringValue())
@@ -142,6 +144,7 @@ class ClassificationEventWriterTests {
         media.setMimeType("application/pdf");
         media.setSizeBytes(128);
         media.setStatus(MediaStatus.READY);
+        media.setVerifiedEtag("verified-etag");
 
         Document document = new Document();
         document.setId(DOCUMENT_ID);
