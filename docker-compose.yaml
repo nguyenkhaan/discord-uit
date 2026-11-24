@@ -45,6 +45,20 @@ services:
           --topic notification.events.v1 \
           --bootstrap-server kafka:9092
 
+        for topic in \
+          document.classification.requested.v1 \
+          document.classification.completed.v1 \
+          document.classification.failed.v1 \
+          document.classification.dlq.v1; do
+          /opt/kafka/bin/kafka-topics.sh \
+            --create \
+            --if-not-exists \
+            --topic "$$topic" \
+            --partitions 3 \
+            --replication-factor 1 \
+            --bootstrap-server kafka:9092
+        done
+
   livekit:
     image: livekit/livekit-server:latest
     # node-ip 127.0.0.1: the browser on this machine connects to localhost.

@@ -1,10 +1,12 @@
 package com.cloudian.backend.configs;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @EnableScheduling
+@PropertySource("classpath:application-classification.properties")
 public class ClassificationKafkaConfig {
 
     public static final String REQUESTED_TOPIC = "document.classification.requested.v1";
