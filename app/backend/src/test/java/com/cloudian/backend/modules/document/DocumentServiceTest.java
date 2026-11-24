@@ -290,6 +290,7 @@ class DocumentServiceTest {
     @Test
     void doesNotEnqueueASecondRunForDuplicateCompletionOfReadyMedia() {
         Document document = pendingDocument();
+        document.getMedia().setStatus(MediaStatus.QUARANTINED);
         DocumentSubmission submission = pendingSubmission(document);
         submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
         when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
@@ -310,6 +311,7 @@ class DocumentServiceTest {
     @Test
     void rejectsCompletionWhenStorageMetadataDoesNotMatchDeclaration() {
         Document document = pendingDocument();
+        document.getMedia().setStatus(MediaStatus.QUARANTINED);
         DocumentSubmission submission = pendingSubmission(document);
         submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
         when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
