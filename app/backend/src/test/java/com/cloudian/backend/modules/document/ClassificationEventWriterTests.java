@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.cloudian.backend.commons.enums.DocumentSubmissionStatus;
 import com.cloudian.backend.commons.enums.MediaStatus;
@@ -74,6 +75,7 @@ class ClassificationEventWriterTests {
         when(storageService.presignedGetUrlExpiresAt()).thenReturn(EXPIRES_AT);
         when(classificationRunRepository.save(any(ClassificationRun.class))).thenAnswer(invocation -> {
             ClassificationRun run = invocation.getArgument(0);
+            ReflectionTestUtils.setField(run, "id", UUID.fromString("00000000-0000-0000-0000-000000006004"));
             return run;
         });
         JsonMapper jsonMapper = JsonMapper.builder().build();
