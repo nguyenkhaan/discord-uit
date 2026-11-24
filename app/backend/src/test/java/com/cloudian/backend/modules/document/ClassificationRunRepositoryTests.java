@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,9 @@ import com.cloudian.backend.models.ClassificationRun;
 import com.cloudian.backend.models.Document;
 import com.cloudian.backend.models.DocumentSubmission;
 import com.cloudian.backend.models.Media;
+import com.cloudian.backend.modules.document.messaging.ClassificationCompletedEvent;
+import com.cloudian.backend.modules.document.messaging.ClassificationFailedEvent;
+import com.cloudian.backend.modules.document.messaging.ClassificationRequestedEvent;
 import com.cloudian.backend.repositories.ClassificationRunRepository;
 
 class ClassificationRunRepositoryTests {
@@ -84,6 +88,71 @@ class ClassificationRunRepositoryTests {
         assertThat(ClassificationRunRepository.class
                 .getMethod("findByDocumentSubmission_Id", UUID.class))
                 .isNotNull();
+    }
+
+    @Test
+    void requestEventCarriesVersionedSafeInputAndImmutableTaxonomySnapshot() {
+        ClassificationRequestedEvent event = new ClassificationRequestedEvent(
+                "v1",
+                UUID.fromString("00000000-0000-0000-0000-000000005101"),
+                "classification-run-1",
+                UUID.fromString("00000000-0000-0000-0000-000000005102"),
+                SUBMISSION_ID,
+                MEDIA_ID,
+                new ClassificationRequestedEvent.FileMetadata("course.pdf", "application/pdf", 128L),
+                new ClassificationRequestedEvent.SignedGetUrl(
+                        "https://storage.example/signed",
+                        Instant.parse("2026-11-24T08:15:00Z")),
+                new ClassificationRequestedEvent.TaxonomySnapshot(
+                        "taxonomy-2026-11-24",
+                        List.of("cloud-computing"),
+                        List.of("java")),
+                1,
+                QUEUED_AT);
+
+        assertThat(event.schemaVersion()).isEqualTo("v1");
+        assertThat(event.file().sizeBytes()).isEqualTo(128L);
+        assertThat(event.signedGetUrl().expiresAt()).isAfter(QUEUED_AT);
+        assertThat(event.taxonomy().collectionSlugs()).containsExactly("cloud-computing");
+        assertThatThrownBy(() -> event.taxonomy().collectionSlugs().add("new-slug"))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void completionAndFailureEventsCarryTheSameRunIdentity() {
+        UUID eventId = UUID.fromString("00000000-0000-0000-0000-000000005201");
+        UUID documentId = UUID.fromString("00000000-0000-0000-0000-000000005202");
+
+        ClassificationCompletedEvent completed = new ClassificationCompletedEvent(
+                "v1",
+                eventId,
+                "classification-run-1",
+                documentId,
+                SUBMISSION_ID,
+                MEDIA_ID,
+                "classifier-v1",
+                "Extracted text",
+                true,
+                List.of(new ClassificationCompletedEvent.Suggestion("cloud-computing", 0.95)),
+                List.of(new ClassificationCompletedEvent.Suggestion("java", 0.8)),
+                1,
+                QUEUED_AT);
+        ClassificationFailedEvent failed = new ClassificationFailedEvent(
+                "v1",
+                UUID.fromString("00000000-0000-0000-0000-000000005203"),
+                "classification-run-1",
+                documentId,
+                SUBMISSION_ID,
+                MEDIA_ID,
+                "OCR_TIMEOUT",
+                "OCR timed out",
+                true,
+                1,
+                QUEUED_AT);
+
+        assertThat(completed.classificationRunId()).isEqualTo(failed.classificationRunId());
+        assertThat(completed.collectionSuggestions()).hasSize(1);
+        assertThat(failed.retryable()).isTrue();
     }
 
     private static DocumentSubmission submissionWithMedia(MediaStatus status) {
