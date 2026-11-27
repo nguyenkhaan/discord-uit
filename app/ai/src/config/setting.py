@@ -41,10 +41,8 @@ class Settings(BaseSettings):
     ocr_timeout_seconds: int = Field(default=120, ge=1, le=3600)
     max_upload_bytes: int = Field(default=10_485_760, ge=1)  # 10MB
     max_ocr_pages: int = Field(default=20, ge=1)
+    ocr_cpu_threads: int = Field(default=2, ge=1, le=64)
     ocr_render_dpi: int = Field(default=300, ge=72, le=600)
-    ocr_cpu_threads: int = Field(default=4, ge=1)
-    ocr_languages: str = "eng+vie"
-    tesseract_command: str = "tesseract"
     max_ocr_pixels_per_page: int = Field(default=16_777_216, ge=1)  # 16 megapixels
     max_pdf_pages: int = Field(default=100, ge=1)
     max_archive_expanded_bytes: int = Field(default=50_000_000, ge=1_024)

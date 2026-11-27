@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from src.agentic.ocr_ai import TesseractOcrProvider
+from src.agentic.ocr_ai import RapidOcrProvider
 from src.config.setting import Settings
 from src.content.file_probe import ContentProcessingError, probe_file
 from src.content.pdf_ocr import OcrProvider
@@ -167,7 +167,9 @@ async def extract_request_content(
         settings.max_upload_bytes,
     )
 
-    provider = ocr_provider
-    if provider is None and settings.tesseract_command:
-        provider = TesseractOcrProvider(settings)
+    provider = (
+        ocr_provider
+        if ocr_provider is not None
+        else RapidOcrProvider(settings.ocr_cpu_threads)
+    )
     return await extract_document(data, probe, settings, provider)

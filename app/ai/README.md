@@ -10,7 +10,7 @@ Copy `.env.example` to `.env`. Set `DATABASE_URL` to the PostgreSQL database whe
 
 `DOCUMENT_URL_ALLOWED_HOSTS` is a comma-separated allowlist of exact `host:port` values from backend signed URLs. Add the storage endpoint used by the backend. The worker rejects other hosts and redirects. Do not put storage credentials or permanent object keys in this service's configuration.
 
-Scanned PDFs use local Tesseract OCR. Install Tesseract and the language packs named by `OCR_LANGUAGES` in the worker image/host; the default is English and Vietnamese (`eng+vie`). The OCR code does not send page images to a third-party service. If the local OCR binary or language data is missing, scanned-document jobs return a safe configuration failure.
+Scanned PDFs use RapidOCR PP-OCRv6 small with ONNX Runtime and Vietnamese recognition. RapidOCR and its CPU runtime are installed through this project's `uv` dependencies; no system OCR binary or third-party OCR API is used. RapidOCR downloads model weights on first use and caches them under its package model directory, so that directory must be writable and the first OCR run needs network access. Provision the models in advance for offline deployments. OCR runs locally in a killable child process, and PDF page images stay on this machine. `OCR_CPU_THREADS` limits ONNX Runtime CPU threads (default: 2). The first page may take longer while the model initializes.
 
 ## Run and check
 
@@ -31,11 +31,10 @@ Readiness becomes healthy after the worker has connected to PostgreSQL and Kafka
 
 ## Manual content checks
 
-To test local PDF extraction without sending it to Kafka, run this from `app/ai`. The default path is `/home/cloud/Downloads/IEEEBC27_paper__49.pdf`; pass another PDF path as the optional argument:
+To test local PDF extraction without sending it to Kafka, run this from `app/ai` and pass a PDF path:
 
 ```bash
-uv run python -m scripts.manual_extract
 uv run python -m scripts.manual_extract /path/to/sample.pdf
 ```
 
-Expected behavior: text-layer PDFs report `source=pdf_text` and skip OCR; scanned PDFs report `source=ocr` (or `mixed`) and use Tesseract. TXT, DOCX and PPTX extraction are covered by the AI tests. Extracted text is sensitive; avoid pasting it into logs or tickets.
+Expected behavior: text-layer PDFs report `source=pdf_text` and skip OCR; scanned PDFs report `source=ocr` (or `mixed`) and use RapidOCR PP-OCRv6 small. The manual script prints all extracted text. TXT, DOCX and PPTX extraction are covered by the AI tests. Extracted text is sensitive; avoid pasting it into logs or tickets.

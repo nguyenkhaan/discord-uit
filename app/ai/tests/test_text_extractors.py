@@ -37,10 +37,14 @@ class FixedOcrProvider(OcrProvider):
     def __init__(self, text: str = "Recognized scanned document text.") -> None:
         self.text = text
         self.calls = 0
+        self.closed = 0
 
     async def extract_text(self, image_bytes: bytes) -> str:
         self.calls += 1
         return self.text
+
+    async def aclose(self) -> None:
+        self.closed += 1
 
 
 class TextExtractorTests(unittest.IsolatedAsyncioTestCase):
@@ -65,6 +69,7 @@ class TextExtractorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.text, "Recognized scanned document text.")
         self.assertTrue(result.needs_ocr)
         self.assertEqual(ocr.calls, 1)
+        self.assertEqual(ocr.closed, 1)
 
     async def test_rejects_pdf_and_ocr_page_limits_before_partial_extraction(self) -> None:
         data = create_pdf(None, page_count=2)
@@ -111,10 +116,12 @@ class TextExtractorTests(unittest.IsolatedAsyncioTestCase):
                 await asyncio.sleep(2)
                 return await super().extract_text(image_bytes)
 
+        ocr = SlowOcr()
         with self.assertRaises(ContentProcessingError) as raised:
-            await extract_document(data, probe, settings, SlowOcr())
+            await extract_document(data, probe, settings, ocr)
 
         self.assertEqual(raised.exception.code, "OCR_TIMEOUT")
+        self.assertEqual(ocr.closed, 1)
 
     async def test_ocr_timeout_kills_and_reaps_pdf_render_process(self) -> None:
         data = create_pdf(None)

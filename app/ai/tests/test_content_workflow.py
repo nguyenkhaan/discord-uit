@@ -3,9 +3,12 @@ import logging
 import unittest
 
 import httpx
+import pymupdf
+from unittest.mock import AsyncMock, patch
 
 from src.config.setting import Settings
 from src.content.file_probe import ContentProcessingError
+from src.content.text_extractors import ExtractedContent
 from src.contract.classification_event import ClassificationRequestedEvent
 from src.agentic.workflow import extract_request_content
 
@@ -66,6 +69,50 @@ class ContentWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result.text, "Private notes content.")
         self.assertEqual(len(seen_urls), 1)
+
+    async def test_uses_rapidocr_as_the_default_scanned_pdf_provider(self) -> None:
+        document = pymupdf.open()
+        page = document.new_page()
+        page.draw_rect(pymupdf.Rect(20, 20, 250, 250), fill=(0.9, 0.9, 0.9))
+        image_pdf = document.tobytes()
+        document.close()
+        expected = ExtractedContent("recognized", "ocr", True, 1)
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, content=image_pdf)
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        provider = object()
+        request = request_for(
+            "https://files.internal:9443/private/scan.pdf",
+            len(image_pdf),
+        )
+        request = request.model_copy(
+            update={
+                "file": request.file.model_copy(
+                    update={"file_name": "scan.pdf", "mime_type": "application/pdf"}
+                )
+            }
+        )
+        with (
+            patch("src.agentic.workflow.RapidOcrProvider", return_value=provider) as provider_factory,
+            patch(
+                "src.agentic.workflow.extract_document",
+                new=AsyncMock(return_value=expected),
+            ) as extract_document,
+        ):
+            try:
+                result = await extract_request_content(
+                    request,
+                    Settings(_env_file=None, document_url_allowed_hosts="files.internal:9443"),
+                    http_client=client,
+                )
+            finally:
+                await client.aclose()
+
+        self.assertIs(result, expected)
+        provider_factory.assert_called_once_with(2)
+        self.assertIs(extract_document.await_args.args[3], provider)
 
     async def test_http_info_logs_never_include_the_signed_url(self) -> None:
         payload = b"Private notes content."

@@ -14,6 +14,8 @@ from src.content.file_probe import ContentProcessingError
 class OcrProvider(Protocol):
     async def extract_text(self, image_bytes: bytes) -> str: ...
 
+    async def aclose(self) -> None: ...
+
 
 def render_pdf_page(data: bytes, page_number: int, settings: Settings) -> bytes:
     return _render_pdf_page_with_limits(
@@ -116,21 +118,24 @@ async def ocr_pdf_pages(
     recognized: dict[int, str] = {}
     total_chars = initial_text_chars
     try:
-        async with asyncio.timeout(settings.ocr_timeout_seconds):
-            for page_number in page_numbers:
-                image_bytes = await _render_pdf_page_isolated(data, page_number, settings)
-                page_text = await provider.extract_text(image_bytes)
-                total_chars += len(page_text)
-                if total_chars > settings.max_extracted_text_chars:
-                    raise ContentProcessingError(
-                        "TEXT_TOO_LONG",
-                        "Extracted text exceeds the processing limit.",
-                    )
-                recognized[page_number] = page_text
-    except TimeoutError:
-        raise ContentProcessingError(
-            "OCR_TIMEOUT",
-            "OCR did not finish within the processing time limit.",
-            retryable=True,
-        ) from None
+        try:
+            async with asyncio.timeout(settings.ocr_timeout_seconds):
+                for page_number in page_numbers:
+                    image_bytes = await _render_pdf_page_isolated(data, page_number, settings)
+                    page_text = await provider.extract_text(image_bytes)
+                    total_chars += len(page_text)
+                    if total_chars > settings.max_extracted_text_chars:
+                        raise ContentProcessingError(
+                            "TEXT_TOO_LONG",
+                            "Extracted text exceeds the processing limit.",
+                        )
+                    recognized[page_number] = page_text
+        except TimeoutError:
+            raise ContentProcessingError(
+                "OCR_TIMEOUT",
+                "OCR did not finish within the processing time limit.",
+                retryable=True,
+            ) from None
+    finally:
+        await provider.aclose()
     return recognized
