@@ -5,12 +5,16 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from src.agentic.llm import GroqClassificationClient
 from src.agentic.ocr_ai import RapidOcrProvider
 from src.config.setting import Settings
 from src.content.file_probe import ContentProcessingError, probe_file
 from src.content.pdf_ocr import OcrProvider
 from src.content.text_extractors import ExtractedContent, extract_document
-from src.contract.classification_event import ClassificationRequestedEvent
+from src.contract.classification_event import (
+    ClassificationCompletedEvent,
+    ClassificationRequestedEvent,
+)
 
 
 class _HttpxRequestLogFilter(logging.Filter):
@@ -173,3 +177,49 @@ async def extract_request_content(
         else RapidOcrProvider(settings.ocr_cpu_threads)
     )
     return await extract_document(data, probe, settings, provider)
+
+
+async def process_classification_request(
+    event: ClassificationRequestedEvent,
+    settings: Settings,
+    *,
+    ocr_provider: OcrProvider | None = None,
+    http_client: httpx.AsyncClient | None = None,
+    llm_client: GroqClassificationClient | None = None,
+) -> tuple[str, str]:
+    extracted = await extract_request_content(
+        event,
+        settings,
+        ocr_provider=ocr_provider,
+        http_client=http_client,
+    )
+    if not extracted.text.strip():
+        raise ContentProcessingError(
+            "EMPTY_DOCUMENT_TEXT",
+            "No readable text could be extracted from the document.",
+        )
+
+    classifier = llm_client or GroqClassificationClient(settings)
+    recommendations = await classifier.recommend(
+        document_text=extracted.text,
+        collection_slugs=event.taxonomy.collection_slugs,
+        tag_slugs=event.taxonomy.tag_slugs,
+    )
+    recommendations.validate_taxonomy(
+        collection_slugs=set(event.taxonomy.collection_slugs),
+        tag_slugs=set(event.taxonomy.tag_slugs),
+    )
+
+    output = ClassificationCompletedEvent(
+        classification_run_id=event.classification_run_id,
+        document_id=event.document_id,
+        submission_id=event.submission_id,
+        media_id=event.media_id,
+        model_id=f"{settings.llm_provider}/{settings.llm_model}",
+        ocr_text=extracted.text,
+        ocr_needed=extracted.needs_ocr,
+        collection_suggestions=recommendations.collection_suggestions,
+        tag_suggestions=recommendations.tag_suggestions,
+        attempt=event.attempt,
+    )
+    return settings.kafka_completed_topic, output.model_dump_json(by_alias=True)

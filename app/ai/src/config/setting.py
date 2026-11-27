@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     # LLM (Groq / OpenRouter)
     llm_provider: str = "groq"
     llm_timeout_seconds: int = Field(default=60, ge=1, le=3600)
+    llm_max_input_chars: int = Field(default=60_000, ge=1_000, le=200_000)
     groq_api_key: str | None = None
     llm_model: str = "openai/gpt-oss-20b"
 

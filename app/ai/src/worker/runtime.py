@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import json
 import logging
+from functools import partial
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 from sqlalchemy import make_url, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from src.agentic.workflow import process_classification_request
 from src.config.setting import Settings, get_settings
 from src.contract.classification_event import (
     ClassificationCompletedEvent,
@@ -59,7 +61,10 @@ class ClassificationWorker:
         if self._settings.database_url is None:
             raise RuntimeError("DATABASE_URL is required for the classification worker.")
 
-        self._processor = processor or self._pipeline_not_ready
+        self._processor = processor or partial(
+            process_classification_request,
+            settings=self._settings,
+        )
         self._engine: AsyncEngine | None = None
         self._job_store: JobStore | None = None
         self._consumer: KafkaConsumer | None = None
@@ -392,22 +397,3 @@ class ClassificationWorker:
         assert self._consumer is not None
 
         await self._consumer.commit(record.topic, record.partition, record.offset + 1)
-
-    async def _pipeline_not_ready(
-        self,
-        request: ClassificationRequestedEvent,
-    ) -> tuple[str, str]:
-        event = ClassificationFailedEvent(
-            classification_run_id=request.classification_run_id,
-            document_id=request.document_id,
-            submission_id=request.submission_id,
-            media_id=request.media_id,
-            failure_code="PIPELINE_NOT_IMPLEMENTED",
-            failure_message="OCR and classification pipeline is not deployed yet.",
-            retryable=False,
-            attempt=request.attempt,
-        )
-        return (
-            self._settings.kafka_failed_topic,
-            event.model_dump_json(by_alias=True),
-        )

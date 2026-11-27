@@ -222,11 +222,11 @@ Expected: PASS; OCR is skipped for readable text PDFs and used for image-only PD
 - Failure updates run status, leaves the submission non-public, and allows bounded retry.
 - No result path can set `APPROVED`, `PUBLIC` or final taxonomy.
 
-- [ ] **Step 1: Add failing worker output tests** for valid output, unknown slug, confidence outside `[0,1]`, duplicate suggestion and oversized OCR text.
-- [ ] **Step 2: Add failing backend consumer tests** for success, duplicate completion, stale submission, media mismatch, failure and retry exhaustion.
-- [ ] **Step 3: Implement AI structured output validation and model provenance.**
-- [ ] **Step 4: Implement the backend transactional result consumer** with idempotency and allowlist validation.
-- [ ] **Step 5: Run AI and backend focused tests.**
+- [x] **Step 1: Add failing worker output tests** for valid output, unknown slug, confidence outside `[0,1]`, duplicate suggestion and oversized OCR text.
+- [x] **Step 2: Add failing backend consumer tests** for success, duplicate completion, stale submission, media mismatch, failure and retry exhaustion.
+- [x] **Step 3: Implement AI structured output validation and model provenance.**
+- [x] **Step 4: Implement the backend transactional result consumer** with idempotency and allowlist validation.
+- [x] **Step 5: Run AI and backend focused tests.**
 
 Run: `uv run pytest app/ai/tests/test_classification_output.py -q`
 Run: `./gradlew test --tests '*ClassificationResultServiceTests'`
