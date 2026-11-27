@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "app/frontend"
+		},
+		{
+			"path": "app/ai"
 		}
 	],
 	"settings": {
