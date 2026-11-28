@@ -18,6 +18,15 @@ public interface ClassificationRunRepository extends JpaRepository<Classificatio
 
     Optional<ClassificationRun> findByDocumentSubmission_Id(UUID submissionId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select run
+            from ClassificationRun run
+            where run.documentSubmission.id = :submissionId
+            """)
+    Optional<ClassificationRun> findByDocumentSubmission_IdForUpdate(
+            @Param("submissionId") UUID submissionId);
+
     boolean existsByClassificationRunId(String classificationRunId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

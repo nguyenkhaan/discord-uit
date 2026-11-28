@@ -15,6 +15,7 @@ import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Skeleton } from '@/components/common/Skeleton';
 import { AdminBadge } from '@/features/admin/components/AdminBadge';
+import { AdminDocumentClassificationPanel } from '@/features/admin/components/AdminDocumentClassificationPanel';
 import { AdminDocumentTaxonomyEditor } from '@/features/admin/components/AdminDocumentTaxonomyEditor';
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader';
 import { formatAdminDate, formatAdminTime } from '@/features/admin/admin.utils';
@@ -22,6 +23,7 @@ import { hasTaxonomySelectionChanged } from '@/features/admin/admin-document-tax
 import type { AdminTone } from '@/features/admin/admin.type';
 import { formatFileSize } from '@/features/documents/document.format';
 import {
+    useAdminDocumentClassificationQuery,
     useAdminDocumentPreviewQuery,
     useUpdateAdminDocumentTaxonomyMutation,
     useAdminSubmissionsQuery,
@@ -245,6 +247,15 @@ export default function AdminDocumentReviewPage() {
         (item) =>
             item.submissionId === documentId || item.documentId === documentId
     );
+    const classificationQuery = useAdminDocumentClassificationQuery(
+        submission?.submissionId,
+        submission?.submissionStatus === 'PENDING_PROCESSING'
+    );
+    const classificationStatus = classificationQuery.data?.status;
+    const refreshAdminQueue = submissionsQuery.refetch;
+    useEffect(() => {
+        if (classificationStatus !== undefined) void refreshAdminQueue();
+    }, [classificationStatus, refreshAdminQueue]);
     const previewQuery = useAdminDocumentPreviewQuery(submission?.submissionId);
     const reviewMutation = useReviewAdminDocumentMutation();
     const taxonomyMutation = useUpdateAdminDocumentTaxonomyMutation();
@@ -546,6 +557,15 @@ export default function AdminDocumentReviewPage() {
                             />
                         </dl>
                     </section>
+                    <AdminDocumentClassificationPanel
+                        classification={classificationQuery.data}
+                        isError={classificationQuery.isError}
+                        isLoading={classificationQuery.isLoading}
+                        mediaStatus={currentSubmission.mediaStatus}
+                        onRetryLoad={() => void classificationQuery.refetch()}
+                        submissionId={submissionId}
+                        submissionStatus={currentSubmission.submissionStatus}
+                    />
                     <AdminDocumentTaxonomyEditor
                         collections={collectionsQuery.data?.items ?? []}
                         hasUnsavedChanges={hasUnsavedTaxonomyChanges}

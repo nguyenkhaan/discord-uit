@@ -21,6 +21,9 @@ import com.cloudian.backend.modules.document.dto.DocumentSubmissionResponse;
 import com.cloudian.backend.modules.document.dto.DocumentTaxonomyResponse;
 import com.cloudian.backend.modules.document.dto.DocumentTaxonomyUpdateRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
+import com.cloudian.backend.modules.document.dto.ClassificationReviewResponse;
+import com.cloudian.backend.modules.document.dto.ClassificationRetryResponse;
+import com.cloudian.backend.modules.document.messaging.ClassificationEventWriter;
 import com.cloudian.backend.security.CustomUserDetails;
 
 import jakarta.validation.Valid;
@@ -33,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 public class AdminDocumentController {
 
     private final DocumentService documentService;
+    private final ClassificationResultService classificationResultService;
+    private final ClassificationEventWriter classificationEventWriter;
 
     @GetMapping("/submissions")
     public List<DocumentSubmissionResponse> listSubmissions() {
@@ -42,6 +47,17 @@ public class AdminDocumentController {
     @GetMapping("/submissions/{submissionId}/preview-url")
     public DocumentPreviewResponse preview(@PathVariable("submissionId") UUID submissionId) {
         return documentService.previewSubmission(submissionId);
+    }
+
+    @GetMapping("/submissions/{submissionId}/classification")
+    public ClassificationReviewResponse classification(@PathVariable("submissionId") UUID submissionId) {
+        return classificationResultService.getAdminClassification(submissionId);
+    }
+
+    @PostMapping("/submissions/{submissionId}/classification/retry")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public ClassificationRetryResponse retryClassification(@PathVariable("submissionId") UUID submissionId) {
+        return ClassificationRetryResponse.from(classificationEventWriter.retry(submissionId));
     }
 
     @PostMapping("/submissions/{submissionId}/review")

@@ -9,12 +9,14 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cloudian.backend.commons.enums.ClassificationRunStatus;
 import com.cloudian.backend.commons.enums.DocumentSubmissionStatus;
 import com.cloudian.backend.commons.enums.MediaStatus;
+import com.cloudian.backend.exceptions.ApiException;
 import com.cloudian.backend.models.AgentClassification;
 import com.cloudian.backend.models.AgentClassificationCollection;
 import com.cloudian.backend.models.AgentClassificationTag;
@@ -23,6 +25,7 @@ import com.cloudian.backend.models.Collection;
 import com.cloudian.backend.models.DocumentSubmission;
 import com.cloudian.backend.models.Media;
 import com.cloudian.backend.models.Tag;
+import com.cloudian.backend.modules.document.dto.ClassificationReviewResponse;
 import com.cloudian.backend.modules.document.messaging.ClassificationCompletedEvent;
 import com.cloudian.backend.modules.document.messaging.ClassificationFailedEvent;
 import com.cloudian.backend.repositories.AgentClassificationCollectionRepository;
@@ -71,6 +74,53 @@ public class ClassificationResultService {
         this.collectionRepository = collectionRepository;
         this.tagRepository = tagRepository;
         this.maxAttempts = maxAttempts;
+    }
+
+    @Transactional(readOnly = true)
+    public ClassificationReviewResponse getAdminClassification(UUID submissionId) {
+        if (!documentSubmissionRepository.existsById(submissionId)) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Document submission was not found.");
+        }
+        ClassificationRun run = classificationRunRepository
+                .findByDocumentSubmission_Id(submissionId)
+                .orElse(null);
+        if (run == null) {
+            return new ClassificationReviewResponse(
+                    null, null, 0, null, false, null, null, null,
+                    null, null, null, null, List.of(), List.of());
+        }
+
+        AgentClassification classification = agentClassificationRepository
+                .findByClassificationRunId(run.getClassificationRunId())
+                .orElse(null);
+        List<ClassificationReviewResponse.Suggestion> collectionSuggestions = classification == null
+                ? List.of()
+                : collectionLinkRepository.findAllByAgentClassification_Id(classification.getId()).stream()
+                        .map(link -> new ClassificationReviewResponse.Suggestion(
+                                link.getCollection().getSlug(), link.getConfidence()))
+                        .toList();
+        List<ClassificationReviewResponse.Suggestion> tagSuggestions = classification == null
+                ? List.of()
+                : tagLinkRepository.findAllByAgentClassification_Id(classification.getId()).stream()
+                        .map(link -> new ClassificationReviewResponse.Suggestion(
+                                link.getTag().getSlug(), link.getConfidence()))
+                        .toList();
+
+        return new ClassificationReviewResponse(
+                run.getClassificationRunId(),
+                run.getStatus(),
+                run.getAttemptCount(),
+                classification == null ? run.getModelId() : classification.getModelId(),
+                run.isOcrNeeded(),
+                classification == null ? null : classification.getOcrText(),
+                run.getFailureCode(),
+                run.getFailureMessage(),
+                run.getQueuedAt(),
+                run.getStartedAt(),
+                run.getCompletedAt(),
+                classification == null ? null : classification.getCreatedAt(),
+                collectionSuggestions,
+                tagSuggestions);
     }
 
     @Transactional

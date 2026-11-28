@@ -59,11 +59,11 @@
 - A run for a non-`READY` media row cannot be queued.
 - Existing suggestion tables remain append-only and are not confused with official document taxonomy.
 
-- [ ] **Step 1: Write failing repository/entity tests** for unique run id, submission/media references, and status transitions.
-- [ ] **Step 2: Run the focused backend tests** and confirm the new schema/entity is missing.
-- [ ] **Step 3: Add the Flyway migration and JPA model/repository** with foreign keys, indexes, status enum, and unique constraint.
-- [ ] **Step 4: Define versioned event DTOs** with `eventId`, `classificationRunId`, `documentId`, `submissionId`, `mediaId`, file metadata, signed URL metadata, taxonomy snapshot/version, attempt and timestamp.
-- [ ] **Step 5: Run focused repository tests and migration validation**.
+- [x] **Step 1: Write failing repository/entity tests** for unique run id, submission/media references, and status transitions.
+- [x] **Step 2: Run the focused backend tests** and confirm the new schema/entity is missing.
+- [x] **Step 3: Add the Flyway migration and JPA model/repository** with foreign keys, indexes, status enum, and unique constraint.
+- [x] **Step 4: Define versioned event DTOs** with `eventId`, `classificationRunId`, `documentId`, `submissionId`, `mediaId`, file metadata, signed URL metadata, taxonomy snapshot/version, attempt and timestamp.
+- [x] **Step 5: Run focused repository tests and migration validation**.
 
 Run: `./gradlew test --tests '*ClassificationRunRepositoryTests'`
 
@@ -98,11 +98,11 @@ Expected: PASS with the unique/idempotent run constraints covered.
 - Publishing is retried with bounded attempts; exhausted events are marked dead-lettered and remain inspectable.
 - Local compose creates all classification topics without replacing the existing notification topic.
 
-- [ ] **Step 1: Add failing tests** for READY gating, immediate response, atomic outbox creation, duplicate completion, and publish retry.
-- [ ] **Step 2: Run focused tests and confirm the enqueue behavior is absent.**
-- [ ] **Step 3: Implement the event writer** using an opaque signed GET URL and taxonomy snapshot/version; never put MinIO credentials or permanent object keys in the event.
-- [ ] **Step 4: Implement the outbox publisher and Kafka producer settings** with idempotent producer configuration and explicit topic names.
-- [ ] **Step 5: Add local Kafka topic initialization and run backend tests.**
+- [x] **Step 1: Add failing tests** for READY gating, immediate response, atomic outbox creation, duplicate completion, and publish retry.
+- [x] **Step 2: Run focused tests and confirm the enqueue behavior is absent.**
+- [x] **Step 3: Implement the event writer** using an opaque signed GET URL and taxonomy snapshot/version; never put MinIO credentials or permanent object keys in the event.
+- [x] **Step 4: Implement the outbox publisher and Kafka producer settings** with idempotent producer configuration and explicit topic names.
+- [x] **Step 5: Add local Kafka topic initialization and run backend tests.**
 
 Run: `./gradlew test --tests '*ClassificationEventWriterTests' --tests '*DocumentServiceTest'`
 
@@ -261,11 +261,11 @@ Expected: PASS; successful AI output only reaches `PENDING_REVIEW`, never `PUBLI
 - Preview uses an authorized short-lived URL and does not expose `object_key`.
 - Loading uses local skeletons and errors provide retry feedback; AI result never hides status decision controls.
 
-- [ ] **Step 1: Add frontend mapping and state tests** for queued/running/success/failure/dead-letter states.
-- [ ] **Step 2: Add admin-only retry API contract and query invalidation.**
-- [ ] **Step 3: Implement the local classification panel** beside the existing preview/taxonomy editor.
-- [ ] **Step 4: Add skeleton, error, retry and queue-refresh behavior.**
-- [ ] **Step 5: Run frontend tests, type-check and build.**
+- [x] **Step 1: Add frontend mapping and state tests** for queued/running/success/failure/dead-letter states.
+- [x] **Step 2: Add admin-only retry API contract and query invalidation.**
+- [x] **Step 3: Implement the local classification panel** beside the existing preview/taxonomy editor.
+- [x] **Step 4: Add skeleton, error, retry and queue-refresh behavior.**
+- [x] **Step 5: Run frontend tests, type-check and build.**
 
 Run: `bun test`
 Run: `bun run type-check`
@@ -300,11 +300,15 @@ Expected: PASS; panel is visible only on the admin review page and final taxonom
 - Public users cannot call the AI service, consume Kafka, access MinIO objects, or approve/publish documents.
 - AI failure leaves the document private and visible to admin for retry/diagnosis.
 
-- [ ] **Step 1: Start local Kafka/MinIO/backend/AI services and verify health/readiness.**
-- [ ] **Step 2: Run the end-to-end upload → Kafka request → AI result → backend consumer scenario.**
-- [ ] **Step 3: Run duplicate, failure and security scenarios.**
-- [ ] **Step 4: Run the full relevant test suites and record known unrelated failures separately.**
-- [ ] **Step 5: Update the phase checkpoint and implementation notes.**
+- [ ] **Step 1: Start local Kafka/MinIO/backend/AI services and verify health/readiness.** Kafka and MinIO are running; backend/AI readiness awaits a disposable local PostgreSQL schema.
+- [ ] **Step 2: Run the end-to-end upload → Kafka request → AI result → backend consumer scenario.** The live broker slices pass; the database-backed upload-to-result flow remains unverified.
+- [x] **Step 3: Run duplicate, failure and security scenarios.**
+- [x] **Step 4: Run the full relevant test suites and record known unrelated failures separately.**
+- [x] **Step 5: Update the phase checkpoint and implementation notes.**
+
+Task 7 verification checkpoint (2026-11-28): frontend 81 tests passed, type-check/build passed (Vite warns the JS bundle is 2.1 MB); AI suite 51 passed with 1 opt-in test skipped and 7 subtests, plus 2 live AI/Kafka tests passed; 6 focused backend classification test classes passed with live Kafka enabled. The earlier full backend run reported 7 unrelated baseline failures in startup, path-variable, shared error-response and security checks; it was not rerun here.
+
+Task 7 handoff note: keep Steps 1–2 open until a disposable local PostgreSQL database has the baseline application schema and both services can use it. The machine-local, ignored `application.properties` was left untouched; classification Kafka defaults and environment overrides are in the tracked `application-classification.properties`.
 
 Run: `docker compose up -d kafka kafka-init minio`
 Run: `./gradlew test`

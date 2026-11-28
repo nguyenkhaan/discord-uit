@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+    getAdminDocumentClassification,
     getAdminDocumentPreview,
     listAdminSubmissions,
     listMySubmissions,
     reviewAdminDocument,
+    retryAdminDocumentClassification,
     updateAdminDocumentTaxonomy,
     uploadDocument,
 } from '@/features/documents/document.service';
@@ -22,6 +24,8 @@ export const documentKeys = {
     adminSubmissions: () => [...documentKeys.all, 'admin-submissions'] as const,
     adminPreview: (submissionId: string) =>
         [...documentKeys.all, 'admin-preview', submissionId] as const,
+    adminClassification: (submissionId: string) =>
+        [...documentKeys.all, 'admin-classification', submissionId] as const,
 };
 
 export function useMySubmissionsQuery() {
@@ -43,6 +47,25 @@ export function useAdminDocumentPreviewQuery(submissionId: string | undefined) {
         enabled: Boolean(submissionId),
         queryKey: documentKeys.adminPreview(submissionId ?? ''),
         queryFn: () => getAdminDocumentPreview(submissionId ?? ''),
+    });
+}
+
+export function useAdminDocumentClassificationQuery(
+    submissionId: string | undefined,
+    isSubmissionProcessing: boolean
+) {
+    return useQuery({
+        enabled: Boolean(submissionId),
+        queryKey: documentKeys.adminClassification(submissionId ?? ''),
+        queryFn: () => getAdminDocumentClassification(submissionId ?? ''),
+        refetchInterval: (query) => {
+            const status = query.state.data?.status;
+            return status === 'QUEUED' ||
+                status === 'RUNNING' ||
+                (status == null && isSubmissionProcessing)
+                ? 3000
+                : false;
+        },
     });
 }
 
@@ -70,6 +93,21 @@ export function useReviewAdminDocumentMutation() {
             });
             void queryClient.invalidateQueries({
                 queryKey: documentKeys.adminPreview(variables.submissionId),
+            });
+        },
+    });
+}
+
+export function useRetryAdminDocumentClassificationMutation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: retryAdminDocumentClassification,
+        onSuccess: (_, submissionId) => {
+            void queryClient.invalidateQueries({
+                queryKey: documentKeys.adminClassification(submissionId),
+            });
+            void queryClient.invalidateQueries({
+                queryKey: documentKeys.adminSubmissions(),
             });
         },
     });
