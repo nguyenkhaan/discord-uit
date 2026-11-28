@@ -2,6 +2,8 @@ import axios from 'axios';
 
 import { privateClient } from '@/api/client';
 import type {
+    AdminDocumentClassification,
+    ClassificationRetryResult,
     DocumentPreview,
     DocumentSubmission,
     DocumentTaxonomyResponse,
@@ -119,6 +121,24 @@ export async function getAdminDocumentPreview(
 ): Promise<DocumentPreview> {
     const response = await privateClient.get<DocumentPreview>(
         `/admin/documents/submissions/${submissionId}/preview-url`
+    );
+    return response.data;
+}
+
+export async function getAdminDocumentClassification(
+    submissionId: string
+): Promise<AdminDocumentClassification> {
+    const response = await privateClient.get<AdminDocumentClassification>(
+        `/admin/documents/submissions/${submissionId}/classification`
+    );
+    return response.data;
+}
+
+export async function retryAdminDocumentClassification(
+    submissionId: string
+): Promise<ClassificationRetryResult> {
+    const response = await privateClient.post<ClassificationRetryResult>(
+        `/admin/documents/submissions/${submissionId}/classification/retry`
     );
     return response.data;
 }

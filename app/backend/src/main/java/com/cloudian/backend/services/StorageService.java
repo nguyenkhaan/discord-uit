@@ -90,6 +90,10 @@ public class StorageService {
         }
     }
 
+    public Instant presignedGetUrlExpiresAt() {
+        return Instant.now().plus(presignedUrlTtl);
+    }
+
     public String presignedPutUrl(String objectKey, String contentType) {
         try {
             return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()

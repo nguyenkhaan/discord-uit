@@ -8,14 +8,28 @@ authors = [
 ]
 requires-python = ">=3.12.15"
 dependencies = [
+    "aiokafka>=0.15.0",
     "alembic>=1.20.1",
     "asyncpg>=0.32.0",
     "fastapi[standard]>=0.165.0",
     "google-genai>=3.6.1",
+    "httpx>=0.28.1",
+    "numpy>=1.19.5,<3.0.0",
+    "onnxruntime>=1.20.0,<2.0.0",
+    "opencv-python-headless>=4.5.1.48",
+    "pydantic-settings>=2.7.1",
+    "pymupdf>=1.26.5,<2.0",
     "python-dotenv>=1.2.4",
+    "rapidocr>=3.10.0,<4.0.0",
     "sqlalchemy[asyncio]>=2.1.9",
     "uvicorn>=0.54.0",
 ]
+
+[dependency-groups]
+dev = ["pytest>=8.3.4"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
 
 [project.scripts]
 ai = "ai:main"

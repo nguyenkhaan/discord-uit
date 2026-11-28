@@ -47,6 +47,7 @@ import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
 import com.cloudian.backend.modules.document.dto.DocumentReviewRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadInitRequest;
 import com.cloudian.backend.modules.document.dto.UploadDocumentRequest;
+import com.cloudian.backend.modules.document.messaging.ClassificationEventWriter;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
@@ -86,6 +87,9 @@ class DocumentServiceTest {
 
     @Mock
     private DocumentTagRepository documentTagRepository;
+
+    @Mock
+    private ClassificationEventWriter classificationEventWriter;
 
     @Test
     void rejectsUnsupportedExtensionBeforeStorageOrDatabase() {
@@ -277,14 +281,47 @@ class DocumentServiceTest {
 
         DocumentUploadResponse response = service().completeUpload(USER_ID, SUBMISSION_ID);
 
-        assertThat(response.mediaStatus()).isEqualTo(MediaStatus.READY);
-        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_REVIEW);
+        assertThat(response.mediaStatus()).isEqualTo(MediaStatus.SCANNING);
+        assertThat(response.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
         assertThat(response.visibilityStatus()).isEqualTo(DocumentVisibilityStatus.HIDDEN);
+        verify(classificationEventWriter, org.mockito.Mockito.never()).enqueue(any(DocumentSubmission.class));
+    }
+
+    @Test
+    void enqueuesReadyMediaOnRepeatedCompletionWithoutCreatingASecondRunHere() {
+        Document document = pendingDocument();
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+
+        service().completeUpload(USER_ID, SUBMISSION_ID);
+        DocumentUploadResponse duplicateResponse = service().completeUpload(USER_ID, SUBMISSION_ID);
+
+        assertThat(duplicateResponse.mediaStatus()).isEqualTo(MediaStatus.READY);
+        assertThat(duplicateResponse.submissionStatus()).isEqualTo(DocumentSubmissionStatus.PENDING_PROCESSING);
+        verify(classificationEventWriter, org.mockito.Mockito.times(2)).enqueue(submission);
+        verifyNoInteractions(storageService);
+    }
+
+    @Test
+    void rejectsCompletionWhenMediaWasRejectedByScanning() {
+        Document document = pendingDocument();
+        document.getMedia().setStatus(MediaStatus.REJECTED);
+        DocumentSubmission submission = pendingSubmission(document);
+        submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
+        when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
+
+        assertThatThrownBy(() -> service().completeUpload(USER_ID, SUBMISSION_ID))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("scan");
+
+        verifyNoInteractions(storageService, classificationEventWriter);
     }
 
     @Test
     void rejectsCompletionWhenStorageMetadataDoesNotMatchDeclaration() {
         Document document = pendingDocument();
+        document.getMedia().setStatus(MediaStatus.QUARANTINED);
         DocumentSubmission submission = pendingSubmission(document);
         submission.setStatus(DocumentSubmissionStatus.PENDING_PROCESSING);
         when(submissionRepository.findById(SUBMISSION_ID)).thenReturn(Optional.of(submission));
@@ -496,6 +533,7 @@ class DocumentServiceTest {
                 userAccountRepository,
                 tagRepository,
                 documentTagRepository,
+                classificationEventWriter,
                 "pdf,docx,pptx,txt",
                 5_242_880L);
     }

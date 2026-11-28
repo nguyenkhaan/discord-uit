@@ -1,5 +1,7 @@
 package com.cloudian.backend.messagings;
 
+import java.util.concurrent.ExecutionException;
+
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +12,14 @@ public class KafkaEventProducer {
         this.kafkaTemplate = kafkaTemplate;
     } 
     public void publish(String topicName , String recipientId , String message) {
-        kafkaTemplate.send(topicName, recipientId, message);
+        try {
+            kafkaTemplate.send(topicName, recipientId, message).get();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Kafka publish was interrupted.", exception);
+        } catch (ExecutionException exception) {
+            throw new IllegalStateException("Kafka publish failed.", exception);
+        }
         //recipientId: kafka key -> De sap thu tu ben trong partition  
         //message: Noi dung gui len 
 

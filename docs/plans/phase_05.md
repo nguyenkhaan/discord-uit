@@ -63,6 +63,12 @@
 - Kết nối Kafka job, retry, idempotent callback và admin queue refresh.
 - Acceptance: duplicate worker completion chỉ tạo một classification run, confidence luôn trong giới hạn và không AI result nào trực tiếp publish document.
 
+#### Implementation checkpoint — 2026-11-28
+
+- Backend outbox/result handling and the admin-only review panel are implemented; the AI worker performs bounded extraction/OCR and publishes schema-validated suggestions.
+- Local Kafka and MinIO are running; broker integration checks cover duplicate request handling, successful result delivery, expired signed URLs, malformed-event DLQ sanitization and backend result-handler dispatch. Frontend and focused backend/AI suites are tracked in `docs/superpowers/plans/2026-11-22-document-ai-classification.md`.
+- Full upload-to-database end-to-end verification remains pending a disposable local PostgreSQL database with project migrations. Do not use the machine-local ignored `application.properties` connection for this check if it targets a shared database.
+
 ### Feature 5.4 — Human document review, publication, rejection, and removal
 
 **User stories:** DOC-06, DOC-07, DOC-08, DOC-09, DOC-10.

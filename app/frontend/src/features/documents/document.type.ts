@@ -3,6 +3,41 @@ export type DocumentSubmissionStatus =
 
 export type MediaStatus = 'QUARANTINED' | 'READY' | 'REJECTED' | 'DELETED';
 
+export type ClassificationRunStatus =
+    | 'QUEUED'
+    | 'RUNNING'
+    | 'SUCCEEDED'
+    | 'FAILED'
+    | 'DEAD_LETTER';
+
+export interface ClassificationSuggestion {
+    slug: string;
+    confidence: number;
+}
+
+export interface AdminDocumentClassification {
+    classificationRunId: string | null;
+    status: ClassificationRunStatus | null;
+    attemptCount: number;
+    modelId: string | null;
+    ocrNeeded: boolean;
+    ocrText: string | null;
+    failureCode: string | null;
+    failureMessage: string | null;
+    queuedAt: string | null;
+    startedAt: string | null;
+    completedAt: string | null;
+    createdAt: string | null;
+    collectionSuggestions: ClassificationSuggestion[];
+    tagSuggestions: ClassificationSuggestion[];
+}
+
+export interface ClassificationRetryResult {
+    classificationRunId: string;
+    status: ClassificationRunStatus;
+    attemptCount: number;
+}
+
 export interface DocumentSubmission {
     documentId: string;
     submissionId: string;

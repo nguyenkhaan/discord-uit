@@ -45,6 +45,7 @@ import com.cloudian.backend.modules.document.dto.DocumentUploadInitRequest;
 import com.cloudian.backend.modules.document.dto.DocumentUploadInitResponse;
 import com.cloudian.backend.modules.document.dto.DocumentUploadResponse;
 import com.cloudian.backend.modules.document.dto.UploadDocumentRequest;
+import com.cloudian.backend.modules.document.messaging.ClassificationEventWriter;
 import com.cloudian.backend.repositories.DocumentTagRepository;
 import com.cloudian.backend.repositories.DocumentRepository;
 import com.cloudian.backend.repositories.DocumentSubmissionRepository;
@@ -78,6 +79,7 @@ public class DocumentService {
     private final UserAccountRepository userAccountRepository;
     private final TagRepository tagRepository;
     private final DocumentTagRepository documentTagRepository;
+    private final ClassificationEventWriter classificationEventWriter;
     private final Set<String> allowedExtensions;
     private final long maxUploadSizeBytes;
 
@@ -91,6 +93,7 @@ public class DocumentService {
             UserAccountRepository userAccountRepository,
             TagRepository tagRepository,
             DocumentTagRepository documentTagRepository,
+            ClassificationEventWriter classificationEventWriter,
             @Value("${app.agent.classfication.allowed:pdf,docx,pptx,txt}") String allowedExtensions,
             @Value("${app.storage.max-upload-size-bytes:5242880}") long maxUploadSizeBytes) {
         this.storageService = storageService;
@@ -102,6 +105,7 @@ public class DocumentService {
         this.userAccountRepository = userAccountRepository;
         this.tagRepository = tagRepository;
         this.documentTagRepository = documentTagRepository;
+        this.classificationEventWriter = classificationEventWriter;
         this.allowedExtensions = parseAllowedExtensions(allowedExtensions);
         this.maxUploadSizeBytes = maxUploadSizeBytes;
     }
@@ -194,6 +198,13 @@ public class DocumentService {
         }
 
         Media media = submission.getDocument().getMedia();
+        if (media.getStatus() == MediaStatus.READY) {
+            classificationEventWriter.enqueue(submission);
+            return toUploadResponse(submission);
+        }
+        if (media.getStatus() != MediaStatus.QUARANTINED) {
+            throw new ApiException(HttpStatus.CONFLICT, "The document scan is not ready for completion.");
+        }
         StorageObjectMetadata metadata;
         try {
             metadata = storageService.statObject(media.getObjectKey());
@@ -209,8 +220,8 @@ public class DocumentService {
         }
         validateContentSignature(media.getFileName(), metadata.prefix());
 
-        media.setStatus(MediaStatus.READY);
-        submission.setStatus(DocumentSubmissionStatus.PENDING_REVIEW);
+        media.setVerifiedEtag(metadata.etag());
+        media.setStatus(MediaStatus.SCANNING);
         mediaRepository.saveAndFlush(media);
         submissionRepository.saveAndFlush(submission);
         return toUploadResponse(submission);
